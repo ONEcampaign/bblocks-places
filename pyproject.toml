@@ -1,15 +1,19 @@
 [project]
 name = "bblocks-places"
 version = "0.0.1"
-description = "A package to work with countries, regions, areas and other geographical or political entities"
+description = ""
 authors = [
-    {name = "ONE Campaign, Luca Picci"}
+    {name = "ONE Campaign"},
+    {name = "Luca Picci",email = "lpicci96@gmail.com"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
 ]
+
+[tool.poetry]
+packages = [{include = "bblocks_places", from = "src"}]
 
 
 [build-system]
