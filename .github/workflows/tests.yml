@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.config.py }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.config.py }}
 
