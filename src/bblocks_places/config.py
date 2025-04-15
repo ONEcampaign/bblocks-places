@@ -1,10 +1,13 @@
 """Configuration settings
 
 - Logger
+- Paths
+- TODO: Custom Exceptions
 
 """
 
 import logging
+from pathlib import Path
 
 # Configure Logging
 logger = logging.getLogger(__name__)
@@ -23,3 +26,7 @@ shell_handler.setFormatter(shell_formatter)  # Add formatters to handlers
 logger.addHandler(shell_handler)  # Add handlers to the logger
 
 
+class Paths:
+    """Configuration for paths"""
+
+    project = Path(__file__).resolve().parent.parent
