@@ -16,6 +16,10 @@ dependencies = [
 packages = [{include = "bblocks_places", from = "src"}]
 
 
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+pytest = "^8.3.5"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
