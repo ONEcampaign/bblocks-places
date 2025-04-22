@@ -1,4 +1,4 @@
-""" """
+"""Module to resolve places to their Data Commons IDs and other properties."""
 
 from datacommons_client.client import DataCommonsClient
 from typing import Optional, Literal
@@ -9,12 +9,18 @@ from bblocks_places.config import logger
 def _remove_duplicates_in_place(lst: list[str | list | None]) -> None:
     """Remove duplicate values from a list in-place, preserving order.
     Works with unhashable and nested items (e.g. lists, dicts).
+
+    Args:
+        lst: The list to remove duplicates from.
+
+    Returns:
+        None: The list is modified in-place.
     """
     seen = []
     for item in lst:
         if item not in seen:
             seen.append(item)
-    lst[:] = seen  # in-place update
+    lst[:] = seen
 
 
 def flatten_dict(d: dict[str: list[str, None]]) -> dict[str, str | None | list[str]]:
