@@ -2,6 +2,7 @@
 
 from datacommons_client.client import DataCommonsClient
 from typing import Optional, Literal
+import pandas as pd
 
 from bblocks_places.config import logger
 
@@ -141,7 +142,7 @@ class PlaceResolver:
 
 
     def get_candidates(self,
-                       places: str | list[str],
+                       places: str | list[str] | pd.Series,
                        to: Optional[str] = "dcid",
                        place_type: Optional[str] = None
                        ) -> dict[str, str | None | list[str]]:
@@ -155,6 +156,9 @@ class PlaceResolver:
         Returns:
             A dictionary mapping the places to the candidates in the specified format
         """
+
+        if isinstance(places, pd.Series):
+            places = list(places.unique())
 
         # fetch the dcid candidates for the places
         places_dcids_dict = self._fetch_dcid_candidates(places, place_type)
@@ -217,14 +221,23 @@ class PlaceResolver:
 
         return candidates
 
+    def split_custom_mapping(self, places: list | str, custom_mapping: dict):
+        """Removes places that are listed in the custom mapping from the list of places to convert"""
+
+        if isinstance(places,str):
+            places = [places]
+
+        places_to_convert = [place for place in places if place not in custom_mapping.keys()]
+        return places_to_convert
+
     def convert(self,
-                places,
+                places: str | list[str] | pd.Series,
                 to: str = "dcid",
                 place_type: Optional[str] = None,
                 not_found: Optional[Literal["raise", "ignore"] | str] = "raise",
                 multiple_candidates: Optional[Literal["raise", "first", "ignore"]] = "raise",
                 custom_mapping: Optional[dict] = None
-                ) -> str | list[str] | None:
+                ) -> str | list[str] | None | pd.Series:
         """Convert a place or list of places to a specified format
 
         Args:
@@ -235,21 +248,30 @@ class PlaceResolver:
 
         """
 
+        # check the type passed for places
+        if not isinstance(places, (str, list, pd.Series)):
+            raise TypeError(f"places must be a string, list or pandas series. Type passed: {type(places)}")
+
+
+        # make a copy of the places to convert
+        places_to_convert = places
+
+        # if the places are a pandas series, convert them to a list of unique values
+        if isinstance(places_to_convert, pd.Series):
+            places_to_convert = list(places_to_convert.unique())
+
+
         # if there are any custom mappings remove them from the places that need to be converted
         if custom_mapping:
-            if isinstance(places, str) and places in custom_mapping.keys():
-                return custom_mapping[places]
-            elif isinstance(places, str):
-                # remove the custom mappings from the places
-                places_to_convert = [places]
-            elif isinstance(places, list):
-                # remove the custom mappings from the places
-                places_to_convert = [place for place in places if place not in custom_mapping.keys()]
-            else:
-                raise TypeError(f"places must be a string or a list of strings, not {type(places)}")
-        else:
-            places_to_convert = places
 
+            # when the places are a string
+            if isinstance(places, str) and places in custom_mapping:
+                return custom_mapping[places]
+                # otherwise change the string to a list
+            places_to_convert = self.split_custom_mapping(places, custom_mapping)
+
+
+        # get the candidates for the places
         candidates = self.get_candidates(places=places_to_convert, to=to, place_type=place_type)
 
         # check if the candidates are ambiguous or not found
@@ -261,13 +283,12 @@ class PlaceResolver:
 
 
         if isinstance(places, list):
-            converted_places = [candidates.get(p, p) for p in places]
+            return [candidates.get(p, p) for p in places]
 
-        elif isinstance(places, str):
-            converted_places = candidates.get(places, places)
+        if isinstance(places, str):
+            return candidates.get(places, places)
 
-        else:
-            raise TypeError(f"places must be a string or a list of strings, not {type(places)}")
-
-        return converted_places
+        if isinstance(places, pd.Series):
+            # map the candidates to the series
+            return places.map(candidates)
 
