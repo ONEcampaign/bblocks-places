@@ -8,7 +8,7 @@ from bblocks_places.utils import flatten_dict, map_dict
 from bblocks_places.config import DataCommonsAPIError, NotFoundBehavior, MultipleCandidatesBehavior
 
 
-class DataCommonsResolver:
+class DataCommonsWrapper:
     """Basic wrapper for Data Commons API calls with custom error handling."""
 
     def __init__(self,dc_instance: Optional[str] = None,api_key: Optional[str] = None,url: Optional[str] = None):
@@ -118,12 +118,12 @@ class CandidateProcessor:
         return candidates
 
 
-class DataCommonsService:
+class DataCommonsResolver:
     """High-level user-facing interface for place conversion via Data Commons."""
 
     def __init__( self,dc_instance: Optional[str] = "datacommons.one.org",api_key: Optional[str] = None,url: Optional[str] = None):
 
-        self._resolver = DataCommonsResolver(dc_instance=dc_instance,api_key=api_key,url=url)
+        self._resolver = DataCommonsWrapper(dc_instance=dc_instance, api_key=api_key, url=url)
         self._processor = CandidateProcessor()
 
     def get_candidates(self, places: str | list[str] | pd.Series, to: str = "dcid", place_type: Optional[str] = None) -> dict[str, str | list[str] | None]:
