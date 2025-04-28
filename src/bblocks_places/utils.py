@@ -1,3 +1,9 @@
+"""" """
+
+import unicodedata
+import string
+
+
 def _remove_duplicates_in_place(lst: list[str | list | None]) -> None:
     """Remove duplicate values from a list in-place, preserving order.
     Works with unhashable and nested items (e.g. lists, dicts).
@@ -78,3 +84,25 @@ def map_dict(dict1: dict, dict2: dict) -> dict[str, list[str]]:
         k: [dict2[id_] for id_ in v if id_ in dict2]
         for k, v in dict1.items()
     }
+
+
+
+def clean_string(s: str) -> str:
+    """Cleans a string by:
+    - Lowercasing
+    - Removing all whitespace
+    - Converting accented characters to their closest ASCII equivalent
+
+    Args:
+        s: Input string.
+
+    Returns:
+       Cleaned string.
+    """
+
+    s = s.lower()
+    s = unicodedata.normalize('NFKD', s)
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    s = ''.join(c for c in s if c not in string.punctuation)
+    s = ''.join(s.split())
+    return s

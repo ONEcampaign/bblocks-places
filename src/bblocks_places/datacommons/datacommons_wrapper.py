@@ -5,7 +5,7 @@ from typing import Optional, Any
 import pandas as pd
 
 from bblocks_places.utils import flatten_dict, map_dict
-from bblocks_places.config import DataCommonsAPIError, NotFoundBehavior, MultipleCandidatesBehavior
+from bblocks_places.config import DataCommonsAPIError, NotFoundBehavior, MultipleCandidatesBehavior, logger
 
 
 class DataCommonsWrapper:
@@ -92,9 +92,8 @@ class CandidateProcessor:
         """Flatten a dictionary with lists as values."""
 
         return flatten_dict(data)
-
+    @staticmethod
     def parse_ambiguous(
-            self,
             candidates: dict[str, Any],
             to: str,
             not_found: NotFoundBehavior | str = NotFoundBehavior.RAISE,
@@ -107,14 +106,19 @@ class CandidateProcessor:
                 if not_found == NotFoundBehavior.RAISE:
                     raise ValueError(f"Could not find a '{to}' match for: {name}")
                 elif not_found == NotFoundBehavior.IGNORE:
+                    logger.warn(f"Could not find a '{to}' match for: {name}. Returning None.")
                     candidates[name] = None
                 else:
+                    logger.warn(f"Could not find a '{to}' match for: {name}. Returning '{not_found}'.")
                     candidates[name] = not_found
             elif isinstance(val, list) and len(val) > 1:
                 if multiple == MultipleCandidatesBehavior.RAISE:
                     raise ValueError(f"Multiple '{to}' matches for {name}: {val}")
                 elif multiple == MultipleCandidatesBehavior.FIRST:
+                    logger.warn(f"Multiple '{to}' matches for {name}: {val}. Returning the first match.")
                     candidates[name] = val[0]
+                else:
+                    logger.warn(f"Multiple '{to}' matches for {name}: {val}. Returning all matches.")
         return candidates
 
 
