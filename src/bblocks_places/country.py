@@ -1,8 +1,7 @@
 """Module to work with country and region level names"""
 
-from typing import Optional, Literal
+from typing import Optional
 import pandas as pd
-from pandas.core.dtypes.missing import isna_all
 
 from bblocks_places.datacommons import DataCommonsResolver
 from bblocks_places.config import Paths, logger
@@ -13,113 +12,107 @@ from bblocks_places.utils import clean_string
 class PlaceResolver:
     """A class to resolve countries and regions to standard formats"""
 
-    def __init__(self, *, concordance_table: Optional[pd.DataFrame] = None, dc_instance: Optional[str] = None,api_key: Optional[str] = None,url: Optional[str] = None):
+    def __init__(self):
         """ """
 
-        self.__dc_client_options = {
-            "dc_instance": dc_instance,
-            "api_key": api_key,
-            "url": url
-        }
+        self._dc = DataCommonsResolver()
+        self._concordance_table = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv")
 
-        self._dc = DataCommonsResolver(**self.__dc_client_options)
-        self._concordance_table = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv") if concordance_table is None else concordance_table
+    def _concordance_mapper(self, place_type, to) -> dict[str, str]:
+        """Get a dictionary from the concordance table mapping place_type to the target format"""
 
+        # check that the place_type and to are in the concordance table
+        if place_type not in self._concordance_table.columns:
+            raise ValueError(f"place_type {place_type} not in concordance table")
+        if to not in self._concordance_table.columns:
+            raise ValueError(f"to {to} not in concordance table")
 
-    def _resolve_ambiguous_place(self, place: str) -> str:
-        """Resolve an ambiguous place using the Data Commons API"""
+        # if to and place_type are the same, raise a warning
+        if to == place_type:
+            logger.warn("`place_type` and `to` are the same. Standardizing and returning places in the same format")
+            return self._concordance_table.assign(to_copy = lambda d: d[place_type]).set_index("to_copy")[to].to_dict()
 
-        clean_place = clean_string(place)
-
-        # edge cases
-        if clean_place == "congo":
-            return "country/COD"
-        if clean_place == 'france':
-            return "country/FRA"
-
-        # get the candidates in all other cases
-        try:
-            candidates = self._dc.get_candidates(clean_place, place_type="Country")
-
-        except Exception as e:
-            raise e
-
-        # if there is a single candidate return the candidate
-        if isinstance(candidates[clean_place], str):
-            return candidates[clean_place]
-
-        # if there are no candidates raise error
-        elif candidates[clean_place] is None:
-            raise ValueError(f"place {place} not found in Data Commons")
-
-        # if there are multiple candidates raise error
-        elif len(candidates[clean_place]) > 1:
-            raise ValueError(f"place {place} has multiple candidates in Data Commons: {candidates[clean_place]}")
-
+        return self._concordance_table.set_index(place_type)[to].to_dict()
 
     @staticmethod
-    def _convert_place(place: str, mapper: dict) -> str:
-        """Convert a single place"""
+    def _filter_mapper(places, mapper, not_found) -> dict[str, str]:
+        """Gets a mapper only for specified places
+        It handles the not_found behavior
+        """
 
-        clean_place = clean_string(place) # clean the place name
+        clean_mapper = {clean_string(k): v for k, v in mapper.items()}
 
-        # check if the place is in the mapping dictionary
-        if clean_place not in mapper:
-            raise ValueError(f"place {place} not in mapping dictionary")
+        # remove any duplicates from the list of places
+        places = list(set(places))
 
-        resolved_place = mapper.get(clean_place)
+        d = {} # initialize a dictionary to store the mapping
 
-        if resolved_place is None:
-            raise ValueError(f"place {place} does not have a resolved value")
+        # loop through each place and check if it is in the mapping
+        for place in places:
+            clean_place = clean_string(place)
+            if clean_place not in clean_mapper:
+                if not_found == "raise":
+                    raise ValueError(f"place {place} not in concordance table")
+                elif not_found == "ignore":
+                    logger.warn(f"place {place} not in concordance table")
+                    d[place] = None
+                else:
+                    logger.warn(f"place {place} not in concordance table. replacing with {not_found}")
+                    d[place] = not_found
+            else:
+                d[place] = clean_mapper[clean_place]
 
-        return resolved_place
+        if len(d) == 0:
+            raise ValueError("No places found in the mapping")
 
-    def _check_valid_fields(self, field: str | list[str]) -> None:
+        return d
+
+    def get_mapper(self, places: str | list[str], place_type: str, to: str, not_found="raise", custom_mapping: Optional[dict] = None) -> dict[str, str]:
+        """Get a dictionary mapping of places to the target format"""
+
+        if isinstance(places, str):
+            places = [places]
+
+        if isinstance(places, pd.Series):
+            places = list(places.unique())
+
+        # if a custom mapping is provided, remove the keys from the list of places to convert
+        if custom_mapping:
+            places = [p for p in places if p not in custom_mapping.keys()]
+
+        # TODO: resolve the places
+
+        # get the mapping of the places to the target format
+        mapper = self._concordance_mapper(place_type, to)
+        mapper = self._filter_mapper(places, mapper, not_found)
+
+        # add the custom mapping to the mapper
+        mapper = mapper | custom_mapping if custom_mapping else mapper
+
+        return mapper
+
+    def convert(self,
+                places: str | list[str] | pd.Series,
+                place_type: Optional[str] = None,
+                to: Optional[str] = "dcid",
+                not_found="raise",
+                custom_mapping: Optional[dict] = None):
         """ """
 
-        if isinstance(field, str):
-            field = [field]
+        mapper = self.get_mapper(places, place_type, to, not_found, custom_mapping)
 
-        for f in field:
-            # check that the field is in the concordance table
-            if f not in self._concordance_table.columns:
-                raise ValueError(f"{f} not in concordance table columns")
+        # convert the places to the target format
+        if isinstance(places, str):
+            return mapper[places]
 
+        elif isinstance(places, list):
+            return [mapper[p] for p in places]
 
-    def get_mapper(self, places: list[str], place_type, to) -> dict[str, str]:
-        """ """
+        elif isinstance(places, pd.Series):
+            return places.map(mapper)
 
-        # check that the place_type and to are in the concordance table
-        self._check_valid_fields([place_type, to])
-
-        full_mapper = {clean_string(k): v for k, v in self._concordance_table.set_index(place_type)[to].to_dict().items()}
-
-        # check if there are missing values in the mapping dictionary
-        missing = [place for place in places if clean_string(place) not in full_mapper]
-        if missing:
-            logger.warning(f"Missing values in mapping dictionary: {missing}")
-
-        # keep only the places that are in the concordance table
-        return {place: full_mapper.get(clean_string(place)) for place in places if clean_string(place) in full_mapper}
-
-    def convert(self, place: str, place_type, to: str):
-
-        """ """
-
-        # check that the place_type and to are in the concordance table
-        self._check_valid_fields([place_type, to])
-
-        # get a mapping dictionary from the concordance table
-        mapper = self._concordance_table.set_index(place_type)[to].to_dict()  # create a mapping dictionary from the concordance table
-        mapper = {clean_string(k): v for k, v in mapper.items()}  # clean the keys using clean_string
-
-        # convert the place using the mapping dictionary
-        resolved_place = self._convert_place(place, mapper)
-
-        return resolved_place
-
-
-
+        else:
+            raise ValueError("places must be a string or a list of strings")
 
 
 
