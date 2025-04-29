@@ -8,7 +8,6 @@ from bblocks_places.config import Paths, logger
 from bblocks_places.utils import clean_string
 
 
-
 class PlaceResolver:
     """A class to resolve countries and regions to standard formats"""
 
@@ -67,7 +66,36 @@ class PlaceResolver:
 
         return d
 
-    def get_mapper(self, places: str | list[str], place_type: str, to: str, not_found="raise", custom_mapping: Optional[dict] = None) -> dict[str, str]:
+
+    def resolve_to_dcid(self, places, not_found="raise") -> dict:
+        """ """
+
+        place_candidates = self._dc.get_candidates(places, place_type="Country")
+
+        for place, candidates in place_candidates.items():
+            if candidates is None:
+                if not_found == "raise":
+                    raise ValueError(f"Place not found: {place}")
+                elif not_found == "ignore":
+                    logger.warn(f"Place not found: {place}")
+                    place_candidates[place] = None
+                else:
+                    logger.warn(f"Place not found: {place}. replacing with {not_found}")
+                    place_candidates[place] = not_found
+
+            if isinstance(candidates, list) and len(candidates) > 1:
+                if not_found == "raise":
+                    raise ValueError(f"Multiple candidates found for {place}: {candidates}")
+                elif not_found == "ignore":
+                    logger.warn(f"Multiple candidates found for {place}: {candidates}. Returning None.")
+                    place_candidates[place] = None
+                else:
+                    logger.warn(f"Multiple candidates found for {place}: {candidates}. Replacing with {not_found}.")
+                    place_candidates[place] = not_found
+
+        return place_candidates
+
+    def get_mapper(self, places: str | list[str], to: str, place_type: Optional[str] = None, not_found="raise", custom_mapping: Optional[dict] = None) -> dict[str, str]:
         """Get a dictionary mapping of places to the target format"""
 
         if isinstance(places, str):
@@ -80,16 +108,46 @@ class PlaceResolver:
         if custom_mapping:
             places = [p for p in places if p not in custom_mapping.keys()]
 
-        # TODO: resolve the places
+            # if all the places are in the custom mapping, return the custom mapping
+            if len(places) == 0:
+                return custom_mapping
 
-        # get the mapping of the places to the target format
-        mapper = self._concordance_mapper(place_type, to)
-        mapper = self._filter_mapper(places, mapper, not_found)
 
-        # add the custom mapping to the mapper
-        mapper = mapper | custom_mapping if custom_mapping else mapper
 
-        return mapper
+        if not place_type:
+            places = self.resolve_to_dcid(places, not_found=not_found)
+            mapper = self._concordance_mapper("dcid", to)
+
+            for place, dcid in places.items():
+                if dcid is not None:
+                    if dcid not in mapper:
+                        if not_found == "raise":
+                            raise ValueError(f"Place {place} not found in concordance table")
+                        elif not_found == "ignore":
+                            logger.warn(f"Place {place} not found in concordance table. Returning None.")
+                            places[place] = None
+                        else:
+                            logger.warn(f"Place {place} not found in concordance table. Replacing with {not_found}.")
+                            places[place] = not_found
+
+                    places[place] = mapper[dcid]
+
+
+            # add the custom mapping to the mapper
+            places = places | custom_mapping if custom_mapping else places
+            return places
+
+        else:
+
+
+            # get the mapping of the places to the target format
+            mapper = self._concordance_mapper(place_type, to)
+            mapper = self._filter_mapper(places, mapper, not_found)
+
+            # add the custom mapping to the mapper
+            mapper = mapper | custom_mapping if custom_mapping else mapper
+
+            return mapper
 
     def convert(self,
                 places: str | list[str] | pd.Series,
