@@ -36,12 +36,14 @@ class Paths:
 
 class DataCommonsAPIError(Exception):
     """Custom exception for Data Commons API errors."""
+
     pass
 
 
 class NotFoundBehavior(str, Enum):
     RAISE = "raise"
     IGNORE = "ignore"
+
 
 class MultipleCandidatesBehavior(str, Enum):
     RAISE = "raise"

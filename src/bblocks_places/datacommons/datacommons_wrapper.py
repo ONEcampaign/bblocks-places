@@ -5,17 +5,31 @@ from typing import Optional, Any
 import pandas as pd
 
 from bblocks_places.utils import flatten_dict, map_dict
-from bblocks_places.config import DataCommonsAPIError, NotFoundBehavior, MultipleCandidatesBehavior, logger
+from bblocks_places.config import (
+    DataCommonsAPIError,
+    NotFoundBehavior,
+    MultipleCandidatesBehavior,
+    logger,
+)
 
 
 class DataCommonsWrapper:
     """Basic wrapper for Data Commons API calls with custom error handling."""
 
-    def __init__(self,dc_instance: Optional[str] = None,api_key: Optional[str] = None,url: Optional[str] = None):
+    def __init__(
+        self,
+        dc_instance: Optional[str] = None,
+        api_key: Optional[str] = None,
+        url: Optional[str] = None,
+    ):
 
-        self._client = DataCommonsClient(dc_instance=dc_instance,api_key=api_key,url=url)
+        self._client = DataCommonsClient(
+            dc_instance=dc_instance, api_key=api_key, url=url
+        )
 
-    def fetch_dcids_by_name(self, names: list[str], entity_type: Optional[str] = None) -> dict[str, list[str]]:
+    def fetch_dcids_by_name(
+        self, names: list[str], entity_type: Optional[str] = None
+    ) -> dict[str, list[str]]:
         """Fetch candidate DCIDs for each provided name.
 
         Args:
@@ -29,23 +43,27 @@ class DataCommonsWrapper:
             DataCommonsAPIError: On API call failure.
         """
         try:
-            result = self._client.resolve.fetch_dcids_by_name(names=names, entity_type=entity_type ).to_dict()
+            result = self._client.resolve.fetch_dcids_by_name(
+                names=names, entity_type=entity_type
+            ).to_dict()
 
         except Exception as e:
             raise DataCommonsAPIError(f"Failed to fetch DCIDs for {names}: {e}")
 
-        mapping = {} # Initialize an empty dictionary to store the mapping
+        mapping = {}  # Initialize an empty dictionary to store the mapping
 
-        for entity in result.get('entities', []):
+        for entity in result.get("entities", []):
 
-            node = entity.get('node')
-            cands = entity.get('candidates') or []
+            node = entity.get("node")
+            cands = entity.get("candidates") or []
 
-            mapping[node] = [c.get('dcid') for c in cands if 'dcid' in c]
+            mapping[node] = [c.get("dcid") for c in cands if "dcid" in c]
 
         return mapping
 
-    def fetch_property_values(self, dcids: list[str],prop: str) -> dict[str, list[Any]]:
+    def fetch_property_values(
+        self, dcids: list[str], prop: str
+    ) -> dict[str, list[Any]]:
         """Fetch values for a given property across multiple DCIDs.
 
         Args:
@@ -59,19 +77,25 @@ class DataCommonsWrapper:
             DataCommonsAPIError: On API call failure.
         """
         try:
-            result = self._client.node.fetch_property_values(node_dcids=dcids, properties=prop).to_dict()
+            result = self._client.node.fetch_property_values(
+                node_dcids=dcids, properties=prop
+            ).to_dict()
 
         except Exception as e:
-            raise DataCommonsAPIError(f"Failed to fetch property '{prop}' for {dcids}: {e}")
+            raise DataCommonsAPIError(
+                f"Failed to fetch property '{prop}' for {dcids}: {e}"
+            )
 
-        mapping = {} # Initialize an empty dictionary to store the mapping
-        data = result.get('data', {}) # Extract the data from the result, defaulting to an empty dictionary if not present
+        mapping = {}  # Initialize an empty dictionary to store the mapping
+        data = result.get(
+            "data", {}
+        )  # Extract the data from the result, defaulting to an empty dictionary if not present
 
         for dcid in dcids:
             entry = data.get(dcid, {})
-            if 'arcs' in entry and prop in entry['arcs']:
-                nodes = entry['arcs'][prop]['nodes'] or []
-                values = [n.get('value', n.get('name')) for n in nodes]
+            if "arcs" in entry and prop in entry["arcs"]:
+                nodes = entry["arcs"][prop]["nodes"] or []
+                values = [n.get("value", n.get("name")) for n in nodes]
                 mapping[dcid] = values
             else:
                 mapping[dcid] = []
@@ -83,7 +107,9 @@ class DataCommonsWrapper:
 class CandidateProcessor:
     """Processes raw DCID and property mappings: flattens, maps, and handles ambiguity."""
 
-    def map_dcids_to_props(self, name_to_dcids: dict[str, list[str]],dcid_to_props: dict[str, Any]) -> dict[str, list[Any]]:
+    def map_dcids_to_props(
+        self, name_to_dcids: dict[str, list[str]], dcid_to_props: dict[str, Any]
+    ) -> dict[str, list[Any]]:
         """Map DCIDs to their properties."""
 
         return map_dict(name_to_dcids, dcid_to_props)
@@ -92,12 +118,13 @@ class CandidateProcessor:
         """Flatten a dictionary with lists as values."""
 
         return flatten_dict(data)
+
     @staticmethod
     def parse_ambiguous(
-            candidates: dict[str, Any],
-            to: str,
-            not_found: NotFoundBehavior | str = NotFoundBehavior.RAISE,
-            multiple: MultipleCandidatesBehavior = MultipleCandidatesBehavior.RAISE
+        candidates: dict[str, Any],
+        to: str,
+        not_found: NotFoundBehavior | str = NotFoundBehavior.RAISE,
+        multiple: MultipleCandidatesBehavior = MultipleCandidatesBehavior.RAISE,
     ) -> dict[str, Any]:
         """Parse ambiguous candidates."""
 
@@ -106,31 +133,51 @@ class CandidateProcessor:
                 if not_found == NotFoundBehavior.RAISE:
                     raise ValueError(f"Could not find a '{to}' match for: {name}")
                 elif not_found == NotFoundBehavior.IGNORE:
-                    logger.warn(f"Could not find a '{to}' match for: {name}. Returning None.")
+                    logger.warn(
+                        f"Could not find a '{to}' match for: {name}. Returning None."
+                    )
                     candidates[name] = None
                 else:
-                    logger.warn(f"Could not find a '{to}' match for: {name}. Returning '{not_found}'.")
+                    logger.warn(
+                        f"Could not find a '{to}' match for: {name}. Returning '{not_found}'."
+                    )
                     candidates[name] = not_found
             elif isinstance(val, list) and len(val) > 1:
                 if multiple == MultipleCandidatesBehavior.RAISE:
                     raise ValueError(f"Multiple '{to}' matches for {name}: {val}")
                 elif multiple == MultipleCandidatesBehavior.FIRST:
-                    logger.warn(f"Multiple '{to}' matches for {name}: {val}. Returning the first match.")
+                    logger.warn(
+                        f"Multiple '{to}' matches for {name}: {val}. Returning the first match."
+                    )
                     candidates[name] = val[0]
                 else:
-                    logger.warn(f"Multiple '{to}' matches for {name}: {val}. Returning all matches.")
+                    logger.warn(
+                        f"Multiple '{to}' matches for {name}: {val}. Returning all matches."
+                    )
         return candidates
 
 
 class DataCommonsResolver:
     """High-level user-facing interface for place conversion via Data Commons."""
 
-    def __init__( self,dc_instance: Optional[str] = "datacommons.one.org",api_key: Optional[str] = None,url: Optional[str] = None):
+    def __init__(
+        self,
+        dc_instance: Optional[str] = "datacommons.one.org",
+        api_key: Optional[str] = None,
+        url: Optional[str] = None,
+    ):
 
-        self._resolver = DataCommonsWrapper(dc_instance=dc_instance, api_key=api_key, url=url)
+        self._resolver = DataCommonsWrapper(
+            dc_instance=dc_instance, api_key=api_key, url=url
+        )
         self._processor = CandidateProcessor()
 
-    def get_candidates(self, places: str | list[str] | pd.Series, to: str = "dcid", place_type: Optional[str] = None) -> dict[str, str | list[str] | None]:
+    def get_candidates(
+        self,
+        places: str | list[str] | pd.Series,
+        to: str = "dcid",
+        place_type: Optional[str] = None,
+    ) -> dict[str, str | list[str] | None]:
         """Get the candidate that match a place or places in a given format
 
         This method uses the DataCommons API to try to resolve places to a specific property value, giving a list of candidates that match each place.
@@ -153,8 +200,7 @@ class DataCommonsResolver:
             unique = places
 
         name2dcids = self._resolver.fetch_dcids_by_name(
-            names=unique,
-            entity_type=place_type
+            names=unique, entity_type=place_type
         )
 
         # If the user wants to resolve to dcid, return the mapping avoiding the next step
@@ -169,12 +215,12 @@ class DataCommonsResolver:
         return self._processor.flatten(name2props)
 
     def convert(
-            self,
-            places: str | list[str] | pd.Series,
-            to: str = "dcid",
-            place_type: Optional[str] = None,
-            not_found: NotFoundBehavior | str = NotFoundBehavior.RAISE,
-            multiple: MultipleCandidatesBehavior = MultipleCandidatesBehavior.RAISE
+        self,
+        places: str | list[str] | pd.Series,
+        to: str = "dcid",
+        place_type: Optional[str] = None,
+        not_found: NotFoundBehavior | str = NotFoundBehavior.RAISE,
+        multiple: MultipleCandidatesBehavior = MultipleCandidatesBehavior.RAISE,
     ) -> str | list[str | None] | pd.Series | None:
         """Convert a place or places to a given format
 

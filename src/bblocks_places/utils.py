@@ -1,4 +1,4 @@
-"""" """
+""" " """
 
 import unicodedata
 import string
@@ -21,7 +21,7 @@ def _remove_duplicates_in_place(lst: list[str | list | None]) -> None:
     lst[:] = seen
 
 
-def flatten_dict(d: dict[str: list[str, None]]) -> dict[str, str | None | list[str]]:
+def flatten_dict(d: dict[str : list[str, None]]) -> dict[str, str | None | list[str]]:
     """Take a dictionary with values as a list and flatten it.
 
     - If the list is empty, set the value to None
@@ -80,11 +80,7 @@ def map_dict(dict1: dict, dict2: dict) -> dict[str, list[str]]:
     }
     """
 
-    return {
-        k: [dict2[id_] for id_ in v if id_ in dict2]
-        for k, v in dict1.items()
-    }
-
+    return {k: [dict2[id_] for id_ in v if id_ in dict2] for k, v in dict1.items()}
 
 
 def clean_string(s: str) -> str:
@@ -101,13 +97,14 @@ def clean_string(s: str) -> str:
     """
 
     s = s.lower()
-    s = unicodedata.normalize('NFKD', s)
-    s = ''.join(c for c in s if not unicodedata.combining(c))
-    s = ''.join(c for c in s if c not in string.punctuation)
-    s = ''.join(s.split())
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = "".join(c for c in s if c not in string.punctuation)
+    s = "".join(s.split())
     return s
+
 
 def split_list(lst, chunk_size):
     """Split a list into chunks of a specified size."""
     for i in range(0, len(lst), chunk_size):
-        yield lst[i:i + chunk_size]
+        yield lst[i : i + chunk_size]
