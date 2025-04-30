@@ -106,3 +106,8 @@ def clean_string(s: str) -> str:
     s = ''.join(c for c in s if c not in string.punctuation)
     s = ''.join(s.split())
     return s
+
+def split_list(lst, chunk_size):
+    """Split a list into chunks of a specified size."""
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i:i + chunk_size]
