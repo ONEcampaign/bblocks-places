@@ -1,24 +1,15 @@
 """ " """
 
+import sys
 import unicodedata
 import string
 
+# All accents
+_REMOVE = {c: None for c in range(sys.maxunicode) if unicodedata.combining(chr(c))}
 
-def _remove_duplicates_in_place(lst: list[str | list | None]) -> None:
-    """Remove duplicate values from a list in-place, preserving order.
-    Works with unhashable and nested items (e.g. lists, dicts).
-
-    Args:
-        lst: The list to remove duplicates from.
-
-    Returns:
-        None: The list is modified in-place.
-    """
-    seen = []
-    for item in lst:
-        if item not in seen:
-            seen.append(item)
-    lst[:] = seen
+# All punctuation and whitespace
+for ch in string.punctuation + string.whitespace:
+    _REMOVE[ord(ch)] = None
 
 
 def flatten_dict(d: dict[str : list[str, None]]) -> dict[str, str | None | list[str]]:
@@ -35,25 +26,17 @@ def flatten_dict(d: dict[str : list[str, None]]) -> dict[str, str | None | list[
     # loop through the dictionary
     for k, v in d.items():
 
-        # remove any duplicates from the list
-        _remove_duplicates_in_place(v)
-
-        # check if there are any Nones in the list and remove them
-        for i in v:
-            if i is None:
-                v.remove(i)
+        # remove any duplicates from the list (in place)
+        if isinstance(v, list):
+            d[k] = [i for i in list(dict.fromkeys(v)) if i]
 
         # check if the list is empty
         if not v:
             d[k] = None
 
         # if there is only 1 value, return it as a string
-        elif len(v) == 1:
+        if isinstance(v, list) and len(v) == 1:
             d[k] = v[0]
-
-        # if there are multiple values, return it as a list
-        elif len(v) > 1:
-            d[k] = v
 
     return d
 
@@ -95,13 +78,7 @@ def clean_string(s: str) -> str:
     Returns:
        Cleaned string.
     """
-
-    s = s.lower()
-    s = unicodedata.normalize("NFKD", s)
-    s = "".join(c for c in s if not unicodedata.combining(c))
-    s = "".join(c for c in s if c not in string.punctuation)
-    s = "".join(s.split())
-    return s
+    return unicodedata.normalize("NFKD", s.casefold()).translate(_REMOVE)
 
 
 def split_list(lst, chunk_size):

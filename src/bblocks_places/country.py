@@ -1,112 +1,18 @@
 """Module to work with country and region level names"""
 
 from typing import Optional, Literal
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from datacommons_client import DataCommonsClient
 
+from bblocks_places.config import (
+    Paths,
+    logger,
+    MultipleCandidatesBehavior,
+)
 from bblocks_places.datacommons import DataCommonsResolver
-from bblocks_places.config import Paths, logger
-from bblocks_places.utils import clean_string, split_list
-
-
-class Disambiguator:
-    """Class to disambiguate names using Data Commons and custom logic"""
-
-    def __init__(self):
-
-        self._dc_resolver = DataCommonsResolver()
-
-    def resolve(
-        self,
-        places: list[str],
-        not_found: Literal["raise", "ignore"] | str = "raise",
-        multiple: Literal["raise", "first", "ignore"] = "raise",
-    ) -> dict[str, str | None]:
-        """Resolves a list of places to their Data Commons IDs"""
-
-        candidates = {}
-        for chunk in split_list(places, 30):
-            candidates.update(
-                self._dc_resolver.get_candidates(chunk, place_type="Country")
-            )
-
-        # candidates = self._dc_resolver.get_candidates(places, place_type="Country")
-
-        self.apply_custom_disambiguation(candidates)
-        self.apply_not_found(candidates, not_found)
-        self.apply_multiple(candidates, multiple)
-
-        return candidates
-
-    @staticmethod
-    def apply_custom_disambiguation(candidates):
-        """Custom logic for edge cases"""
-
-        for place, cands in candidates.items():
-
-            if clean_string(place) == "france":
-                candidates[place] = "country/FRA"
-
-            if clean_string(place) == "caboverde":
-                candidates[place] = "country/CPV"
-
-            if clean_string(place) == "antarctica":
-                candidates[place] = "antarctica"
-
-            if clean_string(place) == "alandislands" or clean_string(place) == "aland":
-                candidates[place] = "nuts/FI2"
-
-            if clean_string(place) == "pitcairn":
-                candidates[place] = "country/PCN"
-
-            if clean_string(place) == "svalbardandjanmayenislands":
-                candidates[place] = "country/SJM"
-
-        return candidates
-
-    @staticmethod
-    def apply_not_found(
-        candidates: dict, not_found: Literal["raise", "ignore"] | str = "raise"
-    ):
-        """Apply the not found logic to a dictionary of candidates"""
-
-        for place, cands in candidates.items():
-            if cands is None:
-                if not_found == "raise":
-                    raise ValueError(f"Place not found: {place}")
-                elif not_found == "ignore":
-                    logger.warn(f"Place not found: {place}")
-                    candidates[place] = None
-                else:
-                    logger.warn(f"Place not found: {place}. Replacing with {not_found}")
-                    candidates[place] = not_found
-
-        return candidates
-
-    @staticmethod
-    def apply_multiple(
-        candidates: dict, multiple: Literal["raise", "first", "ignore"] = "raise"
-    ):
-        """Apply the multiple candidates logic to a dictionary of candidates"""
-
-        for place, cands in candidates.items():
-            if isinstance(cands, list) and len(cands) > 1:
-                if multiple == "raise":
-                    raise ValueError(
-                        f"Multiple candidates found for {place}: {candidates}"
-                    )
-                elif multiple == "ignore":
-                    logger.warn(
-                        f"Multiple candidates found for {place}: {candidates}. Returning None."
-                    )
-                    candidates[place] = None
-                elif multiple == "first":
-                    logger.warn(
-                        f"Multiple candidates found for {place}: {candidates}. Replacing with first candidate."
-                    )
-                    candidates[place] = cands[0]
-
-        return candidates
+from bblocks_places.utils import clean_string
 
 
 class ConcordanceTable:
@@ -163,9 +69,7 @@ class ConcordanceTable:
         self.check_allowed(source, target)
 
         mapper = self.get_full_mapper(source, target)
-        clean_mapper = {
-            clean_string(k): v for k, v in mapper.items()
-        }  # clean the keys for better matching
+        clean_mapper = {clean_string(k): v for k, v in mapper.items()}
 
         for place in places:
             clean_place = clean_string(place)
@@ -207,7 +111,9 @@ class PlaceResolver:
 
     def __init__(self):
 
-        self._disambiguator = Disambiguator()
+        self._disambiguator = DataCommonsResolver(
+            DataCommonsClient(dc_instance="datacommons.one.org")
+        )
         self._concordance = ConcordanceTable()
 
     def get_mapper(
@@ -216,7 +122,7 @@ class PlaceResolver:
         to: str,
         place_type: Optional[str] = None,
         not_found="raise",
-        multiple: Literal["raise", "first", "ignore"] = "raise",
+        multiple: MultipleCandidatesBehavior | str = "raise",
         custom_mapping: Optional[dict] = None,
     ) -> dict[str, str | None]:
         """Get a dictionary mapping of places to the target format"""
@@ -238,7 +144,7 @@ class PlaceResolver:
         # if the place_type is not provided, resolve the places to their Data Commons IDs first then map them to the target format
         if not place_type:
             # disambiguate the places using Data Commons
-            places = self._disambiguator.resolve(
+            places = self._disambiguator.resolve_ambiguous(
                 places, not_found=not_found, multiple=multiple
             )
 
