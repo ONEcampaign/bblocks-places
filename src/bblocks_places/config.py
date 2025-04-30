@@ -2,12 +2,14 @@
 
 - Logger
 - Paths
-- TODO: Custom Exceptions
+- Custom exceptions
+- Enums for NotFoundBehavior and MultipleCandidatesBehavior
 
 """
 
 import logging
 from pathlib import Path
+from enum import Enum
 
 # Configure Logging
 logger = logging.getLogger(__name__)
@@ -30,3 +32,20 @@ class Paths:
     """Configuration for paths"""
 
     project = Path(__file__).resolve().parent.parent
+
+
+class DataCommonsAPIError(Exception):
+    """Custom exception for Data Commons API errors."""
+
+    pass
+
+
+class NotFoundBehavior(str, Enum):
+    RAISE = "raise"
+    IGNORE = "ignore"
+
+
+class MultipleCandidatesBehavior(str, Enum):
+    RAISE = "raise"
+    FIRST = "first"
+    IGNORE = "ignore"
