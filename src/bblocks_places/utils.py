@@ -96,11 +96,13 @@ def clean_string(s: str) -> str:
        Cleaned string.
     """
 
-    s = s.lower()
-    s = unicodedata.normalize("NFKD", s)
-    s = "".join(c for c in s if not unicodedata.combining(c))
-    s = "".join(c for c in s if c not in string.punctuation)
-    s = "".join(s.split())
+    s = unicodedata.normalize("NFKD", s.lower())
+    s = ''.join(
+        c for c in s
+        if not unicodedata.combining(c)
+        and c not in string.punctuation
+        and not c.isspace()
+    )
     return s
 
 
