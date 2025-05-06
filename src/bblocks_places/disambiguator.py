@@ -3,10 +3,10 @@
 from datacommons_client import DataCommonsClient
 from typing import Optional
 
-from bblocks_places.utils import clean_string
+from bblocks_places.utils import clean_string, split_list
 
 
-_EDGE_CASES: dict[str, str] = {
+_EDGE_CASES ={
     "france": "country/FRA",
     "caboverde": "country/CPV",
     "antarctica": "antarctica",
@@ -15,12 +15,6 @@ _EDGE_CASES: dict[str, str] = {
     "pitcairn": "country/PCN",
     "svalbardandjanmayenislands": "country/SJM",
 }
-
-
-def _split_list(lst, chunk_size):
-    """Split a list into chunks of a specified size."""
-    for i in range(0, len(lst), chunk_size):
-        yield lst[i : i + chunk_size]
 
 def fetch_dcids_by_name(dc_client: DataCommonsClient, entities: str | list, entity_type: str, chunk_size: Optional[int] = 30) -> dict[str, str | list | None]:
     """Fetch DCIDs for a list of entities using the DataCommonsClient.
@@ -41,7 +35,7 @@ def fetch_dcids_by_name(dc_client: DataCommonsClient, entities: str | list, enti
 
     else:
         dcids = {}
-        for chunk in _split_list(entities, chunk_size):
+        for chunk in split_list(entities, chunk_size):
             chunk_dcids = dc_client.resolve.fetch_dcids_by_name(chunk, entity_type).to_flat_dict()
             dcids.update(chunk_dcids)
 

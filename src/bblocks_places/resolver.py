@@ -59,7 +59,7 @@ def handle_multiple_candidates(candidates: dict[str, str | list | None], multipl
 
 
 class PlaceResolver:
-    """ """
+    """A class to resolve places to different formats"""
 
     def __init__(self, api_key: Optional[str] = None, dc_instance: Optional[str] = "datacommons.one.org", url: Optional[str] = None,):
 
@@ -67,19 +67,29 @@ class PlaceResolver:
 
 
     def _get_mapper(self,
-                   places: list[str],
-                   source: Optional[str] = None,
-                   to: Optional[str] = "dcid",
-                   not_found: Optional[Literal["raise", "ignore"]]] j"raise",
-                   multiple_candidates:  Optional[Literal["raise", "first", "ignore"]]="raise",
+                    places: list[str],
+                    source: Optional[str] = None,
+                    to: Optional[str] = "dcid",
+                    not_found: Literal["raise", "ignore"] = "raise",
+                    multiple_candidates:  Literal["raise", "first", "ignore"]="raise",
                     custom_mapping: Optional[dict[str, str]] = None
                     ) -> dict[str, str]:
         """Helper function to get the mapper for a list of places"""
 
+        # remove any custom mapping from the entities to map
+        if custom_mapping:
+            places_to_map = [p for p in places if p not in custom_mapping]
+            # if all places are in the custom mapping, then return the custom mapping
+            if not places_to_map:
+                return custom_mapping
+
+        else:
+            places_to_map = places
+
         # if no source is provided, try to disambiguate the places
         if not source:
             # disambiguate the places
-            candidates = disambiguate(dc_client=self._dc_client, entities=places, entity_type="Country")
+            candidates = disambiguate(dc_client=self._dc_client, entities=places_to_map, entity_type="Country")
 
             # map places to desired type
             if to != "dcid":
@@ -87,13 +97,17 @@ class PlaceResolver:
 
         # else if the source is provided, then use the concordance table to map
         else:
-            candidates = map_places(places=places, source=source, target=to)
+            candidates = map_places(places=places_to_map, source=source, target=to)
 
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
         # handle multiple candidates
         candidates = handle_multiple_candidates(candidates=candidates, multiple_candidates=multiple_candidates)
+
+        # if there are any custom mappings, add them to the candidates
+        if custom_mapping:
+            candidates = candidates | custom_mapping
 
         return candidates
 
@@ -103,8 +117,22 @@ class PlaceResolver:
                    source: Optional[str] = None,
                    to: Optional[str] = "dcid",
                    not_found: Literal["raise", "ignore"] = "raise",
-                   multiple_candidates:  Literal["raise", "first", "ignore"]="raise") -> dict[str, str]:
-        """Get the mapper for a list of places"""
+                   multiple_candidates:  Literal["raise", "first", "ignore"]="raise",
+                   custom_mapping: Optional[dict[str, str]] = None
+                   ) -> dict[str, str]:
+        """Get a mapper of places to a desired format
+
+        Args:
+            places: A place or places to resolve
+            source: The source of the places. If None, will try to disambiguate the places
+            to: The desired format to convert the places to. Default is "dcid"
+            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a string to use as the value for not found places. "ignore" will keep the value as None
+            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a list
+            custom_mapping: A dictionary of custom mappings to use
+
+        Returns:
+            A dictionary mapping the places to the desired format
+        """
 
         # if places is a string, convert it to a list
         if isinstance(places, str):
@@ -115,17 +143,31 @@ class PlaceResolver:
             places = list(places.unique())
 
 
-        return self._get_mapper(places=places, source=source, to=to, not_found=not_found, multiple_candidates=multiple_candidates)
+        return self._get_mapper(places=places, source=source, to=to, not_found=not_found, multiple_candidates=multiple_candidates, custom_mapping=custom_mapping)
 
     def convert(self,
                 places: str | list[str] | pd.Series,
                source: Optional[str] = None,
                to: Optional[str] = "dcid",
                not_found: Literal["raise", "ignore"] = "raise",
-               multiple_candidates:  Literal["raise", "first", "ignore"]="raise") -> str | list[str] | pd.Series:
-        """ """
+               multiple_candidates:  Literal["raise", "first", "ignore"]="raise",
+                custom_mapping: Optional[dict[str, str]] = None
+                ) -> str | list[str] | pd.Series:
+        """Convert places to a desired format
 
-        mapper = self.get_mapper(places=places, source=source, to=to, not_found=not_found, multiple_candidates=multiple_candidates)
+        Args:
+            places: A place or places to resolve
+            source: The source of the places. If None, will try to disambiguate the places
+            to: The desired format to convert the places to. Default is "dcid"
+            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a string to use as the value for not found places. "ignore" will keep the value as None
+            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a list
+            custom_mapping: A dictionary of custom mappings to use
+
+        Returns:
+            Converted places in the desired format
+        """
+
+        mapper = self.get_mapper(places=places, source=source, to=to, not_found=not_found, multiple_candidates=multiple_candidates, custom_mapping=custom_mapping)
 
         # convert back to the original format
         if isinstance(places, str):

@@ -8,7 +8,7 @@ from bblocks_places.config import Paths, logger
 CONCORDANCE_TABLE = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv")
 
 
-_VAIID_SOURCES = ["dcid", "name", "iso2_code", "iso3_code", "name_short"]
+_VAIID_SOURCES = ["dcid", "name", "iso2_code", "iso3_code", "name_short"] # TODO: Add more sources
 _VALID_TARGETS = _VAIID_SOURCES + ["income_level"] # TODO: Add more targets
 
 
