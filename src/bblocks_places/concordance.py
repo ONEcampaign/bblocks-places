@@ -8,13 +8,18 @@ from bblocks_places.config import Paths, logger
 CONCORDANCE_TABLE = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv")
 
 
-_VAIID_SOURCES = ["dcid", "name", "iso2_code", "iso3_code", "name_short"] # TODO: Add more sources
-_VALID_TARGETS = _VAIID_SOURCES + ["income_level"] # TODO: Add more targets
+_VAIID_SOURCES = [
+    "dcid",
+    "name",
+    "iso2_code",
+    "iso3_code",
+    "name_short",
+]  # TODO: Add more sources
+_VALID_TARGETS = _VAIID_SOURCES + ["income_level"]  # TODO: Add more targets
 
 
 def check_allowed(source: str, target: str):
     """Check that the source and target are in the allowed sources and targets"""
-
 
     if source not in _VAIID_SOURCES:
         raise ValueError(
@@ -27,8 +32,7 @@ def check_allowed(source: str, target: str):
 
 
 def get_concordance_dict(source: str, target: str) -> dict[str, str]:
-    """Return a dictionary with the source values as keys and the target values as values using the concordance table
-    """
+    """Return a dictionary with the source values as keys and the target values as values using the concordance table"""
 
     # Check that the source and target are in the allowed sources and targets
     check_allowed(source, target)
@@ -38,25 +42,25 @@ def get_concordance_dict(source: str, target: str) -> dict[str, str]:
         logger.warn(f"Source and target are the same")
 
     # return a dictionary with the source values as keys and the target values as values using the concordance table
-    return (CONCORDANCE_TABLE
-            # create new columns for the source and target to avoid errors where the source and target are the same
-            .assign(source=source, target=target)
-            .set_index(source)
-            [target]
-            .to_dict()
-            )
+    return (
+        CONCORDANCE_TABLE
+        # create new columns for the source and target to avoid errors where the source and target are the same
+        .assign(source=source, target=target)
+        .set_index(source)[target]
+        .to_dict()
+    )
+
 
 def map_places(places: list[str], source, target) -> dict[str, str | None]:
-    """ Map a list of places to their concordance values
-    """
+    """Map a list of places to their concordance values"""
 
     concordance_dict = get_concordance_dict(source=source, target=target)
-    return {
-        place: concordance_dict.get(place, None) for place in places
-    }
+    return {place: concordance_dict.get(place, None) for place in places}
 
 
-def map_candidates(candidates: dict[str, str | list | None], target: str) -> dict[str, str | list | None]:
+def map_candidates(
+    candidates: dict[str, str | list | None], target: str
+) -> dict[str, str | list | None]:
     """Map a dictionary of candidates to a desired type"""
 
     concordance_dict = get_concordance_dict(source="dcid", target=target)
@@ -83,4 +87,3 @@ def map_candidates(candidates: dict[str, str | list | None], target: str) -> dic
         candidates[place] = resolved_place
 
     return candidates
-

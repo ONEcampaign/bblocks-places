@@ -18,8 +18,9 @@ def clean_string(s: str) -> str:
     """
 
     s = unicodedata.normalize("NFKD", s.lower())
-    s = ''.join(
-        c for c in s
+    s = "".join(
+        c
+        for c in s
         if not unicodedata.combining(c)
         and c not in string.punctuation
         and not c.isspace()

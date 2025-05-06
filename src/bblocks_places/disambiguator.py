@@ -1,4 +1,4 @@
-"""Disambiguator """
+"""Disambiguator"""
 
 from datacommons_client import DataCommonsClient
 from typing import Optional
@@ -6,7 +6,7 @@ from typing import Optional
 from bblocks_places.utils import clean_string, split_list
 
 
-_EDGE_CASES ={
+_EDGE_CASES = {
     "france": "country/FRA",
     "caboverde": "country/CPV",
     "antarctica": "antarctica",
@@ -16,7 +16,13 @@ _EDGE_CASES ={
     "svalbardandjanmayenislands": "country/SJM",
 }
 
-def fetch_dcids_by_name(dc_client: DataCommonsClient, entities: str | list, entity_type: str, chunk_size: Optional[int] = 30) -> dict[str, str | list | None]:
+
+def fetch_dcids_by_name(
+    dc_client: DataCommonsClient,
+    entities: str | list,
+    entity_type: str,
+    chunk_size: Optional[int] = 30,
+) -> dict[str, str | list | None]:
     """Fetch DCIDs for a list of entities using the DataCommonsClient.
 
     Args:
@@ -29,14 +35,17 @@ def fetch_dcids_by_name(dc_client: DataCommonsClient, entities: str | list, enti
         A dictionary mapping entity names to their corresponding DCIDs. If an entity name is not found, it will be mapped to None.
     """
 
-
     if not chunk_size:
-        dcids = dc_client.resolve.fetch_dcids_by_name(entities, entity_type).to_flat_dict()
+        dcids = dc_client.resolve.fetch_dcids_by_name(
+            entities, entity_type
+        ).to_flat_dict()
 
     else:
         dcids = {}
         for chunk in split_list(entities, chunk_size):
-            chunk_dcids = dc_client.resolve.fetch_dcids_by_name(chunk, entity_type).to_flat_dict()
+            chunk_dcids = dc_client.resolve.fetch_dcids_by_name(
+                chunk, entity_type
+            ).to_flat_dict()
             dcids.update(chunk_dcids)
 
     # replace empty lists with None
@@ -63,7 +72,12 @@ def custom_disambiguation(entity: str) -> str | None:
     return None
 
 
-def disambiguate(dc_client: DataCommonsClient, entities: str | list[str], entity_type: Optional[str], chunk_size: Optional[int] = 30) -> dict[str, str | list | None]:
+def disambiguate(
+    dc_client: DataCommonsClient,
+    entities: str | list[str],
+    entity_type: Optional[str],
+    chunk_size: Optional[int] = 30,
+) -> dict[str, str | list | None]:
     """Disambiguate entities to their DCIDs
 
     This function takes ambiguous entity names and resolves them to their corresponding DCIDs using the DataCommonsClient and
@@ -84,7 +98,7 @@ def disambiguate(dc_client: DataCommonsClient, entities: str | list[str], entity
 
     # loop through the entities checking for edge cases
     for entity in entities:
-       # if the entity is an edge case, add the dcid to the dictionary and remove the entity from the list
+        # if the entity is an edge case, add the dcid to the dictionary and remove the entity from the list
         dcid = custom_disambiguation(entity)
         if dcid is not None:
             resolved_entities[entity] = dcid
@@ -95,9 +109,9 @@ def disambiguate(dc_client: DataCommonsClient, entities: str | list[str], entity
     # if there are still entities left, fetch the dcids from the datacommons client
     if entities_to_disambiguate:
         # fetch the dcids from the datacommons client
-        dcids = fetch_dcids_by_name(dc_client, entities_to_disambiguate, entity_type, chunk_size)
+        dcids = fetch_dcids_by_name(
+            dc_client, entities_to_disambiguate, entity_type, chunk_size
+        )
         resolved_entities.update(dcids)
 
     return resolved_entities
-
-

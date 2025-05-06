@@ -11,13 +11,20 @@ from bblocks_places.config import logger
 
 class PlaceNotFoundError(Exception):
     """Custom exception when a place is not found or cannot be resolved."""
+
     pass
+
 
 class MultipleCandidatesError(Exception):
     """Custom exception there are multiple candidates for a place"""
+
     pass
 
-def handle_not_founds(candidates: dict[str, str | list | None], not_found: Literal["raise", "ignore"] | str):
+
+def handle_not_founds(
+    candidates: dict[str, str | list | None],
+    not_found: Literal["raise", "ignore"] | str,
+):
     """ """
 
     for place, cands in candidates.items():
@@ -35,45 +42,62 @@ def handle_not_founds(candidates: dict[str, str | list | None], not_found: Liter
     return candidates
 
 
-def handle_multiple_candidates(candidates: dict[str, str | list | None], multiple_candidates: Literal["raise", "first", "ignore"]):
+def handle_multiple_candidates(
+    candidates: dict[str, str | list | None],
+    multiple_candidates: Literal["raise", "first", "ignore"],
+):
     """Handle multiple candidates for a place"""
 
     for place, cands in candidates.items():
         # if the candidate is a list, then raise an error
         if isinstance(cands, list):
             if multiple_candidates == "raise":
-                raise MultipleCandidatesError(f"Multiple candidates found for {place}: {cands}")
+                raise MultipleCandidatesError(
+                    f"Multiple candidates found for {place}: {cands}"
+                )
             elif multiple_candidates == "first":
                 # set the value of the candidate to the first value in the list
                 candidates[place] = cands[0]
-                logger.info(f"Multiple candidates found for {place}. Using first candidate: {cands[0]}")
+                logger.info(
+                    f"Multiple candidates found for {place}. Using first candidate: {cands[0]}"
+                )
             elif multiple_candidates == "ignore":
                 # keep the value of the candidate as a list
-                logger.warn(f"Multiple candidates found for {place}. Keeping all candidates: {cands}")
+                logger.warn(
+                    f"Multiple candidates found for {place}. Keeping all candidates: {cands}"
+                )
 
             else:
-                raise ValueError(f"Invalid value for multiple_candidates: {multiple_candidates}. Must be one of ['raise', 'first', 'ignore']")
+                raise ValueError(
+                    f"Invalid value for multiple_candidates: {multiple_candidates}. Must be one of ['raise', 'first', 'ignore']"
+                )
 
     return candidates
-
 
 
 class PlaceResolver:
     """A class to resolve places to different formats"""
 
-    def __init__(self, api_key: Optional[str] = None, dc_instance: Optional[str] = "datacommons.one.org", url: Optional[str] = None,):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        dc_instance: Optional[str] = "datacommons.one.org",
+        url: Optional[str] = None,
+    ):
 
-        self._dc_client = DataCommonsClient(api_key=api_key, url=url, dc_instance=dc_instance)
+        self._dc_client = DataCommonsClient(
+            api_key=api_key, url=url, dc_instance=dc_instance
+        )
 
-
-    def _get_mapper(self,
-                    places: list[str],
-                    source: Optional[str] = None,
-                    to: Optional[str] = "dcid",
-                    not_found: Literal["raise", "ignore"] = "raise",
-                    multiple_candidates:  Literal["raise", "first", "ignore"]="raise",
-                    custom_mapping: Optional[dict[str, str]] = None
-                    ) -> dict[str, str]:
+    def _get_mapper(
+        self,
+        places: list[str],
+        source: Optional[str] = None,
+        to: Optional[str] = "dcid",
+        not_found: Literal["raise", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        custom_mapping: Optional[dict[str, str]] = None,
+    ) -> dict[str, str]:
         """Helper function to get the mapper for a list of places"""
 
         # remove any custom mapping from the entities to map
@@ -89,7 +113,9 @@ class PlaceResolver:
         # if no source is provided, try to disambiguate the places
         if not source:
             # disambiguate the places
-            candidates = disambiguate(dc_client=self._dc_client, entities=places_to_map, entity_type="Country")
+            candidates = disambiguate(
+                dc_client=self._dc_client, entities=places_to_map, entity_type="Country"
+            )
 
             # map places to desired type
             if to != "dcid":
@@ -99,11 +125,12 @@ class PlaceResolver:
         else:
             candidates = map_places(places=places_to_map, source=source, target=to)
 
-
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
         # handle multiple candidates
-        candidates = handle_multiple_candidates(candidates=candidates, multiple_candidates=multiple_candidates)
+        candidates = handle_multiple_candidates(
+            candidates=candidates, multiple_candidates=multiple_candidates
+        )
 
         # if there are any custom mappings, add them to the candidates
         if custom_mapping:
@@ -111,15 +138,15 @@ class PlaceResolver:
 
         return candidates
 
-
-    def get_mapper(self,
-                   places: str | list[str] | pd.Series,
-                   source: Optional[str] = None,
-                   to: Optional[str] = "dcid",
-                   not_found: Literal["raise", "ignore"] = "raise",
-                   multiple_candidates:  Literal["raise", "first", "ignore"]="raise",
-                   custom_mapping: Optional[dict[str, str]] = None
-                   ) -> dict[str, str]:
+    def get_mapper(
+        self,
+        places: str | list[str] | pd.Series,
+        source: Optional[str] = None,
+        to: Optional[str] = "dcid",
+        not_found: Literal["raise", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        custom_mapping: Optional[dict[str, str]] = None,
+    ) -> dict[str, str]:
         """Get a mapper of places to a desired format
 
         Args:
@@ -142,17 +169,24 @@ class PlaceResolver:
         elif isinstance(places, pd.Series):
             places = list(places.unique())
 
+        return self._get_mapper(
+            places=places,
+            source=source,
+            to=to,
+            not_found=not_found,
+            multiple_candidates=multiple_candidates,
+            custom_mapping=custom_mapping,
+        )
 
-        return self._get_mapper(places=places, source=source, to=to, not_found=not_found, multiple_candidates=multiple_candidates, custom_mapping=custom_mapping)
-
-    def convert(self,
-                places: str | list[str] | pd.Series,
-               source: Optional[str] = None,
-               to: Optional[str] = "dcid",
-               not_found: Literal["raise", "ignore"] = "raise",
-               multiple_candidates:  Literal["raise", "first", "ignore"]="raise",
-                custom_mapping: Optional[dict[str, str]] = None
-                ) -> str | list[str] | pd.Series:
+    def convert(
+        self,
+        places: str | list[str] | pd.Series,
+        source: Optional[str] = None,
+        to: Optional[str] = "dcid",
+        not_found: Literal["raise", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        custom_mapping: Optional[dict[str, str]] = None,
+    ) -> str | list[str] | pd.Series:
         """Convert places to a desired format
 
         Args:
@@ -167,7 +201,14 @@ class PlaceResolver:
             Converted places in the desired format
         """
 
-        mapper = self.get_mapper(places=places, source=source, to=to, not_found=not_found, multiple_candidates=multiple_candidates, custom_mapping=custom_mapping)
+        mapper = self.get_mapper(
+            places=places,
+            source=source,
+            to=to,
+            not_found=not_found,
+            multiple_candidates=multiple_candidates,
+            custom_mapping=custom_mapping,
+        )
 
         # convert back to the original format
         if isinstance(places, str):
@@ -178,12 +219,3 @@ class PlaceResolver:
 
         else:
             return [mapper.get(p) for p in places]
-
-
-
-
-
-
-
-
-
