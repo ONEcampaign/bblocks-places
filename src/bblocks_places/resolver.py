@@ -4,7 +4,7 @@ from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
 import pandas as pd
 
-from bblocks_places.disambiguator import disambiguate
+from bblocks_places.disambiguator import disambiguation_pipeline
 from bblocks_places.concordance import map_candidates, map_places
 from bblocks_places.config import logger
 
@@ -114,7 +114,7 @@ class PlaceResolver:
         # if no source is provided, try to disambiguate the places
         if not source:
             # disambiguate the places
-            candidates = disambiguate(
+            candidates = disambiguation_pipeline(
                 dc_client=self._dc_client, entities=places_to_map, entity_type="Country"
             )
 

@@ -73,7 +73,7 @@ def custom_disambiguation(entity: str) -> str | None:
     return None
 
 
-def disambiguate(
+def disambiguation_pipeline(
     dc_client: DataCommonsClient,
     entities: str | list[str],
     entity_type: Optional[str],
