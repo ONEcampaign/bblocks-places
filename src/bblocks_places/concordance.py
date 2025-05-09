@@ -18,7 +18,7 @@ _VAIID_SOURCES = [
 _VALID_TARGETS = _VAIID_SOURCES + ["income_level"]  # TODO: Add more targets
 
 
-def check_allowed(source: str, target: str):
+def _check_allowed(source: str, target: str):
     """Check that the source and target are in the allowed sources and targets"""
 
     if source not in _VAIID_SOURCES:
@@ -35,7 +35,7 @@ def get_concordance_dict(source: str, target: str) -> dict[str, str]:
     """Return a dictionary with the source values as keys and the target values as values using the concordance table"""
 
     # Check that the source and target are in the allowed sources and targets
-    check_allowed(source, target)
+    _check_allowed(source, target)
 
     # check if the source and target are the same
     if source == target:
