@@ -4,9 +4,9 @@ from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
 import pandas as pd
 
-from bblocks_places.disambiguator import disambiguation_pipeline
-from bblocks_places.concordance import map_candidates, map_places
-from bblocks_places.config import (
+from bblocks.places.disambiguator import disambiguation_pipeline
+from bblocks.places.concordance import map_candidates, map_places
+from bblocks.places.config import (
     logger,
     Paths,
     PlaceNotFoundError,
@@ -82,7 +82,7 @@ class PlaceResolver:
             api_key=api_key, url=url, dc_instance=dc_instance
         )
         self._concordance_table = pd.read_csv(
-            Paths.project / "bblocks_places" / "concordance.csv"
+            Paths.project / "places" / "concordance.csv"
         )
 
     def _get_mapper(

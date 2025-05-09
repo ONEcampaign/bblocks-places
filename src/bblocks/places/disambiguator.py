@@ -3,7 +3,7 @@
 from datacommons_client import DataCommonsClient
 from typing import Optional
 
-from bblocks_places.utils import clean_string, split_list
+from bblocks.places.utils import clean_string, split_list
 
 
 _EDGE_CASES = {
