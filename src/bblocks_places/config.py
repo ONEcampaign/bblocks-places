@@ -40,6 +40,18 @@ class DataCommonsAPIError(Exception):
     pass
 
 
+class PlaceNotFoundError(Exception):
+    """Custom exception when a place is not found or cannot be resolved."""
+
+    pass
+
+
+class MultipleCandidatesError(Exception):
+    """Custom exception there are multiple candidates for a place"""
+
+    pass
+
+
 class NotFoundBehavior(str, Enum):
     RAISE = "raise"
     IGNORE = "ignore"
