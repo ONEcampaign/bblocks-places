@@ -6,7 +6,12 @@ import pandas as pd
 
 from bblocks_places.disambiguator import disambiguation_pipeline
 from bblocks_places.concordance import map_candidates, map_places
-from bblocks_places.config import logger, Paths, PlaceNotFoundError, MultipleCandidatesError
+from bblocks_places.config import (
+    logger,
+    Paths,
+    PlaceNotFoundError,
+    MultipleCandidatesError,
+)
 
 
 def handle_not_founds(
@@ -76,7 +81,9 @@ class PlaceResolver:
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
-        self._concordance_table = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv")
+        self._concordance_table = pd.read_csv(
+            Paths.project / "bblocks_places" / "concordance.csv"
+        )
 
     def _get_mapper(
         self,
