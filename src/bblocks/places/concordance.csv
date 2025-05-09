@@ -1,4 +1,4 @@
-﻿name,name_short,dcid,iso2_code,iso3_code,iso_numeric_code,m49_code,m49_region_code,m49_region_name,m49_subregion_code,m49_subregion_name,m49_member,m49_intermediate_region_code,m49_intermediate_region_name,ldc,lldc,sids,un_member,un_observer,un_former_member,dac_code,income_level
+﻿name_official,name_short,dcid,iso2_code,iso3_code,iso_numeric_code,m49_code,region_code,region,subregion_code,subregion,m49_member,intermediate_region_code,intermediate_region,ldc,lldc,sids,un_member,un_observer,un_former_member,dac_code,income_level
 Afghanistan,Afghanistan,country/AFG,AF,AFG,4,4,142,Asia,34,Southern Asia,TRUE,,,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,625,Low & middle income
 Åland Islands,Åland Islands,nuts/FI2,AX,ALA,248,248,150,Europe,154,Northern Europe,TRUE,,,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,,
 Albania,Albania,country/ALB,AL,ALB,8,8,150,Europe,39,Southern Europe,TRUE,,,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,71,Upper middle income
