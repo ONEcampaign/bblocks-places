@@ -130,8 +130,8 @@ class PlaceResolver:
     def get_mapper(
         self,
         places: str | list[str] | pd.Series,
-        source: Optional[str] = None,
-        to: Optional[str] = "dcid",
+        from_type: Optional[str] = None,
+        to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
@@ -140,8 +140,8 @@ class PlaceResolver:
 
         Args:
             places: A place or places to resolve
-            source: The source of the places. If None, will try to disambiguate the places
-            to: The desired format to convert the places to. Default is "dcid"
+            from_type: The source of the places. If None, will try to disambiguate the places
+            to_type: The desired format to convert the places to. Default is "dcid"
             not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a
             string to use as the value for not found places. "ignore" will keep the value as None
             multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options
@@ -172,8 +172,8 @@ class PlaceResolver:
 
         return self._get_mapper(
             places=places,
-            source=source,
-            to=to,
+            source=from_type,
+            to=to_type,
             not_found=not_found,
             multiple_candidates=multiple_candidates,
             custom_mapping=custom_mapping,
@@ -182,8 +182,8 @@ class PlaceResolver:
     def convert(
         self,
         places: str | list[str] | pd.Series,
-        source: Optional[str] = None,
-        to: Optional[str] = "dcid",
+        from_type: Optional[str] = None,
+        to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
@@ -192,8 +192,8 @@ class PlaceResolver:
 
         Args:
             places: A place or places to resolve
-            source: The source of the places. If None, will try to disambiguate the places
-            to: The desired format to convert the places to. Default is "dcid"
+            from_type: The source of the places. If None, will try to disambiguate the places
+            to_type: The desired format to convert the places to. Default is "dcid"
             not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a
             string to use as the value for not found places. "ignore" will keep the value as None
             multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options
@@ -207,8 +207,8 @@ class PlaceResolver:
 
         mapper = self.get_mapper(
             places=places,
-            source=source,
-            to=to,
+            source=from_type,
+            to=to_type,
             not_found=not_found,
             multiple_candidates=multiple_candidates,
             custom_mapping=custom_mapping,
