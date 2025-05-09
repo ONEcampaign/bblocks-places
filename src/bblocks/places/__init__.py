@@ -1,3 +1,3 @@
 from importlib.metadata import version
 
-__version__ = version("bblocks_places")
+__version__ = version("bblocks.places")

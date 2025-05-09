@@ -2,7 +2,7 @@
 
 import pytest
 
-from bblocks_places import utils
+from bblocks.places import utils
 
 
 @pytest.mark.parametrize(

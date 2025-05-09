@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from bblocks_places.config import Paths, logger
+from bblocks.places.config import logger
 
 
 _VAIID_SOURCES = [
