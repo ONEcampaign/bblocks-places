@@ -115,11 +115,20 @@ class PlaceResolver:
 
             # map places to desired type
             if to_type != "dcid":
-                candidates = map_candidates(concordance_table=self._concordance_table, candidates=candidates, target=to_type)
+                candidates = map_candidates(
+                    concordance_table=self._concordance_table,
+                    candidates=candidates,
+                    target=to_type,
+                )
 
         # else if the source is provided, then use the concordance table to map
         else:
-            candidates = map_places(concordance_table=self._concordance_table, places=places_to_map, source=from_type, target=to_type)
+            candidates = map_places(
+                concordance_table=self._concordance_table,
+                places=places_to_map,
+                source=from_type,
+                target=to_type,
+            )
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
@@ -143,21 +152,50 @@ class PlaceResolver:
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str]:
-        """Get a mapper of places to a desired format
+        """Get a mapper of places to a desired format.
 
         Args:
-            places: A place or places to resolve
-            from_type: The source of the places. If None, will try to disambiguate the places
-            to_type: The desired format to convert the places to. Default is "dcid"
-            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a
-            string to use as the value for not found places. "ignore" will keep the value as None
-            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options
-            are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a
-            list
-            custom_mapping: A dictionary of custom mappings to use
+            places: A place or list of places to resolve.
+
+            from_type: The original format of the places. If None, the places will be disambiguated automatically.
+                By default, it is None.
+                Options are:
+                    - "dcid": Data Commons ID.
+                    - "name_official": Official name.
+                    - "name_short": Short name.
+                    - "iso2_code": ISO Alpha 2-letter code.
+                    - "iso3_code": ISO Alpha 3-letter code.
+                    - "iso_numeric_code": ISO Numeric code.
+                    - "dac_code": DAC code.
+                    - "m49_code": M49 code.
+
+            to_type: The desired format to convert the places to. Default is "dcid".
+                Options are:
+                    - Any of the from_type options.
+                    - "income_level": Income level.
+                    - "region": Region.
+                    - "region_code": Region code.
+                    - "subregion": Subregion.
+                    - "subregion_code": Subregion code.
+                    - "intermediate_region": Intermediate region.
+                    - "intermediate_region_code": Intermediate region code.
+
+            not_found: What to do if a place is not found. Default is "raise".
+                Options are:
+                    - "raise": raise an error.
+                    - "ignore": keep the value as None.
+                    - Any other string to set as the value for not found places.
+
+            multiple_candidates: What to do if there are multiple candidates for a
+                place. Default is "raise". Options are:
+                    - "raise": raise an error.
+                    - "first": use the first candidate.
+                    - "ignore": keep the value as a list.
+
+            custom_mapping: A dictionary of custom mappings to use.
 
         Returns:
-            A dictionary mapping the places to the desired format
+            A dictionary mapping the places to the desired format.
         """
 
         # if the places is a list, get a unique list of places
@@ -198,15 +236,44 @@ class PlaceResolver:
         """Convert places to a desired format
 
         Args:
-            places: A place or places to resolve
-            from_type: The source of the places. If None, will try to disambiguate the places
-            to_type: The desired format to convert the places to. Default is "dcid"
-            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a
-            string to use as the value for not found places. "ignore" will keep the value as None
-            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options
-            are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a
-            list
-            custom_mapping: A dictionary of custom mappings to use
+            places: A place or list of places to resolve.
+
+            from_type: The original format of the places. If None, the places will be disambiguated automatically.
+                By default, it is None.
+                Options are:
+                    - "dcid": Data Commons ID.
+                    - "name_official": Official name.
+                    - "name_short": Short name.
+                    - "iso2_code": ISO Alpha 2-letter code.
+                    - "iso3_code": ISO Alpha 3-letter code.
+                    - "iso_numeric_code": ISO Numeric code.
+                    - "dac_code": DAC code.
+                    - "m49_code": M49 code.
+
+            to_type: The desired format to convert the places to. Default is "dcid".
+                Options are:
+                    - Any of the from_type options.
+                    - "income_level": Income level.
+                    - "region": Region.
+                    - "region_code": Region code.
+                    - "subregion": Subregion.
+                    - "subregion_code": Subregion code.
+                    - "intermediate_region": Intermediate region.
+                    - "intermediate_region_code": Intermediate region code.
+
+            not_found: What to do if a place is not found. Default is "raise".
+                Options are:
+                    - "raise": raise an error.
+                    - "ignore": keep the value as None.
+                    - Any other string to set as the value for not found places.
+
+            multiple_candidates: What to do if there are multiple candidates for a
+                place. Default is "raise". Options are:
+                    - "raise": raise an error.
+                    - "first": use the first candidate.
+                    - "ignore": keep the value as a list.
+
+            custom_mapping: A dictionary of custom mappings to use.
 
         Returns:
             Converted places in the desired format

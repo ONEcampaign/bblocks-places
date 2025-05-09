@@ -5,22 +5,33 @@ import pandas as pd
 from bblocks.places.config import logger
 
 
-_VAIID_SOURCES = [
+_VALID_SOURCES = [
     "dcid",
-    "name",
+    "name_official",
+    "name_short",
     "iso2_code",
     "iso3_code",
-    "name_short",
-]  # TODO: Add more sources
-_VALID_TARGETS = _VAIID_SOURCES + ["income_level"]  # TODO: Add more targets
+    "iso_numeric_code",
+    "dac_code",
+    "m49_code",
+]
+_VALID_TARGETS = _VALID_SOURCES + [
+    "income_level",
+    "region",
+    "region_code",
+    "subregion",
+    "subregion_code",
+    "intermediate_region",
+    "intermediate_region_code",
+]
 
 
 def _check_allowed(source: str, target: str):
     """Check that the source and target are in the allowed sources and targets"""
 
-    if source not in _VAIID_SOURCES:
+    if source not in _VALID_SOURCES:
         raise ValueError(
-            f"Invalid source: {source}. Allowed sources are {_VAIID_SOURCES}"
+            f"Invalid source: {source}. Allowed sources are {_VALID_SOURCES}"
         )
     if target not in _VALID_TARGETS:
         raise ValueError(
