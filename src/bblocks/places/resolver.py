@@ -115,11 +115,20 @@ class PlaceResolver:
 
             # map places to desired type
             if to_type != "dcid":
-                candidates = map_candidates(concordance_table=self._concordance_table, candidates=candidates, target=to_type)
+                candidates = map_candidates(
+                    concordance_table=self._concordance_table,
+                    candidates=candidates,
+                    target=to_type,
+                )
 
         # else if the source is provided, then use the concordance table to map
         else:
-            candidates = map_places(concordance_table=self._concordance_table, places=places_to_map, source=from_type, target=to_type)
+            candidates = map_places(
+                concordance_table=self._concordance_table,
+                places=places_to_map,
+                source=from_type,
+                target=to_type,
+            )
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
@@ -187,7 +196,7 @@ class PlaceResolver:
 
         Returns:
             A dictionary mapping the places to the desired format.
-"""
+        """
 
         # if the places is a list, get a unique list of places
         if isinstance(places, list):

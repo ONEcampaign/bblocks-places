@@ -13,17 +13,17 @@ _VALID_SOURCES = [
     "iso3_code",
     "iso_numeric_code",
     "dac_code",
-    "m49_code"
-
+    "m49_code",
 ]
-_VALID_TARGETS = _VALID_SOURCES + ["income_level",
-                                   "region",
-                                   "region_code",
-                                   "subregion",
-                                   "subregion_code",
-                                   "intermediate_region",
-                                   "intermediate_region_code",
-                                   ]
+_VALID_TARGETS = _VALID_SOURCES + [
+    "income_level",
+    "region",
+    "region_code",
+    "subregion",
+    "subregion_code",
+    "intermediate_region",
+    "intermediate_region_code",
+]
 
 
 def _check_allowed(source: str, target: str):
