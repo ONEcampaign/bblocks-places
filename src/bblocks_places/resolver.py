@@ -6,19 +6,7 @@ import pandas as pd
 
 from bblocks_places.disambiguator import disambiguation_pipeline
 from bblocks_places.concordance import map_candidates, map_places
-from bblocks_places.config import logger
-
-
-class PlaceNotFoundError(Exception):
-    """Custom exception when a place is not found or cannot be resolved."""
-
-    pass
-
-
-class MultipleCandidatesError(Exception):
-    """Custom exception there are multiple candidates for a place"""
-
-    pass
+from bblocks_places.config import logger, Paths, PlaceNotFoundError, MultipleCandidatesError
 
 
 def handle_not_founds(
