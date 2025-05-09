@@ -13,7 +13,7 @@ def handle_not_founds(
     candidates: dict[str, str | list | None],
     not_found: Literal["raise", "ignore"] | str,
 ):
-    """ """
+    """Handle not found places"""
 
     for place, cands in candidates.items():
         # if the candidate is None, then raise an error
@@ -142,13 +142,20 @@ class PlaceResolver:
             places: A place or places to resolve
             source: The source of the places. If None, will try to disambiguate the places
             to: The desired format to convert the places to. Default is "dcid"
-            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a string to use as the value for not found places. "ignore" will keep the value as None
-            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a list
+            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a
+            string to use as the value for not found places. "ignore" will keep the value as None
+            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options
+            are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a
+            list
             custom_mapping: A dictionary of custom mappings to use
 
         Returns:
             A dictionary mapping the places to the desired format
         """
+
+        # if the places is a list, get a unique list of places
+        if isinstance(places, list):
+            places = list(set(places))
 
         # if places is a string, convert it to a list
         if isinstance(places, str):
@@ -157,6 +164,11 @@ class PlaceResolver:
         # if places is a pandas series, convert it to a list of unique values
         elif isinstance(places, pd.Series):
             places = list(places.unique())
+
+        else:
+            raise ValueError(
+                f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
+            )
 
         return self._get_mapper(
             places=places,
@@ -182,8 +194,11 @@ class PlaceResolver:
             places: A place or places to resolve
             source: The source of the places. If None, will try to disambiguate the places
             to: The desired format to convert the places to. Default is "dcid"
-            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a string to use as the value for not found places. "ignore" will keep the value as None
-            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a list
+            not_found: What to do if a place is not found. Default is "raise". Options are "raise", "ignore", or a
+            string to use as the value for not found places. "ignore" will keep the value as None
+            multiple_candidates: What to do if there are multiple candidates for a place. Default is "raise". Options
+            are "raise", "first", or "ignore". "first" will use the first candidate, "ignore" will keep the value as a
+            list
             custom_mapping: A dictionary of custom mappings to use
 
         Returns:
