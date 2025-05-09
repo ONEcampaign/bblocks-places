@@ -67,8 +67,9 @@ def custom_disambiguation(entity: str) -> str | None:
         The disambiguated DCID if found in special cases, otherwise None.
     """
 
-    if clean_string(entity) in _EDGE_CASES:
-        return _EDGE_CASES[clean_string(entity)]
+    cleaned_string = clean_string(entity)
+    if cleaned_string in _EDGE_CASES:
+        return _EDGE_CASES[cleaned_string]
     return None
 
 
