@@ -51,7 +51,7 @@ def get_concordance_dict(
 
 
 def map_places(
-    concordance_table: pd.dataFrame, places: list[str], source, target
+    concordance_table: pd.DataFrame, places: list[str], source, target
 ) -> dict[str, str | None]:
     """Map a list of places to their concordance values"""
 
@@ -62,7 +62,7 @@ def map_places(
 
 
 def map_candidates(
-    concordance_table: pd.dataFrame,
+    concordance_table: pd.DataFrame,
     candidates: dict[str, str | list | None],
     target: str,
 ) -> dict[str, str | list | None]:

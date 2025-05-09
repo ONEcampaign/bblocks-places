@@ -88,8 +88,8 @@ class PlaceResolver:
     def _get_mapper(
         self,
         places: list[str],
-        source: Optional[str] = None,
-        to: Optional[str] = "dcid",
+        from_type: Optional[str] = None,
+        to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
@@ -107,19 +107,19 @@ class PlaceResolver:
             places_to_map = places
 
         # if no source is provided, try to disambiguate the places
-        if not source:
+        if not from_type:
             # disambiguate the places
             candidates = disambiguation_pipeline(
                 dc_client=self._dc_client, entities=places_to_map, entity_type="Country"
             )
 
             # map places to desired type
-            if to != "dcid":
-                candidates = map_candidates(candidates=candidates, target=to)
+            if to_type != "dcid":
+                candidates = map_candidates(concordance_table=self._concordance_table, candidates=candidates, target=to_type)
 
         # else if the source is provided, then use the concordance table to map
         else:
-            candidates = map_places(places=places_to_map, source=source, target=to)
+            candidates = map_places(concordance_table=self._concordance_table, places=places_to_map, source=from_type, target=to_type)
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
@@ -179,8 +179,8 @@ class PlaceResolver:
 
         return self._get_mapper(
             places=places,
-            source=from_type,
-            to=to_type,
+            from_type=from_type,
+            to_type=to_type,
             not_found=not_found,
             multiple_candidates=multiple_candidates,
             custom_mapping=custom_mapping,
@@ -214,8 +214,8 @@ class PlaceResolver:
 
         mapper = self.get_mapper(
             places=places,
-            source=from_type,
-            to=to_type,
+            from_type=from_type,
+            to_type=to_type,
             not_found=not_found,
             multiple_candidates=multiple_candidates,
             custom_mapping=custom_mapping,
