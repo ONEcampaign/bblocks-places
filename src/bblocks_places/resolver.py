@@ -88,6 +88,7 @@ class PlaceResolver:
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
+        self._concordance_table = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv")
 
     def _get_mapper(
         self,

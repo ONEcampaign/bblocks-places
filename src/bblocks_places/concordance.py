@@ -5,9 +5,6 @@ import pandas as pd
 from bblocks_places.config import Paths, logger
 
 
-CONCORDANCE_TABLE = pd.read_csv(Paths.project / "bblocks_places" / "concordance.csv")
-
-
 _VAIID_SOURCES = [
     "dcid",
     "name",
@@ -31,7 +28,7 @@ def _check_allowed(source: str, target: str):
         )
 
 
-def get_concordance_dict(source: str, target: str) -> dict[str, str]:
+def get_concordance_dict(concordance_table: pd.DataFrame, source: str, target: str) -> dict[str, str]:
     """Return a dictionary with the source values as keys and the target values as values using the concordance table"""
 
     # Check that the source and target are in the allowed sources and targets
@@ -43,7 +40,7 @@ def get_concordance_dict(source: str, target: str) -> dict[str, str]:
 
     # return a dictionary with the source values as keys and the target values as values using the concordance table
     return (
-        CONCORDANCE_TABLE
+        concordance_table
         # create new columns for the source and target to avoid errors where the source and target are the same
         .assign(source=source, target=target)
         .set_index(source)[target]
@@ -51,19 +48,19 @@ def get_concordance_dict(source: str, target: str) -> dict[str, str]:
     )
 
 
-def map_places(places: list[str], source, target) -> dict[str, str | None]:
+def map_places(concordance_table: pd.dataFrame, places: list[str], source, target) -> dict[str, str | None]:
     """Map a list of places to their concordance values"""
 
-    concordance_dict = get_concordance_dict(source=source, target=target)
+    concordance_dict = get_concordance_dict(concordance_table=concordance_table, source=source, target=target)
     return {place: concordance_dict.get(place, None) for place in places}
 
 
-def map_candidates(
+def map_candidates(concordance_table: pd.dataFrame,
     candidates: dict[str, str | list | None], target: str
 ) -> dict[str, str | list | None]:
     """Map a dictionary of candidates to a desired type"""
 
-    concordance_dict = get_concordance_dict(source="dcid", target=target)
+    concordance_dict = get_concordance_dict(concordance_table=concordance_table, source="dcid", target=target)
 
     for place, cands in candidates.items():
         # if the candidate is a single value or None, map it to the target
