@@ -118,7 +118,7 @@ class PlaceResolver:
                 candidates = map_candidates(
                     concordance_table=self._concordance_table,
                     candidates=candidates,
-                    target=to_type,
+                    to_type=to_type,
                 )
 
         # else if the source is provided, then use the concordance table to map
@@ -126,8 +126,8 @@ class PlaceResolver:
             candidates = map_places(
                 concordance_table=self._concordance_table,
                 places=places_to_map,
-                source=from_type,
-                target=to_type,
+                from_type=from_type,
+                to_type=to_type,
             )
 
         # handle not found

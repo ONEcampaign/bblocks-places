@@ -27,34 +27,34 @@ _VALID_TARGETS = _VALID_SOURCES + [
 ]
 
 
-def _check_allowed(source: str, target: str):
-    """Check that the source and target are in the allowed sources and targets"""
+def _check_allowed(from_type: str, to_type: str):
+    """Check that the from_type and to_type are in the allowed sources and targets"""
 
-    if source not in _VALID_SOURCES:
+    if from_type not in _VALID_SOURCES:
         raise ValueError(
-            f"Invalid source: {source}. Allowed sources are {_VALID_SOURCES}"
+            f"Invalid from_type: {from_type}. Allowed from_type values are {_VALID_SOURCES}"
         )
-    if target not in _VALID_TARGETS:
+    if to_type not in _VALID_TARGETS:
         raise ValueError(
-            f"Invalid target: {target}. Allowed targets are {_VALID_TARGETS}"
+            f"Invalid to_type: {to_type}. Allowed to_type values are {_VALID_TARGETS}"
         )
 
 
 def get_concordance_dict(
-    concordance_table: pd.DataFrame, source: str, target: str
+    concordance_table: pd.DataFrame, from_type: str, to_type: str
 ) -> dict[str, str]:
-    """Return a dictionary with the source values as keys and the target values as values using the concordance table"""
+    """Return a dictionary with the from_type values as keys and the to_type values as values using the concordance table"""
 
-    _check_allowed(source, target)
+    _check_allowed(from_type, to_type)
 
-    if source == target:
-        logger.warning("Source and target are the same. Returning identity mapping.")
+    if from_type == to_type:
+        logger.warning("from_type and to_type are the same. Returning identical mapping.")
         return {
             clean_string(v): v
-            for v in concordance_table[source].dropna().unique()
+            for v in concordance_table[from_type].dropna().unique()
         }
 
-    raw_dict = concordance_table.set_index(source)[target].dropna().to_dict()
+    raw_dict = concordance_table.set_index(from_type)[to_type].dropna().to_dict()
     return {clean_string(k): v for k, v in raw_dict.items()}
 
 
@@ -71,20 +71,20 @@ def _map_single_or_list(val, concordance_dict):
         return concordance_dict.get(clean_string(val), None)
 
 
-def map_places(concordance_table: pd.DataFrame, places: list[str], source, target) -> dict[str, str | None]:
+def map_places(concordance_table: pd.DataFrame, places: list[str], from_type, to_type) -> dict[str, str | None]:
     """Map a list of places to a desired type using the concordance table"""
 
-    concordance_dict = get_concordance_dict(concordance_table, source, target)
+    concordance_dict = get_concordance_dict(concordance_table, from_type, to_type)
     return {
         place: _map_single_or_list(place, concordance_dict)
         for place in places
     }
 
 
-def map_candidates(concordance_table: pd.DataFrame, candidates: dict[str, str | list | None], target: str) -> dict[str, str | list | None]:
-    """Map a dictionary of candidates to a desired type using the concordance table"""
+def map_candidates(concordance_table: pd.DataFrame, candidates: dict[str, str | list | None], to_type: str) -> dict[str, str | list | None]:
+    """Map a dictionary of candidates as dcids to a desired type using the concordance table"""
 
-    concordance_dict = get_concordance_dict(concordance_table, "dcid", target)
+    concordance_dict = get_concordance_dict(concordance_table, "dcid", to_type)
     return {
         place: _map_single_or_list(cands, concordance_dict)
         for place, cands in candidates.items()
