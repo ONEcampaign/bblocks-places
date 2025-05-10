@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "bblocks_places", from = "src"}]
+packages = [{include = "bblocks/places", from = "src"}]
 
 
 [tool.poetry.group.dev.dependencies]
