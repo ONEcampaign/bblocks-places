@@ -71,6 +71,9 @@ def handle_multiple_candidates(
 class PlaceResolver:
     """A class to resolve places to different formats"""
 
+    # Shared class-level concordance table (loaded once).
+    _concordance_table: pd.DataFrame = pd.read_csv(Paths.project / "places" / "concordance.csv")
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -81,9 +84,8 @@ class PlaceResolver:
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
-        self._concordance_table = pd.read_csv(
-            Paths.project / "places" / "concordance.csv"
-        )
+
+        self._concordance_table = PlaceResolver._concordance_table
 
     def _get_mapper(
         self,
