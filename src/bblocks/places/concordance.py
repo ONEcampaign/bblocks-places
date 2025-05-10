@@ -50,15 +50,9 @@ def get_concordance_dict(
     # check if the source and target are the same
     if source == target:
         logger.warn(f"Source and target are the same")
+        return {v: v for v in concordance_table[source].dropna().unique()}
 
-    # return a dictionary with the source values as keys and the target values as values using the concordance table
-    return (
-        concordance_table
-        # create new columns for the source and target to avoid errors where the source and target are the same
-        .assign(source=source, target=target)
-        .set_index(source)[target]
-        .to_dict()
-    )
+    return concordance_table.set_index(source)[target].to_dict()
 
 
 def map_places(
