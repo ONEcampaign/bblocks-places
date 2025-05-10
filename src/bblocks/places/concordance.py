@@ -3,6 +3,7 @@
 import pandas as pd
 
 from bblocks.places.config import logger
+from bblocks.places.utils import clean_string
 
 
 _VALID_SOURCES = [
@@ -44,58 +45,47 @@ def get_concordance_dict(
 ) -> dict[str, str]:
     """Return a dictionary with the source values as keys and the target values as values using the concordance table"""
 
-    # Check that the source and target are in the allowed sources and targets
     _check_allowed(source, target)
 
-    # check if the source and target are the same
     if source == target:
-        logger.warn(f"Source and target are the same")
-        return {v: v for v in concordance_table[source].dropna().unique()}
+        logger.warning("Source and target are the same. Returning identity mapping.")
+        return {
+            clean_string(v): v
+            for v in concordance_table[source].dropna().unique()
+        }
 
-    return concordance_table.set_index(source)[target].to_dict()
-
-
-def map_places(
-    concordance_table: pd.DataFrame, places: list[str], source, target
-) -> dict[str, str | None]:
-    """Map a list of places to their concordance values"""
-
-    concordance_dict = get_concordance_dict(
-        concordance_table=concordance_table, source=source, target=target
-    )
-    return {place: concordance_dict.get(place, None) for place in places}
+    raw_dict = concordance_table.set_index(source)[target].dropna().to_dict()
+    return {clean_string(k): v for k, v in raw_dict.items()}
 
 
-def map_candidates(
-    concordance_table: pd.DataFrame,
-    candidates: dict[str, str | list | None],
-    target: str,
-) -> dict[str, str | list | None]:
-    """Map a dictionary of candidates to a desired type"""
+def _map_single_or_list(val, concordance_dict):
+    """Helper function to map a single value or a list of values to their concordance values"""
 
-    concordance_dict = get_concordance_dict(
-        concordance_table=concordance_table, source="dcid", target=target
-    )
+    if isinstance(val, list):
+        mapped = [concordance_dict.get(clean_string(v), None) for v in val]
+        mapped = [m for m in mapped if m is not None]
+        if not mapped:
+            return None
+        return mapped[0] if len(mapped) == 1 else mapped
+    else:
+        return concordance_dict.get(clean_string(val), None)
 
-    for place, cands in candidates.items():
-        # if the candidate is a single value or None, map it to the target
-        if not isinstance(cands, list):
-            resolved_place = concordance_dict.get(cands, None)
 
-        # if the candidate is a list, map each value to the target
-        else:
-            resolved_place = [concordance_dict.get(c, None) for c in cands]
-            # remove any Nones from the list
-            resolved_place = [r for r in resolved_place if r is not None]
+def map_places(concordance_table: pd.DataFrame, places: list[str], source, target) -> dict[str, str | None]:
+    """Map a list of places to a desired type using the concordance table"""
 
-            # if the list is empty, set it to None
-            if not resolved_place:
-                resolved_place = None
+    concordance_dict = get_concordance_dict(concordance_table, source, target)
+    return {
+        place: _map_single_or_list(place, concordance_dict)
+        for place in places
+    }
 
-            elif len(resolved_place) == 1:
-                # if there is only one value, set it to the value
-                resolved_place = resolved_place[0]
 
-        candidates[place] = resolved_place
+def map_candidates(concordance_table: pd.DataFrame, candidates: dict[str, str | list | None], target: str) -> dict[str, str | list | None]:
+    """Map a dictionary of candidates to a desired type using the concordance table"""
 
-    return candidates
+    concordance_dict = get_concordance_dict(concordance_table, "dcid", target)
+    return {
+        place: _map_single_or_list(cands, concordance_dict)
+        for place, cands in candidates.items()
+    }
