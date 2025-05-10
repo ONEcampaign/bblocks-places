@@ -294,3 +294,9 @@ class PlaceResolver:
 
         else:
             return [mapper.get(p) for p in places]
+
+
+    @property
+    def concordance_table(self) -> pd.DataFrame:
+        """Get the concordance table"""
+        return self._concordance_table
