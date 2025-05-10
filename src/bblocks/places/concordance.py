@@ -75,10 +75,12 @@ def map_places(concordance_table: pd.DataFrame, places: list[str], from_type, to
     """Map a list of places to a desired type using the concordance table"""
 
     concordance_dict = get_concordance_dict(concordance_table, from_type, to_type)
-    return {
-        place: _map_single_or_list(place, concordance_dict)
-        for place in places
-    }
+
+    mapped_series = pd.Series(places, index=places).map(
+        lambda x: _map_single_or_list(x, concordance_dict)
+    )
+
+    return mapped_series.to_dict()
 
 
 def map_candidates(concordance_table: pd.DataFrame, candidates: dict[str, str | list | None], to_type: str) -> dict[str, str | list | None]:

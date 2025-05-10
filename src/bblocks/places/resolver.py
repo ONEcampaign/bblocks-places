@@ -198,22 +198,17 @@ class PlaceResolver:
             A dictionary mapping the places to the desired format.
         """
 
-        # if the places is a list, get a unique list of places
-        if isinstance(places, list):
-            places = list(set(places))
-
-        # if places is a string, convert it to a list
         if isinstance(places, str):
             places = [places]
 
-        # if places is a pandas series, convert it to a list of unique values
+        elif isinstance(places, list):
+            places = list(set(places))  # deduplicate
+
         elif isinstance(places, pd.Series):
             places = list(places.unique())
 
         else:
-            raise ValueError(
-                f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
-            )
+            raise ValueError(f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]")
 
         return self._get_mapper(
             places=places,
