@@ -18,6 +18,7 @@ from bblocks.places import utils
         ("", ""),  # Empty string
         ("    ", ""),  # Only spaces
         ("12345", "12345"),  # Numbers should stay
+        (None, None),  # None input should return None
     ],
 )
 def test_simple_clean_string(input_str, expected):
