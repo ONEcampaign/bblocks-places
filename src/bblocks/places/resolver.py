@@ -71,6 +71,11 @@ def handle_multiple_candidates(
 class PlaceResolver:
     """A class to resolve places to different formats"""
 
+    # Shared class-level concordance table (loaded once).
+    _concordance_table: pd.DataFrame = pd.read_csv(
+        Paths.project / "places" / "concordance.csv"
+    )
+
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -81,9 +86,8 @@ class PlaceResolver:
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
-        self._concordance_table = pd.read_csv(
-            Paths.project / "places" / "concordance.csv"
-        )
+
+        self._concordance_table = PlaceResolver._concordance_table
 
     def _get_mapper(
         self,
@@ -118,7 +122,7 @@ class PlaceResolver:
                 candidates = map_candidates(
                     concordance_table=self._concordance_table,
                     candidates=candidates,
-                    target=to_type,
+                    to_type=to_type,
                 )
 
         # else if the source is provided, then use the concordance table to map
@@ -126,8 +130,8 @@ class PlaceResolver:
             candidates = map_places(
                 concordance_table=self._concordance_table,
                 places=places_to_map,
-                source=from_type,
-                target=to_type,
+                from_type=from_type,
+                to_type=to_type,
             )
 
         # handle not found
@@ -198,15 +202,12 @@ class PlaceResolver:
             A dictionary mapping the places to the desired format.
         """
 
-        # if the places is a list, get a unique list of places
-        if isinstance(places, list):
-            places = list(set(places))
-
-        # if places is a string, convert it to a list
         if isinstance(places, str):
             places = [places]
 
-        # if places is a pandas series, convert it to a list of unique values
+        elif isinstance(places, list):
+            places = list(set(places))  # deduplicate
+
         elif isinstance(places, pd.Series):
             places = list(places.unique())
 
@@ -297,3 +298,8 @@ class PlaceResolver:
 
         else:
             return [mapper.get(p) for p in places]
+
+    @property
+    def concordance_table(self) -> pd.DataFrame:
+        """Get the concordance table"""
+        return self._concordance_table

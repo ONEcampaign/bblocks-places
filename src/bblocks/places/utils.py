@@ -4,7 +4,7 @@ import unicodedata
 import string
 
 
-def clean_string(s: str) -> str:
+def clean_string(s: str | None) -> str | None:
     """Cleans a string by:
     - Lowercasing
     - Removing all whitespace
@@ -16,6 +16,9 @@ def clean_string(s: str) -> str:
     Returns:
        Cleaned string.
     """
+
+    if s is None:
+        return None
 
     s = unicodedata.normalize("NFKD", s.lower())
     s = "".join(
