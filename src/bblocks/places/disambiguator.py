@@ -14,23 +14,17 @@ _EDGE_CASES = {
     "alandislands": "nuts/FI2",
     "aland": "nuts/FI2",
     "pitcairn": "country/PCN",
-
-    #Svalbard and Jan Mayen Islands
+    # Svalbard and Jan Mayen Islands
     "svalbardandjanmayenislands": "country/SJM",
     "svalbardjanmayenislands": "country/SJM",
     "svalbardandjanmayenis": "country/SJM",
     "svalbardjanmayenis": "country/SJM",
-
     "palestine": "country/PSE",
     "saintmartin": "country/MAF",
-
     # South Georgia and the South Sandwich Islands
     "southgeorgiaandsouthsandwichis": "country/SGS",
     "southgeorgiasouthsandwichis": "country/SGS",
-
-
     "sthelena": "country/SHN",
-
 }
 
 

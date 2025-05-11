@@ -72,7 +72,9 @@ class PlaceResolver:
     """A class to resolve places to different formats"""
 
     # Shared class-level concordance table (loaded once).
-    _concordance_table: pd.DataFrame = pd.read_csv(Paths.project / "places" / "concordance.csv")
+    _concordance_table: pd.DataFrame = pd.read_csv(
+        Paths.project / "places" / "concordance.csv"
+    )
 
     def __init__(
         self,
@@ -210,7 +212,9 @@ class PlaceResolver:
             places = list(places.unique())
 
         else:
-            raise ValueError(f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]")
+            raise ValueError(
+                f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
+            )
 
         return self._get_mapper(
             places=places,
@@ -294,7 +298,6 @@ class PlaceResolver:
 
         else:
             return [mapper.get(p) for p in places]
-
 
     @property
     def concordance_table(self) -> pd.DataFrame:

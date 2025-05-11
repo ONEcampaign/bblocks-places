@@ -48,10 +48,11 @@ def get_concordance_dict(
     _check_allowed(from_type, to_type)
 
     if from_type == to_type:
-        logger.warning("from_type and to_type are the same. Returning identical mapping.")
+        logger.warning(
+            "from_type and to_type are the same. Returning identical mapping."
+        )
         return {
-            clean_string(v): v
-            for v in concordance_table[from_type].dropna().unique()
+            clean_string(v): v for v in concordance_table[from_type].dropna().unique()
         }
 
     raw_dict = concordance_table.set_index(from_type)[to_type].dropna().to_dict()
@@ -71,7 +72,9 @@ def _map_single_or_list(val, concordance_dict):
         return concordance_dict.get(clean_string(val), None)
 
 
-def map_places(concordance_table: pd.DataFrame, places: list[str], from_type, to_type) -> dict[str, str | None]:
+def map_places(
+    concordance_table: pd.DataFrame, places: list[str], from_type, to_type
+) -> dict[str, str | None]:
     """Map a list of places to a desired type using the concordance table"""
 
     concordance_dict = get_concordance_dict(concordance_table, from_type, to_type)
@@ -83,7 +86,11 @@ def map_places(concordance_table: pd.DataFrame, places: list[str], from_type, to
     return mapped_series.to_dict()
 
 
-def map_candidates(concordance_table: pd.DataFrame, candidates: dict[str, str | list | None], to_type: str) -> dict[str, str | list | None]:
+def map_candidates(
+    concordance_table: pd.DataFrame,
+    candidates: dict[str, str | list | None],
+    to_type: str,
+) -> dict[str, str | list | None]:
     """Map a dictionary of candidates as dcids to a desired type using the concordance table"""
 
     concordance_dict = get_concordance_dict(concordance_table, "dcid", to_type)
