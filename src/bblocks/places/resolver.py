@@ -315,7 +315,17 @@ class PlaceResolver:
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
     ) -> "PlaceResolver":
-        """Create a PlaceResolver instance from a CSV file"""
+        """Create a PlaceResolver instance using a CSV file for the concordance table.
+
+        Args:
+            csv_path: Path to the CSV file containing the concordance table.
+            api_key: Optional API key for Data Commons.
+            dc_instance: Optional Data Commons instance.
+            url: Optional URL for Data Commons.
+
+        Returns:
+            PlaceResolver: An instance of PlaceResolver with the specified concordance table.
+        """
         concordance_table = pd.read_csv(csv_path)
 
         return cls(
