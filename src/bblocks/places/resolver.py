@@ -112,9 +112,9 @@ class PlaceResolver:
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
         concordance_table: Optional[pd.DataFrame] = None,
-            *,
-            dc_entity_type: Optional[str] = None,
-            custom_disambiguation: Optional[dict] = None,
+        *,
+        dc_entity_type: Optional[str] = None,
+        custom_disambiguation: Optional[dict] = None,
     ):
 
         self._dc_client = DataCommonsClient(
@@ -158,7 +158,10 @@ class PlaceResolver:
         if not from_type:
             # disambiguate the places
             candidates = disambiguation_pipeline(
-                dc_client=self._dc_client, entities=places_to_map, entity_type=self._dc_entity_type, disambiguation_dict=self._custom_disambiguation
+                dc_client=self._dc_client,
+                entities=places_to_map,
+                entity_type=self._dc_entity_type,
+                disambiguation_dict=self._custom_disambiguation,
             )
 
             # map places to desired type
@@ -491,7 +494,7 @@ class PlaceResolver:
         return {k: v for k, v in d.items() if pd.notna(v)}
 
     def add_custom_disambiguation(self, custom_disambiguation: dict) -> None:
-        """ Add custom disambiguation rules to the resolver.
+        """Add custom disambiguation rules to the resolver.
 
         Args:
             custom_disambiguation: A dictionary of custom disambiguation rules.
