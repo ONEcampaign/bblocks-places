@@ -1,4 +1,5 @@
 """Resolver"""
+
 from os import PathLike
 
 from datacommons_client import DataCommonsClient
@@ -6,7 +7,11 @@ from typing import Optional, Literal
 import pandas as pd
 
 from bblocks.places.disambiguator import disambiguation_pipeline
-from bblocks.places.concordance import map_candidates, map_places, validate_concordance_table
+from bblocks.places.concordance import (
+    map_candidates,
+    map_places,
+    validate_concordance_table,
+)
 from bblocks.places.config import (
     logger,
     Paths,
@@ -82,15 +87,21 @@ class PlaceResolver:
         api_key: Optional[str] = None,
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
-            concordance_table: Optional[pd.DataFrame] = None,
+        concordance_table: Optional[pd.DataFrame] = None,
     ):
 
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
 
-        self._concordance_table = concordance_table if concordance_table is not None else self._concordance_table
-        validate_concordance_table(self._concordance_table) # validate the concordance table
+        self._concordance_table = (
+            concordance_table
+            if concordance_table is not None
+            else self._concordance_table
+        )
+        validate_concordance_table(
+            self._concordance_table
+        )  # validate the concordance table
 
     def _get_mapper(
         self,
@@ -329,12 +340,22 @@ class PlaceResolver:
         concordance_table = pd.read_csv(csv_path)
 
         return cls(
-            api_key=api_key, dc_instance=dc_instance, url=url, concordance_table=concordance_table
+            api_key=api_key,
+            dc_instance=dc_instance,
+            url=url,
+            concordance_table=concordance_table,
         )
 
-    def filter(self, places: list[str] | pd.Series, filter_type: str, filter_values: str | list[str], from_type: Optional[str] = None,
-               not_found: Literal["raise", "ignore"] = "raise", multiple_candidates: Literal["raise", "first", "ignore"] = "raise"):
-        """Filters places
+    def filter(
+        self,
+        places: list[str] | pd.Series,
+        filter_type: str,
+        filter_values: str | list[str],
+        from_type: Optional[str] = None,
+        not_found: Literal["raise", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+    ):
+        """Filters places based on a filter type and filter values.
 
         Args:
             places: places to filter
@@ -353,7 +374,7 @@ class PlaceResolver:
                     - "ignore": keep the value as a list.
 
         Returns:
-            A list of filtered places in the original format
+            The filtered places
         """
 
         # ensure filter_type is a valid column in the concordance table
@@ -367,7 +388,10 @@ class PlaceResolver:
             filter_values = [filter_values]
 
         # check that all filter values are in the concordance table column
-        if not all(val in self._concordance_table[filter_type].unique() for val in filter_values):
+        if not all(
+            val in self._concordance_table[filter_type].unique()
+            for val in filter_values
+        ):
             raise ValueError(
                 f"Invalid filter values: {filter_values}. Must be a valid value in the {filter_type} column of the concordance table."
             )
@@ -392,12 +416,15 @@ class PlaceResolver:
         )
 
         # filter the places based on the filter values
-        filtered_places = [place for place, converted_place in mapper.items() if converted_place in filter_values]
+        filtered_places = [
+            place
+            for place, converted_place in mapper.items()
+            if converted_place in filter_values
+        ]
 
         # return the filtered in the original format
         if isinstance(places, list):
             return [place for place in places if place in filtered_places]
         return pd.Series(
-                [place for place in places if place in filtered_places], index=places.index
-            )
-
+            [place for place in places if place in filtered_places], index=places.index
+        )
