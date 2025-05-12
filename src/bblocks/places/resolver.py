@@ -112,7 +112,9 @@ class PlaceResolver:
         api_key: Optional[str] = None,
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
-        concordance_table: Optional[pd.DataFrame | None | Literal["default"]] = "default",
+        concordance_table: Optional[
+            pd.DataFrame | None | Literal["default"]
+        ] = "default",
         *,
         dc_entity_type: Optional[str] = None,
         custom_disambiguation: Optional[dict] = None,
@@ -126,7 +128,6 @@ class PlaceResolver:
             self._concordance_table = self._concordance_table
         else:
             self._concordance_table = concordance_table
-
 
         if self._concordance_table is not None:
             validate_concordance_table(
@@ -172,7 +173,10 @@ class PlaceResolver:
                 # if the to_type is not dcid, then we need to map the candidates
 
                 # if the to_type is in the concordance table, then map the candidates
-                if self._concordance_table is not None and to_type in self._concordance_table.columns:
+                if (
+                    self._concordance_table is not None
+                    and to_type in self._concordance_table.columns
+                ):
                     candidates = map_candidates(
                         concordance_table=self._concordance_table,
                         candidates=candidates,
@@ -183,7 +187,11 @@ class PlaceResolver:
                 else:
                     logger.info(f"Mapping to {to_type} using Data Commons API")
 
-                    dcids = [v for val in candidates.values() for v in (val if isinstance(val, list) else [val])]
+                    dcids = [
+                        v
+                        for val in candidates.values()
+                        for v in (val if isinstance(val, list) else [val])
+                    ]
                     dc_props = fetch_properties(self._dc_client, dcids, to_type)
 
                     for place, val in candidates.items():
@@ -192,13 +200,18 @@ class PlaceResolver:
                         elif isinstance(val, list):
                             mapped = [dc_props.get(v) for v in val if v in dc_props]
                             mapped = [m for m in mapped if m is not None]
-                            candidates[place] = mapped[0] if len(mapped) == 1 else (mapped or None)
+                            candidates[place] = (
+                                mapped[0] if len(mapped) == 1 else (mapped or None)
+                            )
                         else:
                             candidates[place] = None
 
         # else if the source is provided, then use the concordance table to map
         else:
-            if self._concordance_table is not None and to_type in self._concordance_table.columns:
+            if (
+                self._concordance_table is not None
+                and to_type in self._concordance_table.columns
+            ):
                 candidates = map_places(
                     concordance_table=self._concordance_table,
                     places=places_to_map,
@@ -219,7 +232,11 @@ class PlaceResolver:
                 else:
                     candidates = {place: place for place in places_to_map}
 
-                dcids = [v for val in candidates.values() for v in (val if isinstance(val, list) else [val])]
+                dcids = [
+                    v
+                    for val in candidates.values()
+                    for v in (val if isinstance(val, list) else [val])
+                ]
                 dc_props = fetch_properties(self._dc_client, dcids, to_type)
 
                 for place, val in candidates.items():
@@ -228,10 +245,11 @@ class PlaceResolver:
                     elif isinstance(val, list):
                         mapped = [dc_props.get(v) for v in val if v in dc_props]
                         mapped = [m for m in mapped if m is not None]
-                        candidates[place] = mapped[0] if len(mapped) == 1 else (mapped or None)
+                        candidates[place] = (
+                            mapped[0] if len(mapped) == 1 else (mapped or None)
+                        )
                     else:
                         candidates[place] = None
-
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)

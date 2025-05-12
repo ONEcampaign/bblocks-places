@@ -111,7 +111,9 @@ def map_candidates(
     }
 
 
-def fetch_properties(dc_client: DataCommonsClient, dcids: list[str], dc_property: str) -> dict[str, str | list[str] | None]:
+def fetch_properties(
+    dc_client: DataCommonsClient, dcids: list[str], dc_property: str
+) -> dict[str, str | list[str] | None]:
     """Fetch a property for a list of DCIDs using the Data Commons node endpoint.
 
     Args:
@@ -123,15 +125,14 @@ def fetch_properties(dc_client: DataCommonsClient, dcids: list[str], dc_property
         A dictionary mapping each DCID to its property value(s).
     """
 
-    node_response = dc_client.node.fetch_property_values(dcids, dc_property).get_properties()
+    node_response = dc_client.node.fetch_property_values(
+        dcids, dc_property
+    ).get_properties()
     property_map = {}
 
     for dcid, nodes in node_response.items():
         if isinstance(nodes, list):
-            values = [
-                item.value or item.name or None
-                for item in nodes
-            ]
+            values = [item.value or item.name or None for item in nodes]
             # Simplify if only one non-null value
             values = [v for v in values if v is not None]
             property_map[dcid] = values[0] if len(values) == 1 else (values or None)
