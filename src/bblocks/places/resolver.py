@@ -103,7 +103,7 @@ class PlaceResolver:
             self._concordance_table
         )  # validate the concordance table
 
-    def _get_mapper(
+    def _map(
         self,
         places: list[str],
         from_type: Optional[str] = None,
@@ -161,7 +161,7 @@ class PlaceResolver:
 
         return candidates
 
-    def get_mapper(
+    def map(
         self,
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
@@ -169,7 +169,7 @@ class PlaceResolver:
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
-    ) -> dict[str, str]:
+    ) -> dict[str, str | list[str] | None]:
         """Get a mapper of places to a desired format.
 
         Args:
@@ -230,7 +230,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        return self._get_mapper(
+        return self._map(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -294,7 +294,7 @@ class PlaceResolver:
             Converted places in the desired format
         """
 
-        mapper = self.get_mapper(
+        mapper = self.map(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -407,7 +407,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        mapper = self.get_mapper(
+        mapper = self.map(
             places=places_to_filter,
             from_type=from_type,
             to_type=filter_type,
