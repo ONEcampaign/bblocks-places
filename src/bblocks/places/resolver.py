@@ -181,7 +181,7 @@ class PlaceResolver:
 
                 # if the to_type is not in the concordance table, then we use Node API
                 else:
-                    logger.info(f"Mapping to {to_type} using Node API")
+                    logger.info(f"Mapping to {to_type} using Data Commons API")
 
                     dcids = [v for val in candidates.values() for v in (val if isinstance(val, list) else [val])]
                     dc_props = fetch_properties(self._dc_client, dcids, to_type)
@@ -206,7 +206,7 @@ class PlaceResolver:
                     to_type=to_type,
                 )
             else:
-                logger.info(f"Mapping to {to_type} using Node API")
+                logger.info(f"Mapping to {to_type} using Data Commons API")
 
                 # map the places to their dcids
                 if from_type != "dcid":

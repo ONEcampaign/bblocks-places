@@ -4,6 +4,7 @@ from datacommons_client import DataCommonsClient
 from typing import Optional
 
 from bblocks.places.utils import clean_string, split_list
+from bblocks.places.config import logger
 
 
 _EDGE_CASES = {
@@ -45,6 +46,8 @@ def fetch_dcids_by_name(
     Returns:
         A dictionary mapping entity names to their corresponding DCIDs. If an entity name is not found, it will be mapped to None.
     """
+
+    logger.info(f"Disambiguating places using Data Commons API")
 
     if not chunk_size:
         dcids = dc_client.resolve.fetch_dcids_by_name(
