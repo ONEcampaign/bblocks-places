@@ -63,8 +63,6 @@ def get_concordance_dict(
 ) -> dict[str, str]:
     """Return a dictionary with the from_type values as keys and the to_type values as values using the concordance table"""
 
-    _check_allowed(from_type, to_type)
-
     if from_type == to_type:
         logger.warning(
             "from_type and to_type are the same. Returning identical mapping."
