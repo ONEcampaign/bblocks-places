@@ -1,7 +1,6 @@
 """Resolver"""
 
 from os import PathLike
-
 from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
 import pandas as pd
@@ -490,3 +489,16 @@ class PlaceResolver:
 
         # remove nan values
         return {k: v for k, v in d.items() if pd.notna(v)}
+
+    def add_custom_disambiguation(self, custom_disambiguation: dict) -> None:
+        """ Add custom disambiguation rules to the resolver.
+
+        Args:
+            custom_disambiguation: A dictionary of custom disambiguation rules.
+                The keys are the place names and the values are the corresponding DCIDs.
+        """
+
+        if self._custom_disambiguation is None:
+            self._custom_disambiguation = custom_disambiguation
+        else:
+            self._custom_disambiguation.update(custom_disambiguation)
