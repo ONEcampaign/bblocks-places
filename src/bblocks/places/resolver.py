@@ -74,12 +74,37 @@ def handle_multiple_candidates(
     return candidates
 
 
+CONCORDANCE_DTYPES = {
+    "dcid": "string",
+    "name_official": "string",
+    "name_short": "string",
+    "iso2_code": "string",
+    "iso3_code": "string",
+    "iso_numeric_code": "Int64",  # Nullable integer
+    "m49_code": "Int64",
+    "region_code": "Int64",
+    "region": "string",
+    "subregion_code": "Int64",
+    "subregion": "string",
+    "intermediate_region_code": "Int64",
+    "intermediate_region": "string",
+    "ldc": "boolean",
+    "lldc": "boolean",
+    "sids": "boolean",
+    "un_member": "boolean",
+    "un_observer": "boolean",
+    "un_former_member": "boolean",
+    "dac_code": "Int64",
+    "income_level": "string",
+}
+
+
 class PlaceResolver:
     """A class to resolve places to different formats"""
 
     # Shared class-level concordance table (loaded once).
     _concordance_table: pd.DataFrame = pd.read_csv(
-        Paths.project / "places" / "concordance.csv"
+        Paths.project / "places" / "concordance.csv", dtype=CONCORDANCE_DTYPES
     )
 
     def __init__(
