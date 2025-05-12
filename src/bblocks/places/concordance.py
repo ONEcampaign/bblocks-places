@@ -1,43 +1,44 @@
 """Concordance"""
 
 import pandas as pd
+from datacommons_client import DataCommonsClient
 
 from bblocks.places.config import logger
 from bblocks.places.utils import clean_string
 
+#
+# _VALID_SOURCES = [
+#     "dcid",
+#     "name_official",
+#     "name_short",
+#     "iso2_code",
+#     "iso3_code",
+#     "iso_numeric_code",
+#     "dac_code",
+#     "m49_code",
+# ]
+# _VALID_TARGETS = _VALID_SOURCES + [
+#     "income_level",
+#     "region",
+#     "region_code",
+#     "subregion",
+#     "subregion_code",
+#     "intermediate_region",
+#     "intermediate_region_code",
+# ]
 
-_VALID_SOURCES = [
-    "dcid",
-    "name_official",
-    "name_short",
-    "iso2_code",
-    "iso3_code",
-    "iso_numeric_code",
-    "dac_code",
-    "m49_code",
-]
-_VALID_TARGETS = _VALID_SOURCES + [
-    "income_level",
-    "region",
-    "region_code",
-    "subregion",
-    "subregion_code",
-    "intermediate_region",
-    "intermediate_region_code",
-]
 
-
-def _check_allowed(from_type: str, to_type: str):
-    """Check that the from_type and to_type are in the allowed sources and targets"""
-
-    if from_type not in _VALID_SOURCES:
-        raise ValueError(
-            f"Invalid from_type: {from_type}. Allowed from_type values are {_VALID_SOURCES}"
-        )
-    if to_type not in _VALID_TARGETS:
-        raise ValueError(
-            f"Invalid to_type: {to_type}. Allowed to_type values are {_VALID_TARGETS}"
-        )
+# def _check_allowed(from_type: str, to_type: str):
+#     """Check that the from_type and to_type are in the allowed sources and targets"""
+#
+#     if from_type not in _VALID_SOURCES:
+#         raise ValueError(
+#             f"Invalid from_type: {from_type}. Allowed from_type values are {_VALID_SOURCES}"
+#         )
+#     if to_type not in _VALID_TARGETS:
+#         raise ValueError(
+#             f"Invalid to_type: {to_type}. Allowed to_type values are {_VALID_TARGETS}"
+#         )
 
 
 def validate_concordance_table(concordance_table: pd.DataFrame) -> None:
@@ -108,3 +109,34 @@ def map_candidates(
         place: _map_single_or_list(cands, concordance_dict)
         for place, cands in candidates.items()
     }
+
+
+def fetch_properties(
+    dc_client: DataCommonsClient, dcids: list[str], dc_property: str
+) -> dict[str, str | list[str] | None]:
+    """Fetch a property for a list of DCIDs using the Data Commons node endpoint.
+
+    Args:
+        dc_client: An instance of DataCommonsClient.
+        dcids: A list of DCIDs to fetch properties for.
+        dc_property: The property name to fetch.
+
+    Returns:
+        A dictionary mapping each DCID to its property value(s).
+    """
+
+    node_response = dc_client.node.fetch_property_values(
+        dcids, dc_property
+    ).get_properties()
+    property_map = {}
+
+    for dcid, nodes in node_response.items():
+        if isinstance(nodes, list):
+            values = [item.value or item.name or None for item in nodes]
+            # Simplify if only one non-null value
+            values = [v for v in values if v is not None]
+            property_map[dcid] = values[0] if len(values) == 1 else (values or None)
+        else:
+            property_map[dcid] = nodes.value or nodes.name or None
+
+    return property_map
