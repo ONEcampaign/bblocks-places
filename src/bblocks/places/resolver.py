@@ -112,7 +112,7 @@ class PlaceResolver:
         api_key: Optional[str] = None,
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
-        concordance_table: Optional[pd.DataFrame] = None,
+        concordance_table: Optional[pd.DataFrame | None | Literal["default"]] = "default",
         *,
         dc_entity_type: Optional[str] = None,
         custom_disambiguation: Optional[dict] = None,
@@ -122,14 +122,16 @@ class PlaceResolver:
             api_key=api_key, url=url, dc_instance=dc_instance
         )
 
-        self._concordance_table = (
-            concordance_table
-            if concordance_table is not None
-            else self._concordance_table
-        )
-        validate_concordance_table(
-            self._concordance_table
-        )  # validate the concordance table
+        if concordance_table == "default":
+            self._concordance_table = self._concordance_table
+        else:
+            self._concordance_table = concordance_table
+
+
+        if self._concordance_table is not None:
+            validate_concordance_table(
+                self._concordance_table
+            )  # validate the concordance table
 
         self._dc_entity_type = dc_entity_type
         self._custom_disambiguation = custom_disambiguation
@@ -170,7 +172,7 @@ class PlaceResolver:
                 # if the to_type is not dcid, then we need to map the candidates
 
                 # if the to_type is in the concordance table, then map the candidates
-                if to_type in self._concordance_table.columns:
+                if self._concordance_table is not None and to_type in self._concordance_table.columns:
                     candidates = map_candidates(
                         concordance_table=self._concordance_table,
                         candidates=candidates,
@@ -196,7 +198,7 @@ class PlaceResolver:
 
         # else if the source is provided, then use the concordance table to map
         else:
-            if to_type in self._concordance_table.columns:
+            if self._concordance_table is not None and to_type in self._concordance_table.columns:
                 candidates = map_places(
                     concordance_table=self._concordance_table,
                     places=places_to_map,
