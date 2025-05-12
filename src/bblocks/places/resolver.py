@@ -10,6 +10,7 @@ from bblocks.places.concordance import (
     map_candidates,
     map_places,
     validate_concordance_table,
+    fetch_properties,
 )
 from bblocks.places.config import (
     logger,
@@ -166,20 +167,69 @@ class PlaceResolver:
 
             # map places to desired type
             if to_type != "dcid":
-                candidates = map_candidates(
-                    concordance_table=self._concordance_table,
-                    candidates=candidates,
-                    to_type=to_type,
-                )
+                # if the to_type is not dcid, then we need to map the candidates
+
+                # if the to_type is in the concordance table, then map the candidates
+                if to_type in self._concordance_table.columns:
+                    candidates = map_candidates(
+                        concordance_table=self._concordance_table,
+                        candidates=candidates,
+                        to_type=to_type,
+                    )
+
+                # if the to_type is not in the concordance table, then we use Node API
+                else:
+                    logger.info(f"Mapping to {to_type} using Node API")
+
+                    dcids = [v for val in candidates.values() for v in (val if isinstance(val, list) else [val])]
+                    dc_props = fetch_properties(self._dc_client, dcids, to_type)
+
+                    for place, val in candidates.items():
+                        if isinstance(val, str):
+                            candidates[place] = dc_props.get(val)
+                        elif isinstance(val, list):
+                            mapped = [dc_props.get(v) for v in val if v in dc_props]
+                            mapped = [m for m in mapped if m is not None]
+                            candidates[place] = mapped[0] if len(mapped) == 1 else (mapped or None)
+                        else:
+                            candidates[place] = None
 
         # else if the source is provided, then use the concordance table to map
         else:
-            candidates = map_places(
-                concordance_table=self._concordance_table,
-                places=places_to_map,
-                from_type=from_type,
-                to_type=to_type,
-            )
+            if to_type in self._concordance_table.columns:
+                candidates = map_places(
+                    concordance_table=self._concordance_table,
+                    places=places_to_map,
+                    from_type=from_type,
+                    to_type=to_type,
+                )
+            else:
+                logger.info(f"Mapping to {to_type} using Node API")
+
+                # map the places to their dcids
+                if from_type != "dcid":
+                    candidates = map_places(
+                        concordance_table=self._concordance_table,
+                        places=places_to_map,
+                        from_type=from_type,
+                        to_type="dcid",
+                    )
+                else:
+                    candidates = {place: place for place in places_to_map}
+
+                dcids = [v for val in candidates.values() for v in (val if isinstance(val, list) else [val])]
+                dc_props = fetch_properties(self._dc_client, dcids, to_type)
+
+                for place, val in candidates.items():
+                    if isinstance(val, str):
+                        candidates[place] = dc_props.get(val)
+                    elif isinstance(val, list):
+                        mapped = [dc_props.get(v) for v in val if v in dc_props]
+                        mapped = [m for m in mapped if m is not None]
+                        candidates[place] = mapped[0] if len(mapped) == 1 else (mapped or None)
+                    else:
+                        candidates[place] = None
+
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
