@@ -39,23 +39,17 @@ def _check_allowed(from_type: str, to_type: str):
             f"Invalid to_type: {to_type}. Allowed to_type values are {_VALID_TARGETS}"
         )
 
+
 def validate_concordance_table(concordance_table: pd.DataFrame) -> None:
-    """Validate the concordance table to ensure it has the required column "dcid" and at least two columns.
-    """
+    """Validate the concordance table to ensure it has the required column "dcid" and at least two columns."""
 
     # At least 2 columns are required
-    if concordance_table.shape[1] < 2:
-        raise ValueError(
-            f"Concordance table must have at least 2 columns. Found {concordance_table.shape[1]}"
-        )
+    if len(concordance_table.columns) < 2:
+        raise ValueError(f"Concordance table must have at least 2 columns")
 
     # Check if the concordance table has the required column "dcid"
     if "dcid" not in concordance_table.columns:
-        raise ValueError(
-            f"Concordance table must have a column named 'dcid'. Found {concordance_table.columns}"
-        )
-
-
+        raise ValueError(f"Concordance table must have a column named 'dcid'")
 
 
 def get_concordance_dict(
