@@ -428,3 +428,34 @@ class PlaceResolver:
         return pd.Series(
             [place for place in places if place in filtered_places], index=places.index
         )
+
+    def get_mapping_dict(
+        self, from_type: str, to_type: str, include_nulls: bool = False
+    ) -> dict[str, str | None]:
+        """Get a mapping dictionary for a given from_type and to_type.
+
+        Args:
+            from_type: The original format of the places.
+            to_type: The desired format to convert the places to.
+            include_nulls: Whether to include null values in the mapping. Default is False.
+
+        Returns:
+            A dictionary mapping the from_type values to the to_type values.
+        """
+
+        if from_type == to_type:
+            logger.warning(
+                "from_type and to_type are the same. Returning identical mapping."
+            )
+            d = {v: v for v in self._concordance_table[from_type].dropna().unique()}
+
+        else:
+            raw_dict = self._concordance_table.set_index(from_type)[to_type].to_dict()
+            d = {k: v for k, v in raw_dict.items()}
+
+        # if include nulls then convert nan to None
+        if include_nulls:
+            return {k: v if pd.notna(v) else None for k, v in d.items()}
+
+        # remove nan values
+        return {k: v for k, v in d.items() if pd.notna(v)}
