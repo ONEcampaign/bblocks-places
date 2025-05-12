@@ -115,6 +115,7 @@ class PlaceResolver:
         concordance_table: Optional[pd.DataFrame] = None,
             *,
             dc_entity_type: Optional[str] = None,
+            custom_disambiguation: Optional[dict] = None,
     ):
 
         self._dc_client = DataCommonsClient(
@@ -131,6 +132,7 @@ class PlaceResolver:
         )  # validate the concordance table
 
         self._dc_entity_type = dc_entity_type
+        self._custom_disambiguation = custom_disambiguation
 
     def _map(
         self,
@@ -157,7 +159,7 @@ class PlaceResolver:
         if not from_type:
             # disambiguate the places
             candidates = disambiguation_pipeline(
-                dc_client=self._dc_client, entities=places_to_map, entity_type=self._dc_entity_type
+                dc_client=self._dc_client, entities=places_to_map, entity_type=self._dc_entity_type, disambiguation_dict=self._custom_disambiguation
             )
 
             # map places to desired type

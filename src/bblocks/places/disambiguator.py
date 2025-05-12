@@ -68,26 +68,27 @@ def fetch_dcids_by_name(
     return dcids
 
 
-def custom_disambiguation(entity: str) -> str | None:
+def custom_disambiguation(entity: str, disambiguation_dict: dict) -> str | None:
     """Disambiguate a given entity name using special cases.
 
     Args:
         entity: The entity name to disambiguate.
+        disambiguation_dict: A dictionary of special cases for disambiguation.
 
     Returns:
         The disambiguated DCID if found in special cases, otherwise None.
     """
 
     cleaned_string = clean_string(entity)
-    if cleaned_string in _EDGE_CASES:
-        return _EDGE_CASES[cleaned_string]
-    return None
+    cleaned_dict = {clean_string(k): v for k, v in disambiguation_dict.items()}
+    return cleaned_dict.get(cleaned_string)
 
 
 def disambiguation_pipeline(
     dc_client: DataCommonsClient,
     entities: str | list[str],
     entity_type: Optional[str],
+    disambiguation_dict: Optional[dict] = None,
     chunk_size: Optional[int] = 30,
 ) -> dict[str, str | list | None]:
     """Disambiguate entities to their DCIDs
@@ -108,15 +109,20 @@ def disambiguation_pipeline(
     resolved_entities = {}
     entities_to_disambiguate = []
 
-    # loop through the entities checking for edge cases
-    for entity in entities:
-        # if the entity is an edge case, add the dcid to the dictionary and remove the entity from the list
-        dcid = custom_disambiguation(entity)
-        if dcid is not None:
-            resolved_entities[entity] = dcid
-        else:
-            # if the entity is not an edge case, add it to the list of entities to disambiguate
-            entities_to_disambiguate.append(entity)
+    # if there is any custom disambiguation, do that first
+    if disambiguation_dict is not None:
+        # loop through the entities checking for edge cases
+        for entity in entities:
+            # if the entity is an edge case, add the dcid to the dictionary and remove the entity from the list
+            dcid = custom_disambiguation(entity, disambiguation_dict)
+            if dcid is not None:
+                resolved_entities[entity] = dcid
+            else:
+                # if the entity is not an edge case, add it to the list of entities to disambiguate
+                entities_to_disambiguate.append(entity)
+    else:
+        # if there is no custom disambiguation, add all entities to the list of entities to disambiguate
+        entities_to_disambiguate = entities
 
     # if there are still entities left, fetch the dcids from the datacommons client
     if entities_to_disambiguate:
