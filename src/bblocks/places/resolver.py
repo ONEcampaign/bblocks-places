@@ -5,7 +5,7 @@ from typing import Optional, Literal
 import pandas as pd
 
 from bblocks.places.disambiguator import disambiguation_pipeline
-from bblocks.places.concordance import map_candidates, map_places
+from bblocks.places.concordance import map_candidates, map_places, validate_concordance_table
 from bblocks.places.config import (
     logger,
     Paths,
@@ -81,13 +81,15 @@ class PlaceResolver:
         api_key: Optional[str] = None,
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
+            concordance_table: Optional[pd.DataFrame] = None,
     ):
 
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
 
-        self._concordance_table = PlaceResolver._concordance_table
+        self._concordance_table = concordance_table or self._concordance_table
+        validate_concordance_table(concordance_table) # validate the concordance table
 
     def _get_mapper(
         self,
