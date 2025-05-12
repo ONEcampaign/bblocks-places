@@ -1,11 +1,12 @@
 """Resolver"""
+from os import PathLike
 
 from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
 import pandas as pd
 
 from bblocks.places.disambiguator import disambiguation_pipeline
-from bblocks.places.concordance import map_candidates, map_places
+from bblocks.places.concordance import map_candidates, map_places, validate_concordance_table
 from bblocks.places.config import (
     logger,
     Paths,
@@ -81,13 +82,15 @@ class PlaceResolver:
         api_key: Optional[str] = None,
         dc_instance: Optional[str] = "datacommons.one.org",
         url: Optional[str] = None,
+            concordance_table: Optional[pd.DataFrame] = None,
     ):
 
         self._dc_client = DataCommonsClient(
             api_key=api_key, url=url, dc_instance=dc_instance
         )
 
-        self._concordance_table = PlaceResolver._concordance_table
+        self._concordance_table = concordance_table or self._concordance_table
+        validate_concordance_table(concordance_table) # validate the concordance table
 
     def _get_mapper(
         self,
@@ -303,3 +306,28 @@ class PlaceResolver:
     def concordance_table(self) -> pd.DataFrame:
         """Get the concordance table"""
         return self._concordance_table
+
+    @classmethod
+    def from_csv(
+        cls,
+        csv_path: PathLike,
+        api_key: Optional[str] = None,
+        dc_instance: Optional[str] = "datacommons.one.org",
+        url: Optional[str] = None,
+    ) -> "PlaceResolver":
+        """Create a PlaceResolver instance using a CSV file for the concordance table.
+
+        Args:
+            csv_path: Path to the CSV file containing the concordance table.
+            api_key: Optional API key for Data Commons.
+            dc_instance: Optional Data Commons instance.
+            url: Optional URL for Data Commons.
+
+        Returns:
+            PlaceResolver: An instance of PlaceResolver with the specified concordance table.
+        """
+        concordance_table = pd.read_csv(csv_path)
+
+        return cls(
+            api_key=api_key, dc_instance=dc_instance, url=url, concordance_table=concordance_table
+        )
