@@ -1,4 +1,5 @@
 """Resolver"""
+from os import PathLike
 
 from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
@@ -305,3 +306,18 @@ class PlaceResolver:
     def concordance_table(self) -> pd.DataFrame:
         """Get the concordance table"""
         return self._concordance_table
+
+    @classmethod
+    def from_csv(
+        cls,
+        csv_path: PathLike,
+        api_key: Optional[str] = None,
+        dc_instance: Optional[str] = "datacommons.one.org",
+        url: Optional[str] = None,
+    ) -> "PlaceResolver":
+        """Create a PlaceResolver instance from a CSV file"""
+        concordance_table = pd.read_csv(csv_path)
+
+        return cls(
+            api_key=api_key, dc_instance=dc_instance, url=url, concordance_table=concordance_table
+        )
