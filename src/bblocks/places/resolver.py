@@ -103,7 +103,7 @@ class PlaceResolver:
             self._concordance_table
         )  # validate the concordance table
 
-    def _get_mapper(
+    def _map(
         self,
         places: list[str],
         from_type: Optional[str] = None,
@@ -161,7 +161,7 @@ class PlaceResolver:
 
         return candidates
 
-    def get_mapper(
+    def map(
         self,
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
@@ -169,7 +169,7 @@ class PlaceResolver:
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
-    ) -> dict[str, str]:
+    ) -> dict[str, str | list[str] | None]:
         """Get a mapper of places to a desired format.
 
         Args:
@@ -230,7 +230,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        return self._get_mapper(
+        return self._map(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -294,7 +294,7 @@ class PlaceResolver:
             Converted places in the desired format
         """
 
-        mapper = self.get_mapper(
+        mapper = self.map(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -407,7 +407,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        mapper = self.get_mapper(
+        mapper = self.map(
             places=places_to_filter,
             from_type=from_type,
             to_type=filter_type,
@@ -428,3 +428,34 @@ class PlaceResolver:
         return pd.Series(
             [place for place in places if place in filtered_places], index=places.index
         )
+
+    def get_mapping_dict(
+        self, from_type: str, to_type: str, include_nulls: bool = False
+    ) -> dict[str, str | None]:
+        """Get a mapping dictionary for a given from_type and to_type.
+
+        Args:
+            from_type: The original format of the places.
+            to_type: The desired format to convert the places to.
+            include_nulls: Whether to include null values in the mapping. Default is False.
+
+        Returns:
+            A dictionary mapping the from_type values to the to_type values.
+        """
+
+        if from_type == to_type:
+            logger.warning(
+                "from_type and to_type are the same. Returning identical mapping."
+            )
+            d = {v: v for v in self._concordance_table[from_type].dropna().unique()}
+
+        else:
+            raw_dict = self._concordance_table.set_index(from_type)[to_type].to_dict()
+            d = {k: v for k, v in raw_dict.items()}
+
+        # if include nulls then convert nan to None
+        if include_nulls:
+            return {k: v if pd.notna(v) else None for k, v in d.items()}
+
+        # remove nan values
+        return {k: v for k, v in d.items() if pd.notna(v)}
