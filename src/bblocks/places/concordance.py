@@ -44,15 +44,15 @@ def validate_concordance_table(concordance_table: pd.DataFrame) -> None:
     """
 
     # At least 2 columns are required
-    if concordance_table.shape[1] < 2:
+    if len(concordance_table.columns) < 2:
         raise ValueError(
-            f"Concordance table must have at least 2 columns. Found {concordance_table.shape[1]}"
+            f"Concordance table must have at least 2 columns"
         )
 
     # Check if the concordance table has the required column "dcid"
     if "dcid" not in concordance_table.columns:
         raise ValueError(
-            f"Concordance table must have a column named 'dcid'. Found {concordance_table.columns}"
+            f"Concordance table must have a column named 'dcid'"
         )
 
 
