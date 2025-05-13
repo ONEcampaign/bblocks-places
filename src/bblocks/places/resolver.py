@@ -137,96 +137,35 @@ class PlaceResolver:
         self._dc_entity_type = dc_entity_type
         self._custom_disambiguation = custom_disambiguation
 
-    def _map(
-        self,
-        places: list[str],
-        from_type: Optional[str] = None,
-        to_type: Optional[str] = "dcid",
-        not_found: Literal["raise", "ignore"] = "raise",
-        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
-        custom_mapping: Optional[dict[str, str]] = None,
-    ) -> dict[str, str]:
-        """Helper function to get the mapper for a list of places"""
+    def _disambiguation_path_pipeline(self, to_type, places_to_map):
+        """ """
 
-        # remove any custom mapping from the entities to map
-        places_to_map = [p for p in places if not (custom_mapping and p in custom_mapping)]
+        # disambiguate the places
+        candidates = disambiguation_pipeline(
+            dc_client=self._dc_client,
+            entities=places_to_map,
+            entity_type=self._dc_entity_type,
+            disambiguation_dict=self._custom_disambiguation,
+        )
 
-        if not places_to_map:
-            return custom_mapping
+        # map places to desired type
+        if to_type != "dcid":
+            # if the to_type is not dcid, then we need to map the candidates
 
-        # if no source is provided, try to disambiguate the places
-        if not from_type:
-            # disambiguate the places
-            candidates = disambiguation_pipeline(
-                dc_client=self._dc_client,
-                entities=places_to_map,
-                entity_type=self._dc_entity_type,
-                disambiguation_dict=self._custom_disambiguation,
-            )
-
-            # map places to desired type
-            if to_type != "dcid":
-                # if the to_type is not dcid, then we need to map the candidates
-
-                # if the to_type is in the concordance table, then map the candidates
-                if (
+            # if the to_type is in the concordance table, then map the candidates
+            if (
                     self._concordance_table is not None
                     and to_type in self._concordance_table.columns
-                ):
-                    candidates = map_candidates(
-                        concordance_table=self._concordance_table,
-                        candidates=candidates,
-                        to_type=to_type,
-                    )
-
-                # if the to_type is not in the concordance table, then we use Node API
-                else:
-                    logger.info(f"Mapping to {to_type} using Data Commons API")
-
-                    dcids = [
-                        v
-                        for val in candidates.values()
-                        for v in (val if isinstance(val, list) else [val])
-                    ]
-                    dc_props = fetch_properties(self._dc_client, dcids, to_type)
-
-                    for place, val in candidates.items():
-                        if isinstance(val, str):
-                            candidates[place] = dc_props.get(val)
-                        elif isinstance(val, list):
-                            mapped = [dc_props.get(v) for v in val if v in dc_props]
-                            mapped = [m for m in mapped if m is not None]
-                            candidates[place] = (
-                                mapped[0] if len(mapped) == 1 else (mapped or None)
-                            )
-                        else:
-                            candidates[place] = None
-
-        # else if the source is provided, then use the concordance table to map
-        else:
-            if (
-                self._concordance_table is not None
-                and to_type in self._concordance_table.columns
             ):
-                candidates = map_places(
+                candidates = map_candidates(
                     concordance_table=self._concordance_table,
-                    places=places_to_map,
-                    from_type=from_type,
+                    candidates=candidates,
                     to_type=to_type,
                 )
+
+            # if the to_type is not in the concordance table, then we use Node API
             else:
                 logger.info(f"Mapping to {to_type} using Data Commons API")
-
-                # map the places to their dcids
-                if from_type != "dcid":
-                    candidates = map_places(
-                        concordance_table=self._concordance_table,
-                        places=places_to_map,
-                        from_type=from_type,
-                        to_type="dcid",
-                    )
-                else:
-                    candidates = {place: place for place in places_to_map}
 
                 dcids = [
                     v
@@ -246,6 +185,86 @@ class PlaceResolver:
                         )
                     else:
                         candidates[place] = None
+
+        return candidates
+
+    def concordance_path_pipeline(self, places_to_map, from_type, to_type):
+        """ """
+
+        if self._concordance_table is not None and to_type in self._concordance_table.columns:
+            candidates = map_places(
+                concordance_table=self._concordance_table,
+                places=places_to_map,
+                from_type=from_type,
+                to_type=to_type,
+            )
+        else:
+            logger.info(f"Mapping to {to_type} using Data Commons API")
+
+            # map the places to their dcids
+            if from_type != "dcid":
+                candidates = map_places(
+                    concordance_table=self._concordance_table,
+                    places=places_to_map,
+                    from_type=from_type,
+                    to_type="dcid",
+                )
+            else:
+                candidates = {place: place for place in places_to_map}
+
+            dcids = [
+                v
+                for val in candidates.values()
+                for v in (val if isinstance(val, list) else [val])
+            ]
+            dc_props = fetch_properties(self._dc_client, dcids, to_type)
+
+            for place, val in candidates.items():
+                if isinstance(val, str):
+                    candidates[place] = dc_props.get(val)
+                elif isinstance(val, list):
+                    mapped = [dc_props.get(v) for v in val if v in dc_props]
+                    mapped = [m for m in mapped if m is not None]
+                    candidates[place] = (
+                        mapped[0] if len(mapped) == 1 else (mapped or None)
+                    )
+                else:
+                    candidates[place] = None
+
+        return candidates
+
+
+
+
+    def _map(
+        self,
+        places: list[str],
+        from_type: Optional[str] = None,
+        to_type: Optional[str] = "dcid",
+        not_found: Literal["raise", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        custom_mapping: Optional[dict[str, str]] = None,
+    ) -> dict[str, str]:
+        """Helper function to get the mapper for a list of places"""
+
+        # remove any custom mapping from the entities to map
+        places_to_map = [p for p in places if not (custom_mapping and p in custom_mapping)]
+
+        if not places_to_map:
+            return custom_mapping
+
+        # if no from_type is provided, use the disambiguation pipeline to get the mapper
+        if not from_type:
+            # disambiguate the places
+            candidates = self._disambiguation_path_pipeline(to_type=to_type, places_to_map=places_to_map)
+
+        # else if the source is provided, then use the concordance table to map
+        else:
+           candidates = self.concordance_path_pipeline(
+                places_to_map=places_to_map,
+                from_type=from_type,
+                to_type=to_type,
+            )
 
         # handle not found
         candidates = handle_not_founds(candidates=candidates, not_found=not_found)
@@ -416,6 +435,7 @@ class PlaceResolver:
     def concordance_table(self) -> pd.DataFrame:
         """Get the concordance table"""
         return self._concordance_table
+    # TODO: handle cases when there is no concordance table
 
     @classmethod
     def from_csv(
@@ -558,6 +578,8 @@ class PlaceResolver:
 
         # remove nan values
         return {k: v for k, v in d.items() if pd.notna(v)}
+
+    # TODO: handle cases when there is no concordance table
 
     def add_custom_disambiguation(self, custom_disambiguation: dict) -> None:
         """Add custom disambiguation rules to the resolver.
