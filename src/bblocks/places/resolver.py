@@ -723,7 +723,7 @@ class PlaceResolver:
         filter_values: str | list[str],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
-        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first"] = "raise",
     ) -> list[str] | pd.Series:
         """Filter places
 
@@ -743,13 +743,11 @@ class PlaceResolver:
                 Options are:
                     - "raise": raise an error.
                     - "ignore": keep the value as None.
-                    - Any other string to set as the value for not found places.
 
             multiple_candidates: How to handle cases when a place can be resolved to multiple values.
                 Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
-                    - "ignore": keep the value as a list.
 
         Returns:
             The filtered places
