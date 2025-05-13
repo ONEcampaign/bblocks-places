@@ -108,7 +108,8 @@ def handle_multiple_candidates(
 
 def read_default_concordance_table() -> pd.DataFrame:
     """Read the default concordance table"""
-    CONCORDANCE_DTYPES = {
+
+    concordance_dtypes = {
         "dcid": "string",
         "name_official": "string",
         "name_short": "string",
@@ -133,7 +134,7 @@ def read_default_concordance_table() -> pd.DataFrame:
     }
 
     return pd.read_csv(
-        Paths.project / "places" / "concordance.csv", dtype=CONCORDANCE_DTYPES
+        Paths.project / "places" / "concordance.csv", dtype=concordance_dtypes
     )
 
 
