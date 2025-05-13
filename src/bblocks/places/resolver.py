@@ -23,8 +23,24 @@ from bblocks.places.config import (
 def handle_not_founds(
     candidates: dict[str, str | list | None],
     not_found: Literal["raise", "ignore"] | str,
-):
-    """Handle not found places"""
+) -> dict[str, str | list | None]:
+    """Handle places that could not be resolved
+
+    Args:
+        candidates: A dict of candidates.
+        not_found: How to handle not founds.
+            Options are:
+                - "raise": raise an error.
+                - "ignore": keep the value as None.
+                - Any other string to set as the value for not found places.
+
+    Returns:
+        The candidates with not found places handled
+
+    Raises:
+        PlaceNotFoundError if the function is set to raise an error when places cannot be resolved
+
+    """
 
     for place, cands in candidates.items():
         # if the candidate is None, then raise an error
@@ -44,8 +60,24 @@ def handle_not_founds(
 def handle_multiple_candidates(
     candidates: dict[str, str | list | None],
     multiple_candidates: Literal["raise", "first", "ignore"],
-):
-    """Handle multiple candidates for a place"""
+) -> dict[str, str | list | None]:
+    """Handle cases when a place can be resolved to more than one value
+
+    Args:
+        candidates: A dict of candidates.
+        multiple_candidates: How to handle multiple candidates.
+            Options are:
+                - "raise": raise an error.
+                - "first": use the first candidate.
+                - "ignore": keep the value as a list.
+
+    Returns:
+        The candidates with multiple candidate values handled
+
+    Raises:
+        MultipleCandidatesError if the function is set to raise an error when multiple candidates exist
+
+    """
 
     for place, cands in candidates.items():
         # if the candidate is a list, then raise an error
@@ -74,70 +106,107 @@ def handle_multiple_candidates(
     return candidates
 
 
-CONCORDANCE_DTYPES = {
-    "dcid": "string",
-    "name_official": "string",
-    "name_short": "string",
-    "iso2_code": "string",
-    "iso3_code": "string",
-    "iso_numeric_code": "Int64",  # Nullable integer
-    "m49_code": "Int64",
-    "region_code": "Int64",
-    "region": "string",
-    "subregion_code": "Int64",
-    "subregion": "string",
-    "intermediate_region_code": "Int64",
-    "intermediate_region": "string",
-    "ldc": "boolean",
-    "lldc": "boolean",
-    "sids": "boolean",
-    "un_member": "boolean",
-    "un_observer": "boolean",
-    "un_former_member": "boolean",
-    "dac_code": "Int64",
-    "income_level": "string",
-}
+def read_default_concordance_table() -> pd.DataFrame:
+    """Read the default concordance table"""
+    CONCORDANCE_DTYPES = {
+        "dcid": "string",
+        "name_official": "string",
+        "name_short": "string",
+        "iso2_code": "string",
+        "iso3_code": "string",
+        "iso_numeric_code": "Int64",  # Nullable integer
+        "m49_code": "Int64",
+        "region_code": "Int64",
+        "region": "string",
+        "subregion_code": "Int64",
+        "subregion": "string",
+        "intermediate_region_code": "Int64",
+        "intermediate_region": "string",
+        "ldc": "boolean",
+        "lldc": "boolean",
+        "sids": "boolean",
+        "un_member": "boolean",
+        "un_observer": "boolean",
+        "un_former_member": "boolean",
+        "dac_code": "Int64",
+        "income_level": "string",
+    }
 
-
-class PlaceResolver:
-    """A class to resolve places to different formats"""
-
-    # Shared class-level concordance table (loaded once).
-    _concordance_table: pd.DataFrame = pd.read_csv(
+    return pd.read_csv(
         Paths.project / "places" / "concordance.csv", dtype=CONCORDANCE_DTYPES
     )
 
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        dc_instance: Optional[str] = "datacommons.one.org",
-        url: Optional[str] = None,
-        concordance_table: Optional[
-            pd.DataFrame | None | Literal["default"]
-        ] = "default",
-        *,
-        dc_entity_type: Optional[str] = None,
-        custom_disambiguation: Optional[dict] = None,
+
+class PlaceResolver:
+    """A class to resolve places
+
+    """
+
+    # Shared class-level concordance table (loaded once).
+    _CONCORDANCE_TABLE = read_default_concordance_table()
+
+    # Shared class-level disambiguation rules
+    # These are edge cases specific to working with countries based on the M49 list of countries and the current
+    # functionality of the Data Commons Node endpoint.
+    _EDGE_CASES = {
+        "congo": "country/COG",
+        "france": "country/FRA",
+        "caboverde": "country/CPV",
+        "antarctica": "antarctica",
+        "alandislands": "nuts/FI2",
+        "aland": "nuts/FI2",
+        "pitcairn": "country/PCN",
+        # Svalbard and Jan Mayen Islands
+        "svalbardandjanmayenislands": "country/SJM",
+        "svalbardjanmayenislands": "country/SJM",
+        "svalbardandjanmayenis": "country/SJM",
+        "svalbardjanmayenis": "country/SJM",
+        "palestine": "country/PSE",
+        "saintmartin": "country/MAF",
+        # South Georgia and the South Sandwich Islands
+        "southgeorgiaandsouthsandwichis": "country/SGS",
+        "southgeorgiasouthsandwichis": "country/SGS",
+        "sthelena": "country/SHN",
+    }
+
+    def __init__(self,
+                 concordance_table: Optional[None | pd.DataFrame | Literal["default"]] = None,
+                 custom_disambiguation: Optional[dict | Literal["default"]] = None,
+                 dc_entity_type: Optional[str] = None,
+                 *,
+                 dc_api_settings: Optional[dict] = None,
     ):
 
-        self._dc_client = DataCommonsClient(
-            api_key=api_key, url=url, dc_instance=dc_instance
-        )
+        # set the Data Commons client
+        if dc_api_settings:
+            self._dc_client = DataCommonsClient(**dc_api_settings)
+        else:
+            self._dc_client = DataCommonsClient(dc_instance="datacommons.one.org")
 
+        # set the concordance table
         if concordance_table == "default":
-            self._concordance_table = self._concordance_table
+            self._concordance_table = self._CONCORDANCE_TABLE
         else:
             self._concordance_table = concordance_table
 
+        # validate the concordance table
         if self._concordance_table is not None:
             validate_concordance_table(
                 self._concordance_table
-            )  # validate the concordance table
+            )
 
-        self._dc_entity_type = dc_entity_type
-        self._custom_disambiguation = custom_disambiguation
+        self._dc_entity_type = dc_entity_type # set the Data Commons entity type
 
-    def _map_candidates_to_dc_property(self, candidates: dict[str, str | list | None], dc_property: str) -> dict[str, str | list | None]:
+        # set any custom disambiguation rules
+        if custom_disambiguation == "default":
+            self._custom_disambiguation = self._EDGE_CASES
+        else:
+            self._custom_disambiguation = custom_disambiguation
+
+    def _map_candidates_to_dc_property(self,
+                                       candidates: dict[str, str | list | None],
+                                       dc_property: str
+                                       ) -> dict[str, str | list | None] :
         """This runs a concordance operation using the Data Commons Node endpoint.
 
         It takes a dictionary of candidates where the keys are the original names and the values are the DCIDs.
@@ -205,10 +274,7 @@ class PlaceResolver:
         # if the to_type is in the concordance table, then map the candidates using the concordance table
 
         # if the to_type is in the concordance table, then we use the concordance table
-        if (
-                self._concordance_table is not None
-                and to_type in self._concordance_table.columns
-        ):
+        if self._concordance_table is not None and to_type in self._concordance_table.columns:
             return map_candidates(
                 concordance_table=self._concordance_table,
                 candidates=candidates,
@@ -221,7 +287,11 @@ class PlaceResolver:
                 dc_property=to_type,
             )
 
-    def _resolve_without_disambiguation(self, places_to_map, from_type: str, to_type:str):
+    def _resolve_without_disambiguation(self,
+                                        places_to_map: list[str],
+                                        from_type: str,
+                                        to_type:str
+                                        ) -> dict[str, str | list | None]:
         """The mapping pipeline that doesn't require disambiguation.
 
         This method uses a concordance table or Node to map the places to the desired type, without needing to
@@ -483,35 +553,36 @@ class PlaceResolver:
     @property
     def concordance_table(self) -> pd.DataFrame:
         """Get the concordance table"""
+
+        # raise an error if there is no concordance table set
+        if not self._concordance_table:
+            raise ValueError("No concordance table is defined for this resolver.")
+
         return self._concordance_table
-    # TODO: handle cases when there is no concordance table
+
 
     @classmethod
-    def from_csv(
+    def from_concordance_csv(
         cls,
-        csv_path: PathLike,
-        api_key: Optional[str] = None,
-        dc_instance: Optional[str] = "datacommons.one.org",
-        url: Optional[str] = None,
+        concordance_csv_path: PathLike,
+        *args, **kwargs
     ) -> "PlaceResolver":
         """Create a PlaceResolver instance using a CSV file for the concordance table.
 
         Args:
-            csv_path: Path to the CSV file containing the concordance table.
-            api_key: Optional API key for Data Commons.
-            dc_instance: Optional Data Commons instance.
-            url: Optional URL for Data Commons.
+            concordance_csv_path: Path to the CSV file containing the concordance table.
+            *args: Additional arguments to pass to the constructor.
+            **kwargs: Additional keyword arguments to pass to the constructor.
 
         Returns:
             PlaceResolver: An instance of PlaceResolver with the specified concordance table.
         """
-        concordance_table = pd.read_csv(csv_path)
+        concordance_table = pd.read_csv(concordance_csv_path)
 
         return cls(
-            api_key=api_key,
-            dc_instance=dc_instance,
-            url=url,
             concordance_table=concordance_table,
+            *args,
+            **kwargs,
         )
 
     def filter(
@@ -522,21 +593,29 @@ class PlaceResolver:
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
-    ):
-        """Filters places based on a filter type and filter values.
+    ) -> list[str] | pd.Series:
+        """Filter places
+
+        This method takes places and filters them for a specific type and value. For example, by type region and for
+        value "Africa".
 
         Args:
             places: places to filter
+
             from_type: the original format of the places. If None, the places will be disambiguated automatically.
+
             filter_type: the place type to filter by. This should be a valid column in the concordance table. e.g. "region"
+
             filter_values: the values to filter by
-            not_found: What to do if a place is not found. Default is "raise".
+
+            not_found: How to handle places that could not be resolved. Default is "raise".
                 Options are:
                     - "raise": raise an error.
                     - "ignore": keep the value as None.
                     - Any other string to set as the value for not found places.
-            multiple_candidates: What to do if there are multiple candidates for a
-                place. Default is "raise". Options are:
+
+            multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+                Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
                     - "ignore": keep the value as a list.
@@ -597,10 +676,10 @@ class PlaceResolver:
             [place for place in places if place in filtered_places], index=places.index
         )
 
-    def get_mapping_dict(
+    def get_concordance_dict(
         self, from_type: str, to_type: str, include_nulls: bool = False
     ) -> dict[str, str | None]:
-        """Get a mapping dictionary for a given from_type and to_type.
+        """Get a mapping dictionary for a given from_type and to_type from the concordance table.
 
         Args:
             from_type: The original format of the places.
@@ -610,6 +689,10 @@ class PlaceResolver:
         Returns:
             A dictionary mapping the from_type values to the to_type values.
         """
+
+        # if no concordance table is set, raise an error
+        if not self._concordance_table:
+            raise ValueError("No concordance table is defined for this resolver.")
 
         if from_type == to_type:
             logger.warning(
@@ -621,14 +704,12 @@ class PlaceResolver:
             raw_dict = self._concordance_table.set_index(from_type)[to_type].to_dict()
             d = {k: v for k, v in raw_dict.items()}
 
-        # if include nulls then convert nan to None
+        # if include_nulls then convert any nan to None
         if include_nulls:
             return {k: v if pd.notna(v) else None for k, v in d.items()}
 
         # remove nan values
         return {k: v for k, v in d.items() if pd.notna(v)}
-
-    # TODO: handle cases when there is no concordance table
 
     def add_custom_disambiguation(self, custom_disambiguation: dict) -> None:
         """Add custom disambiguation rules to the resolver.
