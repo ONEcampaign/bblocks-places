@@ -149,14 +149,10 @@ class PlaceResolver:
         """Helper function to get the mapper for a list of places"""
 
         # remove any custom mapping from the entities to map
-        if custom_mapping:
-            places_to_map = [p for p in places if p not in custom_mapping]
-            # if all places are in the custom mapping, then return the custom mapping
-            if not places_to_map:
-                return custom_mapping
+        places_to_map = [p for p in places if not (custom_mapping and p in custom_mapping)]
 
-        else:
-            places_to_map = places
+        if not places_to_map:
+            return custom_mapping
 
         # if no source is provided, try to disambiguate the places
         if not from_type:
