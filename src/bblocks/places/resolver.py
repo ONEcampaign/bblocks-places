@@ -5,7 +5,7 @@ from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
 import pandas as pd
 
-from bblocks.places.disambiguator import disambiguation_pipeline
+from bblocks.places.disambiguator import resolve_places_to_dcids
 from bblocks.places.concordance import (
     map_candidates,
     map_places,
@@ -137,7 +137,7 @@ class PlaceResolver:
         self._dc_entity_type = dc_entity_type
         self._custom_disambiguation = custom_disambiguation
 
-    def _map_via_datacommons(self, candidates: dict[str, str | list | None], dc_property: str) -> dict[str, str | list | None]:
+    def _map_candidates_to_dc_property(self, candidates: dict[str, str | list | None], dc_property: str) -> dict[str, str | list | None]:
         """This runs a concordance operation using the Data Commons Node endpoint.
 
         It takes a dictionary of candidates where the keys are the original names and the values are the DCIDs.
@@ -175,7 +175,7 @@ class PlaceResolver:
 
         return candidates
 
-    def _disambiguation_path_pipeline(self, to_type: str, places_to_map: list[str]) -> dict[str, str | list | None]:
+    def _resolve_with_disambiguation(self, to_type: str, places_to_map: list[str]) -> dict[str, str | list | None]:
         """The mapping pipeline that disambiguates the places and maps them to the desired type.
 
         This method uses the Data Commons API and/or any custom disambiguation rules
@@ -190,7 +190,7 @@ class PlaceResolver:
         """
 
         # disambiguate the places
-        candidates = disambiguation_pipeline(
+        candidates = resolve_places_to_dcids(
             dc_client=self._dc_client,
             entities=places_to_map,
             entity_type=self._dc_entity_type,
@@ -216,12 +216,12 @@ class PlaceResolver:
             )
 
         # else if the to_type is not in the concordance table, then we use Node
-        return self._map_via_datacommons(
+        return self._map_candidates_to_dc_property(
                 candidates=candidates,
                 dc_property=to_type,
             )
 
-    def concordance_path_pipeline(self, places_to_map, from_type: str, to_type:str):
+    def _resolve_without_disambiguation(self, places_to_map, from_type: str, to_type:str):
         """The mapping pipeline that doesn't require disambiguation.
 
         This method uses a concordance table or Node to map the places to the desired type, without needing to
@@ -263,9 +263,9 @@ class PlaceResolver:
             candidates = {place: place for place in places_to_map}
 
         # use Node to map the candidates to the desired type
-        return self._map_via_datacommons(candidates, to_type)
+        return self._map_candidates_to_dc_property(candidates, to_type)
 
-    def _map(
+    def _resolve(
         self,
         places: list[str],
         from_type: Optional[str] = None,
@@ -274,7 +274,34 @@ class PlaceResolver:
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str]:
-        """Helper function to get the mapper for a list of places"""
+        """Main helper pipeline to resolve places to a desired type
+
+        This method handles the mapping of places to a desired type, using either
+        disambiguation or concordance table. It also handles custom mappings, not found
+        places, and multiple candidates. If a target format that is not in the concordance table
+        is requested, it uses the Data Commons Node endpoint to resolve to a Data Commons property.
+
+        Args:
+            places: A list of places to resolve.
+            from_type: The original type of the places. If None, the places will be disambiguated automatically.
+            to_type: The desired type to map the places to. Default is "dcid".
+            not_found: What to do if a place is not found. Default is "raise".
+                Options are:
+                    - "raise": raise an error.
+                    - "ignore": keep the value as None.
+                    - Any other string to set as the value for not found places.
+            multiple_candidates: What to do if there are multiple candidates for a
+                place. Default is "raise". Options are:
+                    - "raise": raise an error.
+                    - "first": use the first candidate.
+                    - "ignore": keep the value as a list.
+            custom_mapping: A dictionary of custom mappings to use.
+
+        Returns:
+            A dictionary mapping the places to the desired type.
+
+
+        """
 
         # remove any custom mapping from the entities to map
         places_to_map = [p for p in places if not (custom_mapping and p in custom_mapping)]
@@ -282,14 +309,19 @@ class PlaceResolver:
         if not places_to_map:
             return custom_mapping
 
-        # if no from_type is provided, use the disambiguation pipeline to get the mapper
+        # if from type is not provided, then we need to disambiguate the places
         if not from_type:
             # disambiguate the places
-            candidates = self._disambiguation_path_pipeline(to_type=to_type, places_to_map=places_to_map)
+            candidates = self._resolve_with_disambiguation(to_type=to_type, places_to_map=places_to_map)
 
-        # else if the source is provided, then use the concordance table to map
+        # if the from_type is provided but is not in the concordance table, then we need to disambiguate the places
+        elif from_type and (self._concordance_table is None or from_type not in self._concordance_table.columns):
+            # disambiguate the places
+            candidates = self._resolve_with_disambiguation(to_type=to_type, places_to_map=places_to_map)
+
+        # if the from_type is provided and is in the concordance table, then we can use the concordance table to map the places
         else:
-           candidates = self.concordance_path_pipeline(
+           candidates = self._resolve_without_disambiguation(
                 places_to_map=places_to_map,
                 from_type=from_type,
                 to_type=to_type,
@@ -308,7 +340,7 @@ class PlaceResolver:
 
         return candidates
 
-    def map(
+    def resolve_map(
         self,
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
@@ -317,47 +349,41 @@ class PlaceResolver:
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str | list[str] | None]:
-        """Get a mapper of places to a desired format.
+        """Resolve places to a mapping dictionary of {place: resolved}
+
+        This method takes places, it disambiguates them if needed, and maps them to the desired format, then returns
+        a dictionary of the original places to the resolved places. It also handles custom mappings, not found
+        places, and multiple candidates. The method converts places to the desired format first by checking the
+        concordance table, and if the target format is not in the concordance table, it will try to convert to a
+        Data Commons property.
+
 
         Args:
             places: A place or list of places to resolve.
 
-            from_type: The original format of the places. If None, the places will be disambiguated automatically.
-                By default, it is None.
-                Options are:
-                    - "dcid": Data Commons ID.
-                    - "name_official": Official name.
-                    - "name_short": Short name.
-                    - "iso2_code": ISO Alpha 2-letter code.
-                    - "iso3_code": ISO Alpha 3-letter code.
-                    - "iso_numeric_code": ISO Numeric code.
-                    - "dac_code": DAC code.
-                    - "m49_code": M49 code.
+            from_type: The original format of the places. Default is None.
+                If None, the places will be disambiguated automatically using Data Commons
 
             to_type: The desired format to convert the places to. Default is "dcid".
-                Options are:
-                    - Any of the from_type options.
-                    - "income_level": Income level.
-                    - "region": Region.
-                    - "region_code": Region code.
-                    - "subregion": Subregion.
-                    - "subregion_code": Subregion code.
-                    - "intermediate_region": Intermediate region.
-                    - "intermediate_region_code": Intermediate region code.
+                If the object contains a concordance table and the to_type is in the concordance table, it will use
+                that concordance table to map the places. Otherwise it will use Data Commons to resolve to a
+                Data Commons property.
 
-            not_found: What to do if a place is not found. Default is "raise".
+            not_found: How to handle places that could not be resolved. Default is "raise".
                 Options are:
                     - "raise": raise an error.
                     - "ignore": keep the value as None.
                     - Any other string to set as the value for not found places.
 
-            multiple_candidates: What to do if there are multiple candidates for a
-                place. Default is "raise". Options are:
+            multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+                Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
                     - "ignore": keep the value as a list.
 
-            custom_mapping: A dictionary of custom mappings to use.
+            custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
+                override any other mappings. Disambiguation and concordance will not be run for those places.
+                The keys are the original places and the values are the resolved places.
 
         Returns:
             A dictionary mapping the places to the desired format.
@@ -377,7 +403,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        return self._map(
+        return self._resolve(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -386,7 +412,7 @@ class PlaceResolver:
             custom_mapping=custom_mapping,
         )
 
-    def convert(
+    def resolve(
         self,
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
@@ -395,53 +421,47 @@ class PlaceResolver:
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> str | list[str] | pd.Series:
-        """Convert places to a desired format
+        """Resolve places
+
+        This method takes places, it disambiguates them if needed, and maps them to the desired format.
+        It replaces the original places with the resolved places. It handles custom mappings,
+        not found places, and multiple candidates. The method converts places to the desired format first by checking the
+        concordance table, and if the target format is not in the concordance table, it will try to convert to a
+        Data Commons property.
 
         Args:
             places: A place or list of places to resolve.
 
-            from_type: The original format of the places. If None, the places will be disambiguated automatically.
-                By default, it is None.
-                Options are:
-                    - "dcid": Data Commons ID.
-                    - "name_official": Official name.
-                    - "name_short": Short name.
-                    - "iso2_code": ISO Alpha 2-letter code.
-                    - "iso3_code": ISO Alpha 3-letter code.
-                    - "iso_numeric_code": ISO Numeric code.
-                    - "dac_code": DAC code.
-                    - "m49_code": M49 code.
+            from_type: The original format of the places. Default is None.
+                If None, the places will be disambiguated automatically using Data Commons
 
             to_type: The desired format to convert the places to. Default is "dcid".
-                Options are:
-                    - Any of the from_type options.
-                    - "income_level": Income level.
-                    - "region": Region.
-                    - "region_code": Region code.
-                    - "subregion": Subregion.
-                    - "subregion_code": Subregion code.
-                    - "intermediate_region": Intermediate region.
-                    - "intermediate_region_code": Intermediate region code.
+                If the object contains a concordance table and the to_type is in the concordance table, it will use
+                that concordance table to map the places. Otherwise it will use Data Commons to resolve to a
+                Data Commons property.
 
-            not_found: What to do if a place is not found. Default is "raise".
+            not_found: How to handle places that could not be resolved. Default is "raise".
                 Options are:
                     - "raise": raise an error.
                     - "ignore": keep the value as None.
                     - Any other string to set as the value for not found places.
 
-            multiple_candidates: What to do if there are multiple candidates for a
-                place. Default is "raise". Options are:
+            multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+                Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
                     - "ignore": keep the value as a list.
 
-            custom_mapping: A dictionary of custom mappings to use.
+            custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
+                override any other mappings. Disambiguation and concordance will not be run for those places.
+                The keys are the original places and the values are the resolved places.
 
         Returns:
-            Converted places in the desired format
+            Resolved places in the desired format
         """
 
-        mapper = self.map(
+        # get a mapping dictionary for the places
+        mapper = self.resolve_map(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -450,7 +470,7 @@ class PlaceResolver:
             custom_mapping=custom_mapping,
         )
 
-        # convert back to the original format
+        # convert back to the original format replacing the original places with the resolved places
         if isinstance(places, str):
             return mapper.get(places)
 
@@ -555,7 +575,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        mapper = self.map(
+        mapper = self.resolve_map(
             places=places_to_filter,
             from_type=from_type,
             to_type=filter_type,

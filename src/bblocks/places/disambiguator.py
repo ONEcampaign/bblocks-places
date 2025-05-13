@@ -87,7 +87,7 @@ def custom_disambiguation(entity: str, disambiguation_dict: dict) -> str | None:
     return cleaned_dict.get(cleaned_string)
 
 
-def disambiguation_pipeline(
+def resolve_places_to_dcids(
     dc_client: DataCommonsClient,
     entities: str | list[str],
     entity_type: Optional[str],
@@ -103,6 +103,7 @@ def disambiguation_pipeline(
         dc_client: An instance of DataCommonsClient.
         entities: A single entity name or a list of entity names.
         entity_type: The type of the entity (e.g., "Country"). It must be a valid Data Commons type.
+        disambiguation_dict: A dictionary of special cases for disambiguation.
         chunk_size: The size of each chunk to split the list into. If None, no chunking is done.
 
     Returns:
