@@ -697,15 +697,20 @@ class PlaceResolver:
         # remove nan values
         return {k: v for k, v in d.items() if pd.notna(v)}
 
-    def add_custom_disambiguation(self, custom_disambiguation: dict) -> None:
+    def add_custom_disambiguation(self, custom_disambiguation: dict) -> "PlaceResolver":
         """Add custom disambiguation rules to the resolver.
 
         Args:
             custom_disambiguation: A dictionary of custom disambiguation rules.
                 The keys are the place names and the values are the corresponding DCIDs.
+
+        Returns:
+            The updated PlaceResolver instance with the custom disambiguation rules added.
         """
 
         if self._custom_disambiguation is None:
             self._custom_disambiguation = custom_disambiguation
         else:
             self._custom_disambiguation.update(custom_disambiguation)
+
+        return self
