@@ -7,28 +7,6 @@ from bblocks.places.utils import clean_string, split_list
 from bblocks.places.config import logger
 
 
-_EDGE_CASES = {
-    "congo": "country/COG",
-    "france": "country/FRA",
-    "caboverde": "country/CPV",
-    "antarctica": "antarctica",
-    "alandislands": "nuts/FI2",
-    "aland": "nuts/FI2",
-    "pitcairn": "country/PCN",
-    # Svalbard and Jan Mayen Islands
-    "svalbardandjanmayenislands": "country/SJM",
-    "svalbardjanmayenislands": "country/SJM",
-    "svalbardandjanmayenis": "country/SJM",
-    "svalbardjanmayenis": "country/SJM",
-    "palestine": "country/PSE",
-    "saintmartin": "country/MAF",
-    # South Georgia and the South Sandwich Islands
-    "southgeorgiaandsouthsandwichis": "country/SGS",
-    "southgeorgiasouthsandwichis": "country/SGS",
-    "sthelena": "country/SHN",
-}
-
-
 def fetch_dcids_by_name(
     dc_client: DataCommonsClient,
     entities: str | list,
@@ -87,7 +65,7 @@ def custom_disambiguation(entity: str, disambiguation_dict: dict) -> str | None:
     return cleaned_dict.get(cleaned_string)
 
 
-def disambiguation_pipeline(
+def resolve_places_to_dcids(
     dc_client: DataCommonsClient,
     entities: str | list[str],
     entity_type: Optional[str],
@@ -103,6 +81,7 @@ def disambiguation_pipeline(
         dc_client: An instance of DataCommonsClient.
         entities: A single entity name or a list of entity names.
         entity_type: The type of the entity (e.g., "Country"). It must be a valid Data Commons type.
+        disambiguation_dict: A dictionary of special cases for disambiguation.
         chunk_size: The size of each chunk to split the list into. If None, no chunking is done.
 
     Returns:
