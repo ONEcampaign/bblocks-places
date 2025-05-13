@@ -137,12 +137,19 @@ class PlaceResolver:
         self._dc_entity_type = dc_entity_type
         self._custom_disambiguation = custom_disambiguation
 
-    def _map_via_datacommons(self, candidates: dict[str, str | list | None], dc_property: str):
+    def _map_via_datacommons(self, candidates: dict[str, str | list | None], dc_property: str) -> dict[str, str | list | None]:
         """This runs a concordance operation using the Data Commons Node endpoint.
 
         It takes a dictionary of candidates where the keys are the original names and the values are the DCIDs.
         It uses the DCIDs to fetch the properties from the Data Commons Node endpoint, then maps the
         property values retrieved to the original names.
+
+        Args:
+            candidates: A dictionary of candidates where the keys are the original names and the values are the DCIDs.
+            dc_property: The property to fetch from the Data Commons Node endpoint.
+
+        Returns:
+            A dictionary of candidates where the keys are the original names and the values are the property values.
 
         """
 
@@ -168,8 +175,19 @@ class PlaceResolver:
 
         return candidates
 
-    def _disambiguation_path_pipeline(self, to_type, places_to_map):
-        """ """
+    def _disambiguation_path_pipeline(self, to_type: str, places_to_map: list[str]) -> dict[str, str | list | None]:
+        """The mapping pipeline that disambiguates the places and maps them to the desired type.
+
+        This method uses the Data Commons API and/or any custom disambiguation rules
+        to disambiguate places, then concords them to the desired type.
+
+        Args:
+            to_type: The desired type to map the places to.
+            places_to_map: A list of places to map.
+
+        Returns:
+            A dictionary of candidates where the keys are the original names and the values are the mapped values.
+        """
 
         # disambiguate the places
         candidates = disambiguation_pipeline(
@@ -179,50 +197,73 @@ class PlaceResolver:
             disambiguation_dict=self._custom_disambiguation,
         )
 
-        # map places to desired type
-        if to_type != "dcid":
-            # if the to_type is not dcid, then we need to map the candidates
+        # if to_type is dcid then there is no need to map the candidates
+        if to_type == "dcid":
+            return candidates
 
-            # if the to_type is in the concordance table, then map the candidates
-            if (
-                    self._concordance_table is not None
-                    and to_type in self._concordance_table.columns
-            ):
-                candidates = map_candidates(
-                    concordance_table=self._concordance_table,
-                    candidates=candidates,
-                    to_type=to_type,
-                )
 
-            # if the to_type is not in the concordance table, then we use Node API
-            else:
-                candidates = self._map_via_datacommons(
-                    candidates=candidates,
-                    dc_property=to_type,
-                )
+        # if the to_type is in the concordance table, then map the candidates using the concordance table
 
-        return candidates
+        # if the to_type is in the concordance table, then we use the concordance table
+        if (
+                self._concordance_table is not None
+                and to_type in self._concordance_table.columns
+        ):
+            return map_candidates(
+                concordance_table=self._concordance_table,
+                candidates=candidates,
+                to_type=to_type,
+            )
 
-    def concordance_path_pipeline(self, places_to_map, from_type, to_type):
-        """ """
+        # else if the to_type is not in the concordance table, then we use Node
+        return self._map_via_datacommons(
+                candidates=candidates,
+                dc_property=to_type,
+            )
 
+    def concordance_path_pipeline(self, places_to_map, from_type: str, to_type:str):
+        """The mapping pipeline that doesn't require disambiguation.
+
+        This method uses a concordance table or Node to map the places to the desired type, without needing to
+        disambiguate them first. If the target type is in the concordance table, it uses that to map the places.
+        Otherwise, it uses Node to map the places, by first mapping places to dcid then using the dcid to get the
+        desired type.
+
+        Args:
+            places_to_map: A list of places to map.
+            from_type: The original type of the places.
+            to_type: The desired type to map the places to.
+
+        Returns:
+            A dictionary of candidates where the keys are the original names and the values are the mapped values.
+
+        """
+
+        # if the from_type is in the concordance table, then use the concordance table to map the places
         if self._concordance_table is not None and to_type in self._concordance_table.columns:
-            candidates = map_places(
+            return map_places(
                 concordance_table=self._concordance_table,
                 places=places_to_map,
                 from_type=from_type,
                 to_type=to_type,
             )
-        else:
-            candidates = self._map_via_datacommons(
-                candidates=places_to_map,
-                dc_property=to_type,
+
+        # Otherwise, use Node to map the places
+
+        # Map the places to dcid before using Node
+        if from_type != "dcid":
+            candidates = map_places(
+                concordance_table=self._concordance_table,
+                places=places_to_map,
+                from_type=from_type,
+                to_type="dcid",
             )
+        else:
+            # if the from_type is already dcid, then no need to map it - create a mapping dict of dcid to dcid
+            candidates = {place: place for place in places_to_map}
 
-        return candidates
-
-
-
+        # use Node to map the candidates to the desired type
+        return self._map_via_datacommons(candidates, to_type)
 
     def _map(
         self,
