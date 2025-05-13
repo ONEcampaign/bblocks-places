@@ -596,7 +596,7 @@ class PlaceResolver:
     ) -> list[str] | pd.Series:
         """Filter places
 
-        This method takes places and filters them for a specific type and value. For example, by type region and for
+        This method takes places and filters them for a specific type and value. For example, by type region and for a
         value "Africa".
 
         Args:
@@ -604,9 +604,9 @@ class PlaceResolver:
 
             from_type: the original format of the places. If None, the places will be disambiguated automatically.
 
-            filter_type: the place type to filter by. This should be a valid column in the concordance table. e.g. "region"
+            filter_type: the place format to filter by.
 
-            filter_values: the values to filter by
+            filter_values: the values to filter for.
 
             not_found: How to handle places that could not be resolved. Default is "raise".
                 Options are:
@@ -624,24 +624,10 @@ class PlaceResolver:
             The filtered places
         """
 
-        # ensure filter_type is a valid column in the concordance table
-        if filter_type not in self._concordance_table.columns:
-            raise ValueError(
-                f"Invalid filter type: {filter_type}. Must be a valid field column in the concordance table."
-            )
-
         # ensure filter_values is a list
         if isinstance(filter_values, str):
             filter_values = [filter_values]
 
-        # check that all filter values are in the concordance table column
-        if not all(
-            val in self._concordance_table[filter_type].unique()
-            for val in filter_values
-        ):
-            raise ValueError(
-                f"Invalid filter values: {filter_values}. Must be a valid value in the {filter_type} column of the concordance table."
-            )
 
         # if the places is a list ensure it is unique
         if isinstance(places, list):
