@@ -6,40 +6,6 @@ from datacommons_client import DataCommonsClient
 from bblocks.places.config import logger
 from bblocks.places.utils import clean_string
 
-#
-# _VALID_SOURCES = [
-#     "dcid",
-#     "name_official",
-#     "name_short",
-#     "iso2_code",
-#     "iso3_code",
-#     "iso_numeric_code",
-#     "dac_code",
-#     "m49_code",
-# ]
-# _VALID_TARGETS = _VALID_SOURCES + [
-#     "income_level",
-#     "region",
-#     "region_code",
-#     "subregion",
-#     "subregion_code",
-#     "intermediate_region",
-#     "intermediate_region_code",
-# ]
-
-
-# def _check_allowed(from_type: str, to_type: str):
-#     """Check that the from_type and to_type are in the allowed sources and targets"""
-#
-#     if from_type not in _VALID_SOURCES:
-#         raise ValueError(
-#             f"Invalid from_type: {from_type}. Allowed from_type values are {_VALID_SOURCES}"
-#         )
-#     if to_type not in _VALID_TARGETS:
-#         raise ValueError(
-#             f"Invalid to_type: {to_type}. Allowed to_type values are {_VALID_TARGETS}"
-#         )
-
 
 def validate_concordance_table(concordance_table: pd.DataFrame) -> None:
     """Validate the concordance table to ensure it has the required column "dcid" and at least two columns."""

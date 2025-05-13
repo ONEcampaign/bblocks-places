@@ -7,28 +7,6 @@ from bblocks.places.utils import clean_string, split_list
 from bblocks.places.config import logger
 
 
-_EDGE_CASES = {
-    "congo": "country/COG",
-    "france": "country/FRA",
-    "caboverde": "country/CPV",
-    "antarctica": "antarctica",
-    "alandislands": "nuts/FI2",
-    "aland": "nuts/FI2",
-    "pitcairn": "country/PCN",
-    # Svalbard and Jan Mayen Islands
-    "svalbardandjanmayenislands": "country/SJM",
-    "svalbardjanmayenislands": "country/SJM",
-    "svalbardandjanmayenis": "country/SJM",
-    "svalbardjanmayenis": "country/SJM",
-    "palestine": "country/PSE",
-    "saintmartin": "country/MAF",
-    # South Georgia and the South Sandwich Islands
-    "southgeorgiaandsouthsandwichis": "country/SGS",
-    "southgeorgiasouthsandwichis": "country/SGS",
-    "sthelena": "country/SHN",
-}
-
-
 def fetch_dcids_by_name(
     dc_client: DataCommonsClient,
     entities: str | list,
