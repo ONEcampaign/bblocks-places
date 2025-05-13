@@ -137,6 +137,37 @@ class PlaceResolver:
         self._dc_entity_type = dc_entity_type
         self._custom_disambiguation = custom_disambiguation
 
+    def _map_via_datacommons(self, candidates: dict[str, str | list | None], dc_property: str):
+        """This runs a concordance operation using the Data Commons Node endpoint.
+
+        It takes a dictionary of candidates where the keys are the original names and the values are the DCIDs.
+        It uses the DCIDs to fetch the properties from the Data Commons Node endpoint, then maps the
+        property values retrieved to the original names.
+
+        """
+
+        logger.info(f"Mapping to {dc_property} using Data Commons API")
+
+        # get a flattened list of dcids
+        dcids = [
+            v for val in candidates.values()
+            for v in (val if isinstance(val, list) else [val])
+        ]
+        # fetch the properties from the Data Commons Node endpoint
+        dc_props = fetch_properties(self._dc_client, dcids, dc_property)
+
+        # map the property values back to the original names
+        for place, val in candidates.items():
+            if isinstance(val, str):
+                candidates[place] = dc_props.get(val)
+            elif isinstance(val, list):
+                mapped = [dc_props.get(v) for v in val if dc_props.get(v)]
+                candidates[place] = mapped[0] if len(mapped) == 1 else (mapped or None)
+            else:
+                candidates[place] = None
+
+        return candidates
+
     def _disambiguation_path_pipeline(self, to_type, places_to_map):
         """ """
 
@@ -165,26 +196,10 @@ class PlaceResolver:
 
             # if the to_type is not in the concordance table, then we use Node API
             else:
-                logger.info(f"Mapping to {to_type} using Data Commons API")
-
-                dcids = [
-                    v
-                    for val in candidates.values()
-                    for v in (val if isinstance(val, list) else [val])
-                ]
-                dc_props = fetch_properties(self._dc_client, dcids, to_type)
-
-                for place, val in candidates.items():
-                    if isinstance(val, str):
-                        candidates[place] = dc_props.get(val)
-                    elif isinstance(val, list):
-                        mapped = [dc_props.get(v) for v in val if v in dc_props]
-                        mapped = [m for m in mapped if m is not None]
-                        candidates[place] = (
-                            mapped[0] if len(mapped) == 1 else (mapped or None)
-                        )
-                    else:
-                        candidates[place] = None
+                candidates = self._map_via_datacommons(
+                    candidates=candidates,
+                    dc_property=to_type,
+                )
 
         return candidates
 
@@ -199,37 +214,10 @@ class PlaceResolver:
                 to_type=to_type,
             )
         else:
-            logger.info(f"Mapping to {to_type} using Data Commons API")
-
-            # map the places to their dcids
-            if from_type != "dcid":
-                candidates = map_places(
-                    concordance_table=self._concordance_table,
-                    places=places_to_map,
-                    from_type=from_type,
-                    to_type="dcid",
-                )
-            else:
-                candidates = {place: place for place in places_to_map}
-
-            dcids = [
-                v
-                for val in candidates.values()
-                for v in (val if isinstance(val, list) else [val])
-            ]
-            dc_props = fetch_properties(self._dc_client, dcids, to_type)
-
-            for place, val in candidates.items():
-                if isinstance(val, str):
-                    candidates[place] = dc_props.get(val)
-                elif isinstance(val, list):
-                    mapped = [dc_props.get(v) for v in val if v in dc_props]
-                    mapped = [m for m in mapped if m is not None]
-                    candidates[place] = (
-                        mapped[0] if len(mapped) == 1 else (mapped or None)
-                    )
-                else:
-                    candidates[place] = None
+            candidates = self._map_via_datacommons(
+                candidates=places_to_map,
+                dc_property=to_type,
+            )
 
         return candidates
 
