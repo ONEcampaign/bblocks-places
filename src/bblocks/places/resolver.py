@@ -290,12 +290,13 @@ class PlaceResolver:
         "sthelena": "country/SHN",
     }
 
-    def __init__(self,
-                 concordance_table: Optional[None | pd.DataFrame | Literal["default"]] = None,
-                 custom_disambiguation: Optional[dict | Literal["default"]] = None,
-                 dc_entity_type: Optional[str] = None,
-                 *,
-                 dc_api_settings: Optional[dict] = None,
+    def __init__(
+        self,
+        concordance_table: Optional[None | pd.DataFrame | Literal["default"]] = None,
+        custom_disambiguation: Optional[dict | Literal["default"]] = None,
+        dc_entity_type: Optional[str] = None,
+        *,
+        dc_api_settings: Optional[dict] = None,
     ):
 
         # set the Data Commons client
@@ -312,11 +313,9 @@ class PlaceResolver:
 
         # validate the concordance table
         if self._concordance_table is not None:
-            validate_concordance_table(
-                self._concordance_table
-            )
+            validate_concordance_table(self._concordance_table)
 
-        self._dc_entity_type = dc_entity_type # set the Data Commons entity type
+        self._dc_entity_type = dc_entity_type  # set the Data Commons entity type
 
         # set any custom disambiguation rules
         if custom_disambiguation == "default":
@@ -324,10 +323,9 @@ class PlaceResolver:
         else:
             self._custom_disambiguation = custom_disambiguation
 
-    def _map_candidates_to_dc_property(self,
-                                       candidates: dict[str, str | list | None],
-                                       dc_property: str
-                                       ) -> dict[str, str | list | None] :
+    def _map_candidates_to_dc_property(
+        self, candidates: dict[str, str | list | None], dc_property: str
+    ) -> dict[str, str | list | None]:
         """This runs a concordance operation using the Data Commons Node endpoint.
 
         It takes a dictionary of candidates where the keys are the original names and the values are the DCIDs.
@@ -347,7 +345,8 @@ class PlaceResolver:
 
         # get a flattened list of dcids
         dcids = [
-            v for val in candidates.values()
+            v
+            for val in candidates.values()
             for v in (val if isinstance(val, list) else [val])
         ]
         # fetch the properties from the Data Commons Node endpoint
@@ -365,7 +364,9 @@ class PlaceResolver:
 
         return candidates
 
-    def _resolve_with_disambiguation(self, to_type: str, places_to_map: list[str]) -> dict[str, str | list | None]:
+    def _resolve_with_disambiguation(
+        self, to_type: str, places_to_map: list[str]
+    ) -> dict[str, str | list | None]:
         """The mapping pipeline that disambiguates the places and maps them to the desired type.
 
         This method uses the Data Commons API and/or any custom disambiguation rules
@@ -391,11 +392,13 @@ class PlaceResolver:
         if to_type == "dcid":
             return candidates
 
-
         # if the to_type is in the concordance table, then map the candidates using the concordance table
 
         # if the to_type is in the concordance table, then we use the concordance table
-        if self._concordance_table is not None and to_type in self._concordance_table.columns:
+        if (
+            self._concordance_table is not None
+            and to_type in self._concordance_table.columns
+        ):
             return map_candidates(
                 concordance_table=self._concordance_table,
                 candidates=candidates,
@@ -404,15 +407,13 @@ class PlaceResolver:
 
         # else if the to_type is not in the concordance table, then we use Node
         return self._map_candidates_to_dc_property(
-                candidates=candidates,
-                dc_property=to_type,
-            )
+            candidates=candidates,
+            dc_property=to_type,
+        )
 
-    def _resolve_without_disambiguation(self,
-                                        places_to_map: list[str],
-                                        from_type: str,
-                                        to_type:str
-                                        ) -> dict[str, str | list | None]:
+    def _resolve_without_disambiguation(
+        self, places_to_map: list[str], from_type: str, to_type: str
+    ) -> dict[str, str | list | None]:
         """The mapping pipeline that doesn't require disambiguation.
 
         This method uses a concordance table or Node to map the places to the desired type, without needing to
@@ -431,7 +432,10 @@ class PlaceResolver:
         """
 
         # if the from_type is in the concordance table, then use the concordance table to map the places
-        if self._concordance_table is not None and to_type in self._concordance_table.columns:
+        if (
+            self._concordance_table is not None
+            and to_type in self._concordance_table.columns
+        ):
             return map_places(
                 concordance_table=self._concordance_table,
                 places=places_to_map,
@@ -495,7 +499,9 @@ class PlaceResolver:
         """
 
         # remove any custom mapping from the entities to map
-        places_to_map = [p for p in places if not (custom_mapping and p in custom_mapping)]
+        places_to_map = [
+            p for p in places if not (custom_mapping and p in custom_mapping)
+        ]
 
         if not places_to_map:
             return custom_mapping
@@ -503,16 +509,23 @@ class PlaceResolver:
         # if from type is not provided, then we need to disambiguate the places
         if not from_type:
             # disambiguate the places
-            candidates = self._resolve_with_disambiguation(to_type=to_type, places_to_map=places_to_map)
+            candidates = self._resolve_with_disambiguation(
+                to_type=to_type, places_to_map=places_to_map
+            )
 
         # if the from_type is provided but is not in the concordance table, then we need to disambiguate the places
-        elif from_type and (self._concordance_table is None or from_type not in self._concordance_table.columns):
+        elif from_type and (
+            self._concordance_table is None
+            or from_type not in self._concordance_table.columns
+        ):
             # disambiguate the places
-            candidates = self._resolve_with_disambiguation(to_type=to_type, places_to_map=places_to_map)
+            candidates = self._resolve_with_disambiguation(
+                to_type=to_type, places_to_map=places_to_map
+            )
 
         # if the from_type is provided and is in the concordance table, then we can use the concordance table to map the places
         else:
-           candidates = self._resolve_without_disambiguation(
+            candidates = self._resolve_without_disambiguation(
                 places_to_map=places_to_map,
                 from_type=from_type,
                 to_type=to_type,
@@ -681,12 +694,9 @@ class PlaceResolver:
 
         return self._concordance_table
 
-
     @classmethod
     def from_concordance_csv(
-        cls,
-        concordance_csv_path: PathLike,
-        *args, **kwargs
+        cls, concordance_csv_path: PathLike, *args, **kwargs
     ) -> "PlaceResolver":
         """Create a PlaceResolver instance using a CSV file for the concordance table.
 
@@ -748,7 +758,6 @@ class PlaceResolver:
         # ensure filter_values is a list
         if isinstance(filter_values, str):
             filter_values = [filter_values]
-
 
         # if the places is a list ensure it is unique
         if isinstance(places, list):
