@@ -1,4 +1,7 @@
-"""Resolver"""
+"""Provides the core functionality to resolve places to standard formats
+This module contains the PlaceResolver class which is used to resolve places to standard formats
+using Data Commons and/or a custom concordance table
+"""
 
 from os import PathLike
 from datacommons_client import DataCommonsClient
@@ -140,6 +143,123 @@ def read_default_concordance_table() -> pd.DataFrame:
 
 class PlaceResolver:
     """A class to resolve places
+
+    This object contains functionality to resolve places to standard formats like DCIDs, ISO3 codes, names, etc. It
+    uses Data Commons and/or a custom concordance table to resolve places.
+    A concordance table can be specified which contains custom mappings of DCIDS to other place formats, for any
+    number of places. A default concordance table is provided which contains standard formats used by the ONE
+    Campaign. This default concordance table can be used by instantiating the class with the concordance_table
+    parameter set to "default". The concordance table can also be set to None, in which case the class will
+    be instantiated without a concordance table and will rely entirely on Data Commons to resolve places. Otherwise,
+    a custom concordance table can be provided as a pandas DataFrame. If places need to be resolved to formats not
+    contained by the concordance table, the format will attempt to be resolved using Data Commons. The object
+    also contains disambiguation logic. Disambiguation is handled using Data Commons, but custom
+    disambiguation rules can be provided. Default custom disambiguation rules are provided for edge cases that are
+    specific to working with countries based on the M49 list of countries and the current functionality of the
+    Data Commons API. If any custom disambiguation rules are provided, they will take precedence over the default
+    disambiguation logic that uses Data Commons. To set the custom disambiguation rules, instantiate the class with
+    the custom_disambiguation parameter set to a dictionary of custom disambiguation rules (a dictionary
+    of place names and their corresponding DCIDs). Optionally, you can use the default disambiguation rules by
+    setting the custom_disambiguation parameter to "default". Once instantiated, additional custom disambiguation rules
+    can be added to the object calling the add_custom_disambiguation method.
+
+    Parameters:
+        concordance_table: A pandas DataFrame containing the concordance table. Default is None.
+            If "default", the default concordance table will be used. If None, no concordance table will be used.
+        custom_disambiguation: A dictionary of custom disambiguation rules. Default is None.
+            If "default", the default disambiguation rules will be used. If None, no custom disambiguation rules
+            will be used.
+        dc_entity_type: The Data Commons entity type to resolve for, for example "Country".
+            Default is None. If None, the entity type will be automatically determined.
+        dc_api_settings: A dictionary of settings to pass to the Data Commons client. Default is None. If None, the
+            ONE Campaign Data Commons instance will be used. Available settings are:
+                api_key – The API key for authentication
+                dc_instance – The Data Commons instance to use. Defaults to "datacommons.one.org" if not set
+                url – A custom, fully resolved URL for the Data Commons API. Defaults to None if not set
+
+    Usage:
+
+    Instantiate an object
+
+    >>> resolver = PlaceResolver()
+    This will instantiate a class without a concordance table or custom disambiguation rules. It will also connect to
+    the ONE Campaign data commons instance to resolve places.
+
+    >>> resolver = PlaceResolver(concordance_table="default", custom_disambiguation="default", dc_entity_type="Country")
+    This will instantiate a class with the default concordance table and default disambiguation rules. It will also
+    connect to the ONE Campaign data commons instance to resolve places and will resolve places to
+    the "Country" entity type.
+
+    Resolving places:
+
+    The `resolve_map` method will return a dictionary of the original places to the resolved places. For example:
+
+    >>> resolver.resolve_map(["Zimbabwe", "Italy"], to_type="countryAlpha3Code")
+    >>> # returns {"Zimbabwe": "ZWE", "Italy": "ITA"}
+
+    If you know the original format of the places, and they are specified in the concordance table, you can
+    specify the from_type parameter. For example,
+    >>> resolver.resolve_map(["Zimbabwe", "Italy"], from_type="name_official", to_type="countryAlpha3Code")
+
+    If there is no concordance table or if the `to_type` is not in the concordance table, the method will
+    attempt to resolve the places using Data Commons. As in above, "countryAlpha3Code" is not in the concordance table,
+    so the method will attempt to resolve the places using Data Commons. If the `from_type` is not in the concordance
+    the method will again try to disambiguate the places using Data Commons.
+
+    There may be cases when a place cannot be resolved to a value. By default the method will raise an error. But you
+    can choose how to handle these cases. Options include "ignore" which sets the value to None, or any other string
+    which will set the value to that string. For example, if you want to ignore not found places, you can do:
+    >>> resolver.resolve_map(["Zimbabwe", "some invalid place"], to_type="countryAlpha3Code", not_found="ignore")
+    >>> # returns {"Zimbabwe": "ZWE", "some invalid place": None}
+
+    Or if you want to set the value to "not found", you can do:
+    >>> resolver.resolve_map(["Zimbabwe", "some invalid place"], to_type="countryAlpha3Code", not_found="not found")
+    >>> # returns {"Zimbabwe": "ZWE", "some invalid place": "not found"}
+
+    There may be cases when a place can be resolved to more than one value. By default the method will raise an error.
+    But you can choose how to handle these cases. Options include "ignore" which keeps the value as a list containing
+    all the candidates, or "first" which will use the first candidate. For example, if you want to ignore multiple
+    candidates, you can do:
+    >>> resolver.resolve_map(["Zimbabwe", "Place multiple"], to_type="countryAlpha3Code", multiple_candidates="ignore")
+    >>> # returns {"Zimbabwe": "ZWE", "Place multiple": ["candidate1", "candidate2"]}
+
+    Or if you want to use the first candidate, you can do:
+    >>> resolver.resolve_map(["Zimbabwe", "Place multiple"], to_type="countryAlpha3Code", multiple_candidates="first")
+    >>> # returns {"Zimbabwe": "ZWE", "Place multiple": "candidate1"}
+
+    Additionally any custom mappings can be provided. For example, if you want to map "Zimbabwe" to "ZIM", you can do:
+    >>> resolver.resolve_map(["Zimbabwe", "Italy"], to_type="countryAlpha3Code", custom_mapping={"Zimbabwe": "ZIM"})
+    >>> # returns {"Zimbabwe": "ZIM", "Italy": "ITA"}
+
+    The custom mapping will override any other mappings. Disambiguation and concordance will not be run for
+    those places.
+
+    The `resolve` functions the same way but will override original places with the resolved places in their original
+    format. For example:
+    >>> resolver.resolve(["Zimbabwe", "Italy"], to_type="countryAlpha3Code")
+    >>> # returns ["ZWE", "ITA"]
+
+    A single string can also be passed to the `resolve` method. For example:
+    >>> resolver.resolve("Zimbabwe", to_type="countryAlpha3Code")
+    >>> # returns "ZWE"
+
+    Or a pandas Series:
+    >>> resolver.resolve(pd.Series(["Zimbabwe", "Italy"]), to_type="countryAlpha3Code")
+    >>> # returns pd.Series(["ZWE", "ITA"])
+
+    All the same options apply to the `resolve` method as well, including from_type, not_found, multiple_candidates,
+    and custom_mapping.
+
+    The filter method can be used to filter places for values in a specified format. For example,
+    >>> resolver.filter(["Zimbabwe", "Italy"], filter_type="region", filter_value="Africa")
+    >>> # returns ["Zimbabwe"]
+
+    *Note the above example only works if the default concordance table is set.
+
+    Additional methods and properties available on the class include:
+        - `concordance_table`: The concordance table used by the class.
+        - add_custom_disambiguation: A method to add custom disambiguation rules to the class.
+        - get_concordance_dict : A method to get the concordance dictionary for a given from_type and to_type.
 
     """
 
@@ -341,7 +461,7 @@ class PlaceResolver:
         places: list[str],
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
-        not_found: Literal["raise", "ignore"] = "raise",
+        not_found: Literal["raise", "ignore"] | str = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str]:
@@ -416,7 +536,7 @@ class PlaceResolver:
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
-        not_found: Literal["raise", "ignore"] = "raise",
+        not_found: Literal["raise", "ignore"] | str = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str | list[str] | None]:
