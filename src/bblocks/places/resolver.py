@@ -788,9 +788,7 @@ class PlaceResolver:
             return [place for place in places if place in filtered_places]
 
         # if the places is a pd.Series map the filtered places to the original places
-        return pd.Series(
-            [place for place in places if place in filtered_places]
-        )
+        return pd.Series([place for place in places if place in filtered_places])
 
     def get_concordance_dict(
         self, from_type: str, to_type: str, include_nulls: bool = False

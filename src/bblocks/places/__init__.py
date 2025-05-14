@@ -9,14 +9,12 @@ from bblocks.places.main import (
     get_ldc,
     get_lldc,
     get_african_countries,
-
     resolve_places,
     filter_places,
     resolve_places_mapping,
-
     filter_african_countries,
-    get_places_by
-                                 )
+    get_places_by,
+)
 
 
 __version__ = version("bblocks.places")
