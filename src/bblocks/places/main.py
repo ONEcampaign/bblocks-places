@@ -36,7 +36,7 @@ _valid_targets = _valid_sources + ["region",
 
 
 def _get_list_from_bool(target_field, bool_field):
-    """ """
+    """Helper function to get a list of countries from a boolean field."""
 
     if target_field not in _valid_sources:
         raise ValueError(f"Invalid place format: {target_field}. Must be one of {_valid_sources}.")
@@ -55,7 +55,15 @@ def get_un_members(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
-        TODO: Add the available formats here.
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
@@ -68,7 +76,15 @@ def get_un_observers(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
-            TODO: Add the available formats here.
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
@@ -81,6 +97,15 @@ def get_m49_places(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
@@ -94,6 +119,15 @@ def get_sids(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
@@ -106,6 +140,15 @@ def get_ldc(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
@@ -118,6 +161,15 @@ def get_lldc(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
@@ -126,18 +178,73 @@ def get_lldc(place_format: Optional[str] = "dcid") -> list[str | int]:
     return _get_list_from_bool(place_format, "lldc")
 
 
-def resolve_places(places: str | list[str] | pd.Series,
-            to_type: Optional[str] = "dcid",
+def resolve_places(
+            places: str | list[str] | pd.Series,
             from_type: Optional[str] = None,
+            to_type: Optional[str] = "dcid",
             not_found: Literal["raise", "ignore"] | str = "raise",
             multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
             custom_mapping: Optional[dict] = None,
             ):
-    """ """
+    """Resolve places
 
-    # check if the to_type is valid
-    if to_type not in _valid_targets:
-        raise ValueError(f"Invalid country format: {to_type}. Must be one of {_valid_targets}.")
+    Resolve places to a desired format. This function disambiguates places
+    if disambiguation is needed, and map them to the desired format, replacing
+    the original places with the resolved ones.
+
+    Args:
+        places: The places to resolve. This can be a string, a list of strings, or a pandas Series.
+
+        to_type: The format to resolve the places to. Defaults to "dcid".
+            Options are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
+            - region
+            - region_code
+            - subregion
+            - subregion_code
+            - intermediate_region_code
+            - intermediate_region
+            - income_level
+            - Any other valid property in Data Commons
+
+        from_type: The format of the input places. If not provided, the places will be
+            disambiguated automatically. Defaults to None.
+            Options are:
+            - "dcid"
+            - "name_official"
+            - "name_short"
+            - "iso3_code"
+            - "iso2_code"
+            - "iso_numeric_code"
+            - "m49_code"
+            - "dac_code"
+
+        not_found: How to handle places that could not be resolved. Default is "raise".
+            Options are:
+                - "raise": raise an error.
+                - "ignore": keep the value as None.
+                - Any other string to set as the value for not found places.
+
+        multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+            Default is "raise". Options are:
+                - "raise": raise an error.
+                - "first": use the first candidate.
+                - "ignore": keep the value as a list.
+
+        custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
+            override any other mappings. Disambiguation and concordance will not be run for those places.
+            The keys are the original places and the values are the resolved places.
+
+    Returns:
+        Resolved places
+    """
 
     # check if the from_type is valid
     if from_type is not None and from_type not in _valid_sources:
@@ -159,11 +266,66 @@ def resolve_places_mapping(places: str | list[str] | pd.Series,
                             multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
                             custom_mapping: Optional[dict] = None,
                             ) -> dict[str, str | int | None | list]:
-    """ """
+    """Resolve places to a mapping dictionary of {place: resolved}
 
-    # check if the to_type is valid
-    if to_type not in _valid_targets:
-        raise ValueError(f"Invalid country format: {to_type}. Must be one of {_valid_targets}.")
+    Resolve places to a desired format. This function disambiguates places
+    if disambiguation is needed, and map them to the desired format, returning a
+    dictionary with the original places as keys and the resolved places as values.
+
+    Args:
+        places: The places to resolve
+
+        to_type: The desired format to resolve the places to. Defaults to "dcid".
+            Options are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
+            - region
+            - region_code
+            - subregion
+            - subregion_code
+            - intermediate_region_code
+            - intermediate_region
+            - income_level
+            - Any other valid property in Data Commons
+
+        from_type: The original format of the places. Default is None.
+            If None, the places will be disambiguated automatically using Data Commons
+            Options are:
+            - "dcid"
+            - "name_official"
+            - "name_short"
+            - "iso3_code"
+            - "iso2_code"
+            - "iso_numeric_code"
+            - "m49_code"
+            - "dac_code"
+
+        not_found: How to handle places that could not be resolved. Default is "raise".
+            Options are:
+                - "raise": raise an error.
+                - "ignore": keep the value as None.
+                - Any other string to set as the value for not found places.
+
+        multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+            Default is "raise". Options are:
+                - "raise": raise an error.
+                - "first": use the first candidate.
+                - "ignore": keep the value as a list.
+
+        custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
+            override any other mappings. Disambiguation and concordance will not be run for those places.
+            The keys are the original places and the values are the resolved places.
+
+    Returns:
+        A dictionary mapping the places to the desired format.
+    """
+
     # check if the from_type is valid
     if from_type is not None and from_type not in _valid_sources:
         raise ValueError(f"Invalid country format: {from_type}. Must be one of {_valid_sources}.")
@@ -178,14 +340,61 @@ def resolve_places_mapping(places: str | list[str] | pd.Series,
     )
 
 
-def filter_places(places: str | list[str] | pd.Series,
+def filter_places(places: list[str] | pd.Series,
            filter_type: str,
            filter_values: str | list[str],
            from_type: Optional[str] = None,
            not_found: Literal["raise", "ignore"] = "raise",
            multiple_candidates: Literal["raise", "first"] = "raise",
-            ):
-    """ """
+            ) -> pd.Series | list:
+    """Filter places
+
+    Filter places based on a specific category like "region" for specific values like "Africa".
+    This function can disambiguate places if needed, and filter them based on the specified category
+    and values.
+
+    Args:
+        places: The places to filter
+
+        filter_type: The category to filter the places by. This can be a string or a list of strings.
+            Options are:
+            - region
+            - region_code
+            - subregion
+            - subregion_code
+            - intermediate_region_code
+            - intermediate_region
+            - income_level
+
+        filter_values: The values to filter the places by. This can be a string or a list of strings.
+
+        from_type:  The original format of the places. Default is None.
+            If None, the places will be disambiguated automatically using Data Commons
+            Options are:
+            - "dcid"
+            - "name_official"
+            - "name_short"
+            - "iso3_code"
+            - "iso2_code"
+            - "iso_numeric_code"
+            - "m49_code"
+            - "dac_code"
+
+        not_found: How to handle places that could not be resolved. Default is "raise".
+            Options are:
+                - "raise": raise an error.
+                - "ignore": keep the value as None.
+                - Any other string to set as the value for not found places.
+
+        multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+            Default is "raise". Options are:
+                - "raise": raise an error.
+                - "first": use the first candidate.
+                - "ignore": keep the value as a list.
+
+    Returns:
+        Filtered places
+    """
 
     # check if the filter_type is valid
     if filter_type not in _valid_targets:
@@ -217,7 +426,37 @@ def filter_african_countries(places: str | list[str] | pd.Series,
                              from_type: Optional[str] = None,
                              not_found: Literal["raise", "ignore"] = "raise",
                              multiple_candidates: Literal["raise", "first"] = "raise"):
-    """Filter a list of places to only include African countries.
+    """Filter places for African countries
+
+    Filter places based on the region "Africa". This function can disambiguate places
+    if needed, then filter them.
+
+    Args:
+        places: The places to filter
+
+        from_type:  The original format of the places. Default is None.
+            If None, the places will be disambiguated automatically using Data Commons
+            Options are:
+            - "dcid"
+            - "name_official"
+            - "name_short"
+            - "iso3_code"
+            - "iso2_code"
+            - "iso_numeric_code"
+            - "m49_code"
+            - "dac_code"
+
+        not_found: How to handle places that could not be resolved. Default is "raise".
+            Options are:
+                - "raise": raise an error.
+                - "ignore": keep the value as None.
+                - Any other string to set as the value for not found places.
+
+        multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+            Default is "raise". Options are:
+                - "raise": raise an error.
+                - "first": use the first candidate.
+                - "ignore": keep the value as a list.
     """
     return filter_places(places=places,
                          filter_type="region",
@@ -229,7 +468,34 @@ def filter_african_countries(places: str | list[str] | pd.Series,
 
 
 def get_places_by(by: str, filter_values: str | list[str], place_format: Optional[str] = "dcid") -> list[str | int]:
-    """ """
+    """Get places based on a specific category and values.
+
+    This function can be used to get places based on a specific category like "region" for specific values like "Africa".
+
+    Args:
+        by: The category to filter the places by. This can be a string or a list of strings.
+            Options are:
+            - region
+            - region_code
+            - subregion
+            - subregion_code
+            - intermediate_region_code
+            - intermediate_region
+            - income_level
+
+        filter_values: The values to filter the places by. This can be a string or a list of strings.
+
+        place_format: The format of the country names to return. Defaults to "dcid".
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
+    """
 
     # check if the by is valid
     if by not in _valid_targets:
@@ -258,6 +524,15 @@ def get_african_countries(place_format: Optional[str] = "dcid") -> list[str | in
 
     Args:
         place_format: The format of the country names to return. Defaults to "dcid".
+            Options are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
 
     Returns:
         A list of country names in the specified format.
