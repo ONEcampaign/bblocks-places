@@ -621,7 +621,7 @@ class PlaceResolver:
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
-        not_found: Literal["raise", "ignore"] = "raise",
+        not_found: Literal["raise", "ignore"] | str = "raise",
         multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> str | list[str] | pd.Series:
@@ -689,7 +689,7 @@ class PlaceResolver:
         """Get the concordance table"""
 
         # raise an error if there is no concordance table set
-        if not self._concordance_table:
+        if self._concordance_table is None:
             raise ValueError("No concordance table is defined for this resolver.")
 
         return self._concordance_table
@@ -786,9 +786,9 @@ class PlaceResolver:
         # return the filtered in the original format
         if isinstance(places, list):
             return [place for place in places if place in filtered_places]
-        return pd.Series(
-            [place for place in places if place in filtered_places], index=places.index
-        )
+
+        # if the places is a pd.Series map the filtered places to the original places
+        return pd.Series([place for place in places if place in filtered_places])
 
     def get_concordance_dict(
         self, from_type: str, to_type: str, include_nulls: bool = False
@@ -805,7 +805,7 @@ class PlaceResolver:
         """
 
         # if no concordance table is set, raise an error
-        if not self._concordance_table:
+        if self._concordance_table is None:
             raise ValueError("No concordance table is defined for this resolver.")
 
         if from_type == to_type:
