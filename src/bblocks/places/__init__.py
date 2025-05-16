@@ -12,15 +12,18 @@ from bblocks.places.main import (
     get_african_countries,
 
 # resolvers and filters
-    resolve_places,
+    resolve,
     filter_places,
-    resolve_places_mapping,
+    resolve_map,
     filter_african_countries,
 
 # Category-based filters
 
     get_places_by,
-    get_places_by_multiple
+    get_places_by_multiple,
+
+# Other
+    get_default_concordance_table
 )
 
 
