@@ -653,4 +653,4 @@ def get_african_countries(place_format: Optional[str] = "dcid", exclude_non_un_m
     if exclude_non_un_members:
         filter_dict = {"region": "Africa", "un_member": True}
 
-    return get_places_by_multiple(filter_dict=filter_dict, place_format=place_format)
+    return get_places_by_multiple(filters=filter_dict, place_format=place_format)
