@@ -501,6 +501,39 @@ def filter_african_countries(
     )
 
 
+def _get_places_multiple_by(filter_dict: dict[str, str | list[str | int | bool]], place_format) -> list[str | int]:
+    """ """
+
+    if place_format not in _valid_sources:
+        raise ValueError(
+            f"Invalid country format: {place_format}. Must be one of {_valid_sources}."
+        )
+
+    for key, value in filter_dict.items():
+        # if the value is not already a list, wrap it in a list
+        if not isinstance(value, list):
+            filter_dict[key] = [value]
+
+        # validate each value
+        if not all(v in _country_resolver.concordance_table[key].values for v in filter_dict[key]):
+            valid_values = list(_country_resolver.concordance_table[key].dropna().unique())
+            raise ValueError(
+                f"Invalid filter values: {filter_dict[key]}. Must be one of {valid_values}."
+            )
+
+
+
+    # filter the concordance table based on the filter
+    return list(_country_resolver.concordance_table
+        .query(
+            " and ".join([f"{key} in {value}" for key, value in filter_dict.items()])
+        )
+    [place_format]
+        .dropna()
+        .unique()
+                )
+
+
 def get_places_by(
     by: str, filter_values: str | list[str], place_format: Optional[str] = "dcid"
 ) -> list[str | int]:
@@ -563,7 +596,7 @@ def get_places_by(
     return [k for k, v in mapper.items() if v in filter_values]
 
 
-def get_african_countries(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_african_countries(place_format: Optional[str] = "dcid", exclude_non_un_members: Optional[bool] = True) -> list[str | int]:
     """Get a list of African countries in the specified format.
 
     Args:
@@ -577,9 +610,16 @@ def get_african_countries(place_format: Optional[str] = "dcid") -> list[str | in
             - iso_numeric_code
             - m49_code
             - dac_code
+        exclude_non_un_members: Whether to exclude non-UN members. Defaults to True. If set to False, non-UN member
+            countries and areas such as Western Sahara will be included in the list.
 
     Returns:
-        A list of country names in the specified format.
+        A list of African country names in the specified format.
     """
 
-    return get_places_by("region", "Africa", place_format)
+    filter_dict = {"region": "Africa"}
+
+    if exclude_non_un_members:
+        filter_dict = {"region": "Africa", "un_member": True}
+
+    return _get_places_multiple_by(filter_dict=filter_dict, place_format=place_format)
