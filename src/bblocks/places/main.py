@@ -16,7 +16,7 @@ _country_resolver = PlaceResolver(
     dc_entity_type="Country",
 )
 
-_valid_sources = [
+_VALID_SOURCES = [
     "dcid",
     "name_official",
     "name_short",
@@ -27,7 +27,7 @@ _valid_sources = [
     "dac_code",
 ]
 
-_valid_targets = _valid_sources + [
+_VALID_TARGETS = [
     "region",
     "region_code",
     "subregion",
@@ -37,14 +37,59 @@ _valid_targets = _valid_sources + [
     "income_level",
 ]
 
+_VALID_CONCORDANCE_FIELDS = _country_resolver.concordance_table.columns.tolist()
+
+
+def _validate_place_format(place_format: str) -> None:
+    """Validate the place format, ensuring it is one of the valid formats defined in _VALID_SOURCES.
+
+    Args:
+        place_format: the string for the place format to validate.
+
+    Raises:
+        ValueError: if the place format is not one of the valid formats.
+
+    """
+
+    if place_format not in _VALID_SOURCES:
+        raise ValueError(
+            f"Invalid place format: {place_format}. Must be one of {_VALID_SOURCES}."
+        )
+
+
+def _validate_place_target(target_field: str) -> None:
+    """Validate the target field, ensuring it is one of the valid formats defined in _VALID_TARGETS.
+
+    Args:
+        target_field: the string for the target field to validate.
+
+    Raises:
+        ValueError: if the target field is not one of the valid formats.
+
+    """
+
+    if target_field not in _VALID_TARGETS:
+        raise ValueError(
+            f"Invalid place format: {target_field}. Must be one of {_VALID_TARGETS}."
+        )
+
+def _validate_filter_values(filter_category, filter_values: str | list[str]) -> None:
+    """Validate the filter values ensuring they are available for the filter category."""
+
+    valid_values = list(_country_resolver.concordance_table[filter_category].dropna().unique())
+
+    # ensure all the filter values are in the valid_values list
+    if not all(v in valid_values for v in filter_values):
+        raise ValueError(
+            f"Invalid filter values: {filter_values}. Must be one of {valid_values}."
+        )
+
 
 def _get_list_from_bool(target_field, bool_field):
     """Helper function to get a list of countries from a boolean field."""
 
-    if target_field not in _valid_sources:
-        raise ValueError(
-            f"Invalid place format: {target_field}. Must be one of {_valid_sources}."
-        )
+    # validate the target field
+    _validate_place_format(target_field)
 
     countries = _country_resolver.get_concordance_dict(
         from_type=target_field, to_type=bool_field
@@ -258,10 +303,8 @@ def resolve_places(
     """
 
     # check if the from_type is valid
-    if from_type is not None and from_type not in _valid_sources:
-        raise ValueError(
-            f"Invalid country format: {from_type}. Must be one of {_valid_sources}."
-        )
+    if from_type is not None:
+        _validate_place_format(from_type)
 
     return _country_resolver.resolve(
         places=places,
@@ -342,10 +385,8 @@ def resolve_places_mapping(
     """
 
     # check if the from_type is valid
-    if from_type is not None and from_type not in _valid_sources:
-        raise ValueError(
-            f"Invalid country format: {from_type}. Must be one of {_valid_sources}."
-        )
+    if from_type is not None:
+        _validate_place_format(from_type)
 
     return _country_resolver.resolve_map(
         places=places,
@@ -414,34 +455,18 @@ def filter_places(
         Filtered places
     """
 
-    # check if the filter_type is valid
-    if filter_type not in _valid_targets:
-        raise ValueError(
-            f"Invalid country format: {filter_type}. Must be one of {_valid_targets}."
-        )
-
     # check if the from_type is valid
-    if from_type is not None and from_type not in _valid_sources:
-        raise ValueError(
-            f"Invalid country format: {from_type}. Must be one of {_valid_sources}."
-        )
+    if from_type is not None:
+        _validate_place_format(from_type)
+
+    # check if the filter_type is valid
+    _validate_place_target(filter_type)
 
     # check if the filter_values are valid - should exist in the concordance table
     if isinstance(filter_values, str):
         filter_values = [filter_values]
-    if not all(
-        [
-            v in _country_resolver.concordance_table[filter_type].values
-            for v in filter_values
-        ]
-    ):
-        # get a list of valid values, excluding any nulls
-        valid_values = list(
-            _country_resolver.concordance_table[filter_type].dropna().unique()
-        )
-        raise ValueError(
-            f"Invalid filter values: {filter_values}. Must be one of {valid_values}."
-        )
+
+    _validate_filter_values(filter_type, filter_values)
 
     return _country_resolver.filter(
         places=places,
@@ -491,6 +516,7 @@ def filter_african_countries(
                 - "first": use the first candidate.
                 - "ignore": keep the value as a list.
     """
+
     return filter_places(
         places=places,
         filter_type="region",
@@ -501,32 +527,50 @@ def filter_african_countries(
     )
 
 
-def _get_places_multiple_by(filter_dict: dict[str, str | list[str | int | bool]], place_format) -> list[str | int]:
-    """ """
+def get_places_by_multiple(filters: dict[str, str | list[str | int | bool]], place_format: str = "dcid") -> list[str | int]:
+    """Get places based on multiple filters.
 
-    if place_format not in _valid_sources:
-        raise ValueError(
-            f"Invalid country format: {place_format}. Must be one of {_valid_sources}."
-        )
 
-    for key, value in filter_dict.items():
+    This function can be used to get all places based on multiple filters for multiple categories and values,
+    for example, by region and income level for values like "Africa" and "High income".
+
+    Args:
+        filters: A dictionary of filters to apply. The keys are the categories to filter by and the values are the
+            values to filter by. The values can be a string or a list of strings.
+            Example: {"region": "Africa","income_level": ["High income", "Upper middle income"]}
+
+        place_format: The format of the country names to return. Defaults to "dcid".
+            Available formats are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
+
+    Returns:
+        A list of place names in the specified format.
+
+    """
+
+    # check if the filter_dict is valid
+    _validate_place_format(place_format)
+
+    for key, value in filters.items():
         # if the value is not already a list, wrap it in a list
         if not isinstance(value, list):
-            filter_dict[key] = [value]
+            value = [value]
+            filters[key] = value  # update dict for later use
 
         # validate each value
-        if not all(v in _country_resolver.concordance_table[key].values for v in filter_dict[key]):
-            valid_values = list(_country_resolver.concordance_table[key].dropna().unique())
-            raise ValueError(
-                f"Invalid filter values: {filter_dict[key]}. Must be one of {valid_values}."
-            )
-
-
+        _validate_filter_values(key, value)
 
     # filter the concordance table based on the filter
     return list(_country_resolver.concordance_table
         .query(
-            " and ".join([f"{key} in {value}" for key, value in filter_dict.items()])
+            " and ".join([f"{key} in {value}" for key, value in filters.items()])
         )
     [place_format]
         .dropna()
@@ -567,29 +611,16 @@ def get_places_by(
     """
 
     # check if the by is valid
-    if by not in _valid_targets:
-        raise ValueError(
-            f"Invalid country format: {by}. Must be one of {_valid_targets}."
-        )
+    _validate_place_target(by)
 
     if isinstance(filter_values, str):
         filter_values = [filter_values]
 
     # check if the filter_values are valid - should exist in the concordance table
-    if not all(
-        [v in _country_resolver.concordance_table[by].values for v in filter_values]
-    ):
-        # get a list of valid values, excluding any nulls
-        valid_values = list(_country_resolver.concordance_table[by].dropna().unique())
-        raise ValueError(
-            f"Invalid filter values: {filter_values}. Must be one of {valid_values}."
-        )
+    _validate_filter_values(by, filter_values)
 
     # check if the place_format is valid
-    if place_format not in _valid_sources:
-        raise ValueError(
-            f"Invalid country format: {place_format}. Must be one of {_valid_sources}."
-        )
+    _validate_place_format(place_format)
 
     # filter the concordance table
     mapper = _country_resolver.get_concordance_dict(from_type=place_format, to_type=by)
@@ -622,4 +653,4 @@ def get_african_countries(place_format: Optional[str] = "dcid", exclude_non_un_m
     if exclude_non_un_members:
         filter_dict = {"region": "Africa", "un_member": True}
 
-    return _get_places_multiple_by(filter_dict=filter_dict, place_format=place_format)
+    return get_places_by_multiple(filter_dict=filter_dict, place_format=place_format)
