@@ -16,6 +16,17 @@ _country_resolver = PlaceResolver(
     dc_entity_type="Country",
 )
 
+
+def get_default_concordance_table() -> pd.DataFrame:
+    """Get the default concordance table.
+
+    Returns:
+        The default concordance table as a pandas DataFrame.
+    """
+
+    return _country_resolver.concordance_table
+
+
 _VALID_SOURCES = [
     "dcid",
     "name_official",
@@ -73,10 +84,13 @@ def _validate_place_target(target_field: str) -> None:
             f"Invalid place format: {target_field}. Must be one of {_VALID_TARGETS}."
         )
 
+
 def _validate_filter_values(filter_category, filter_values: str | list[str]) -> None:
     """Validate the filter values ensuring they are available for the filter category."""
 
-    valid_values = list(_country_resolver.concordance_table[filter_category].dropna().unique())
+    valid_values = list(
+        _country_resolver.concordance_table[filter_category].dropna().unique()
+    )
 
     # ensure all the filter values are in the valid_values list
     if not all(v in valid_values for v in filter_values):
@@ -234,7 +248,7 @@ def get_lldc(place_format: Optional[str] = "dcid") -> list[str | int]:
     return _get_list_from_bool(place_format, "lldc")
 
 
-def resolve_places(
+def resolve(
     places: str | list[str] | pd.Series,
     from_type: Optional[str] = None,
     to_type: Optional[str] = "dcid",
@@ -316,7 +330,7 @@ def resolve_places(
     )
 
 
-def resolve_places_mapping(
+def resolve_map(
     places: str | list[str] | pd.Series,
     to_type: Optional[str] = "dcid",
     from_type: Optional[str] = None,
@@ -400,7 +414,7 @@ def resolve_places_mapping(
 
 def filter_places(
     places: list[str] | pd.Series,
-    filter_type: str,
+    filter_category: str,
     filter_values: str | list[str],
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
@@ -415,7 +429,7 @@ def filter_places(
     Args:
         places: The places to filter
 
-        filter_type: The category to filter the places by. This can be a string or a list of strings.
+        filter_category: The category to filter the places by. This can be a string or a list of strings.
             Options are:
             - region
             - region_code
@@ -459,18 +473,18 @@ def filter_places(
     if from_type is not None:
         _validate_place_format(from_type)
 
-    # check if the filter_type is valid
-    _validate_place_target(filter_type)
+    # check if the filter_category is valid
+    _validate_place_target(filter_category)
 
     # check if the filter_values are valid - should exist in the concordance table
     if isinstance(filter_values, str):
         filter_values = [filter_values]
 
-    _validate_filter_values(filter_type, filter_values)
+    _validate_filter_values(filter_category, filter_values)
 
     return _country_resolver.filter(
         places=places,
-        filter_type=filter_type,
+        filter_category=filter_category,
         filter_values=filter_values,
         from_type=from_type,
         not_found=not_found,
@@ -519,7 +533,7 @@ def filter_african_countries(
 
     return filter_places(
         places=places,
-        filter_type="region",
+        filter_category="region",
         filter_values="Africa",
         from_type=from_type,
         not_found=not_found,
@@ -527,7 +541,9 @@ def filter_african_countries(
     )
 
 
-def get_places_by_multiple(filters: dict[str, str | list[str | int | bool]], place_format: str = "dcid") -> list[str | int]:
+def get_places_by_multiple(
+    filters: dict[str, str | list[str | int | bool]], place_format: str = "dcid"
+) -> list[str | int]:
     """Get places based on multiple filters.
 
 
@@ -568,14 +584,13 @@ def get_places_by_multiple(filters: dict[str, str | list[str | int | bool]], pla
         _validate_filter_values(key, value)
 
     # filter the concordance table based on the filter
-    return list(_country_resolver.concordance_table
-        .query(
+    return list(
+        _country_resolver.concordance_table.query(
             " and ".join([f"{key} in {value}" for key, value in filters.items()])
-        )
-    [place_format]
+        )[place_format]
         .dropna()
         .unique()
-                )
+    )
 
 
 def get_places_by(
@@ -627,7 +642,9 @@ def get_places_by(
     return [k for k, v in mapper.items() if v in filter_values]
 
 
-def get_african_countries(place_format: Optional[str] = "dcid", exclude_non_un_members: Optional[bool] = True) -> list[str | int]:
+def get_african_countries(
+    place_format: Optional[str] = "dcid", exclude_non_un_members: Optional[bool] = True
+) -> list[str | int]:
     """Get a list of African countries in the specified format.
 
     Args:

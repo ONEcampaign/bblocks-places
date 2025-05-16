@@ -251,7 +251,7 @@ class PlaceResolver:
     and custom_mapping.
 
     The filter method can be used to filter places for values in a specified format. For example,
-    >>> resolver.filter(["Zimbabwe", "Italy"], filter_type="region", filter_value="Africa")
+    >>> resolver.filter(["Zimbabwe", "Italy"], filter_category="region", filter_value="Africa")
     >>> # returns ["Zimbabwe"]
 
     *Note the above example only works if the default concordance table is set.
@@ -306,8 +306,14 @@ class PlaceResolver:
             self._dc_client = DataCommonsClient(dc_instance="datacommons.one.org")
 
         # set the concordance table
-        if concordance_table == "default":
-            self._concordance_table = self._CONCORDANCE_TABLE
+        # if the concordance table is a string and is "default", then use the default concordance table
+        if isinstance(concordance_table, str):
+            if concordance_table == "default":
+                self._concordance_table = self._CONCORDANCE_TABLE
+            else:
+                raise ValueError(
+                    f"Invalid value for concordance_table: {concordance_table}. Must be 'default' or a pandas DataFrame"
+                )
         else:
             self._concordance_table = concordance_table
 
@@ -719,7 +725,7 @@ class PlaceResolver:
     def filter(
         self,
         places: list[str] | pd.Series,
-        filter_type: str,
+        filter_category: str,
         filter_values: str | list[str],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
@@ -735,7 +741,7 @@ class PlaceResolver:
 
             from_type: the original format of the places. If None, the places will be disambiguated automatically.
 
-            filter_type: the place format to filter by.
+            filter_category: the place format to filter by.
 
             filter_values: the values to filter for.
 
@@ -771,7 +777,7 @@ class PlaceResolver:
         mapper = self.resolve_map(
             places=places_to_filter,
             from_type=from_type,
-            to_type=filter_type,
+            to_type=filter_category,
             not_found=not_found,
             multiple_candidates=multiple_candidates,
         )
