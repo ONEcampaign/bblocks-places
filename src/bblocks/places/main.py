@@ -466,6 +466,8 @@ def filter_places(
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
+    *,
+    raise_if_empty: bool = False,
 ) -> pd.Series | list:
     """Filter places
 
@@ -515,6 +517,10 @@ def filter_places(
 
     Returns:
         Filtered places
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no places match the
+            filter criteria.
     """
 
     # check if the from_type is valid
@@ -530,7 +536,7 @@ def filter_places(
 
     _validate_filter_values(filter_category, filter_values)
 
-    return _country_resolver.filter(
+    result = _country_resolver.filter(
         places=places,
         filter_category=filter_category,
         filter_values=filter_values,
@@ -539,12 +545,28 @@ def filter_places(
         multiple_candidates=multiple_candidates,
     )
 
+    empty = False
+    if isinstance(result, list) and not result:
+        empty = True
+    elif isinstance(result, pd.Series) and result.empty:
+        empty = True
+
+    if empty:
+        msg = f"No places found for {filter_category} in {filter_values}"
+        if raise_if_empty:
+            raise ValueError(msg)
+        logger.warning(msg)
+
+    return result
+
 
 def filter_african_countries(
     places: str | list[str] | pd.Series,
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
+    *,
+    raise_if_empty: bool = False,
 ):
     """Filter places for African countries
 
@@ -578,6 +600,9 @@ def filter_african_countries(
                 - "first": use the first candidate.
                 - "last": use the last candidate.
                 - "ignore": keep the value as a list.
+        raise_if_empty: Whether to raise a ``ValueError`` if the filtered
+            result is empty. If ``False`` a warning is logged and an empty list
+            is returned.
     """
 
     return filter_places(
@@ -587,6 +612,7 @@ def filter_african_countries(
         from_type=from_type,
         not_found=not_found,
         multiple_candidates=multiple_candidates,
+        raise_if_empty=raise_if_empty,
     )
 
 
@@ -596,6 +622,8 @@ def filter_places_multiple(
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
+    *,
+    raise_if_empty: bool = False,
 ) -> pd.Series | list:
     """Filter places using multiple categories.
 
@@ -614,6 +642,10 @@ def filter_places_multiple(
 
     Returns:
         The places that satisfy all filters, in the same type as ``places``.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no places match the
+            provided filters.
     """
 
     if from_type is not None:
@@ -648,7 +680,9 @@ def filter_places_multiple(
         )
 
     for category, values in normalised.items():
-        cat_map = _country_resolver.get_concordance_dict("dcid", category, include_nulls=True)
+        cat_map = _country_resolver.get_concordance_dict(
+            "dcid", category, include_nulls=True
+        )
         filtered = []
         for place in result:
             dcid = dcid_map.get(place)
@@ -657,6 +691,14 @@ def filter_places_multiple(
             if cat_map.get(dcid) in values:
                 filtered.append(place)
         result = filtered
+
+    empty = len(result) == 0
+
+    if empty:
+        msg = f"No places found for filters {filters}"
+        if raise_if_empty:
+            raise ValueError(msg)
+        logger.warning(msg)
 
     return pd.Series(result) if isinstance(places, pd.Series) else result
 
