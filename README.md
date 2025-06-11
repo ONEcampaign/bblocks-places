@@ -142,10 +142,11 @@ __Handling ambiguities__
 
 The package is designed to handle ambiguities seamlessly. At a most basic level, it can handle common string issues such
 as whitespace, capitalization, and punctuation. For example, it will treat "Zimbabwe" and " zimbabwe " as the same place,
-and Cote d'Ivoire is recognized without accent marks.
+and Cote d'Ivoire is recognized without accent marks. 
 
 ```python
 resolved_places = places.resolve([" zimbabwe ", "cote d'ivoire"], to_type="iso3_code")
+
 print(resolved_places)
 # Output:
 # ['ZWE', 'CIV']
@@ -155,13 +156,15 @@ The package also handles more complex ambiguities such as historical and alterna
 
 ```python
 resolved_places = places.resolve(["Rhodesia", "Ivory Coast"], to_type="name_official")
+
 print(resolved_places)
 # Output:
 # ['Zimbabwe', 'Côte d’Ivoire']
+
 ```
 
-When resolving places, there may be cases where a place is not found, or there may be multiple candidates for a place. It is
-important to know when these cases occur, so you can handle them appropriately. By default the package will
+When resolving places, there may be cases where a place is not found, or there may be multiple candidates for a place. It is 
+important to know when these cases occur, so you can handle them appropriately. By default the package will 
 raise an error when there is an ambiguity or a place is not found.
 
 ```python
@@ -269,12 +272,14 @@ lmic_africa = places.filter_places(
     countries,
     filters={"region": "Africa", "income_level": "Lower middle income"},
 )
+
 print(lmic_africa)
 # Output:
 # ['Zimbabwe']
 ```
 
 Helper functions for specific filtering exist, for example to filter for African countries
+
 ```python
 african_countries = places.filter_african_countries(countries)
 print(african_countries)
@@ -296,6 +301,7 @@ european_countries = places.get_places(
     place_format="name_official",
     raise_if_empty=True,
 )
+
 print(european_countries)
 # Output:
 # ['Åland Islands', 'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium'...]
