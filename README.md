@@ -231,19 +231,40 @@ print(resolved_countries)
 ### Filtering places
 You can filter places based on some categories like regions or income levels.
 
+Let's say we have a list of countries and we want to filter them for high income countries
+
 ```python
 countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
 
-# Let's say we have a list of countries and we want to filter them for high income countries
-filtered_countries = places.filter_places(countries, {"income_level": "High income"})
+
+filtered_countries = places.filter_places(countries, 
+                                          filters = {"income_level": "High income"})
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
+```
 
-# Set ``raise_if_empty=True`` to be notified when no places match
+You can filter for multiple values in a category
+
+```python
+filtered_countries = places.filter_places(countries, {"region": ["Europe", "Africa"]})
+
+print(filtered_countries)
+# Output:
+# ['Zimbabwe', 'Italy', 'Botswana']
+```
+
+Set ``raise_if_empty=True`` to be notified when no places match
+
+```python
 places.filter_places(countries, {"region": "Oceania"}, raise_if_empty=True)
+# raises ValueError: No places found for filters {'region': 'Oceania'}
+```
 
-# You can also filter using multiple categories at once
+
+You can also filter using multiple categories at once
+
+```python
 lmic_africa = places.filter_places(
     countries,
     filters={"region": "Africa", "income_level": "Lower middle income"},
@@ -251,16 +272,9 @@ lmic_africa = places.filter_places(
 print(lmic_africa)
 # Output:
 # ['Zimbabwe']
-
-# ``raise_if_empty`` can also be used here
-places.filter_places(
-    countries,
-    filters={"region": "Oceania", "income_level": "Low income"},
-    raise_if_empty=True,
-)
 ```
 
-Helper functions for specific filtering exists, for example to filter for African countries
+Helper functions for specific filtering exist, for example to filter for African countries
 ```python
 african_countries = places.filter_african_countries(countries)
 print(african_countries)
