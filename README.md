@@ -140,8 +140,28 @@ print(resolved_countries)
 
 __Handling ambiguities__
 
-When resolving places, there cases where a place is not found, or there may be multiple candidates for a place. It is 
-important to know when these cases occur, so you can handle them appropriately. By default the package will 
+The package is designed to handle ambiguities seamlessly. At a most basic level, it can handle common string issues such
+as whitespace, capitalization, and punctuation. For example, it will treat "Zimbabwe" and " zimbabwe " as the same place,
+and Cote d'Ivoire is recognized without accent marks.
+
+```python
+resolved_places = places.resolve([" zimbabwe ", "cote d'ivoire"], to_type="iso3_code")
+print(resolved_places)
+# Output:
+# ['ZWE', 'CIV']
+```
+
+The package also handles more complex ambiguities such as historical and alternative names. For example:
+
+```python
+resolved_places = places.resolve(["Rhodesia", "Ivory Coast"], to_type="name_official")
+print(resolved_places)
+# Output:
+# ['Zimbabwe', 'Côte d’Ivoire']
+```
+
+When resolving places, there may be cases where a place is not found, or there may be multiple candidates for a place. It is
+important to know when these cases occur, so you can handle them appropriately. By default the package will
 raise an error when there is an ambiguity or a place is not found.
 
 ```python
@@ -152,15 +172,15 @@ resolved_countries = places.resolve(countries)
 # PlaceNotFoundError: Place not found: Gondor
 ```
 
-You can also choose to set not found values to None or a specific value.
+You can also choose to set not found values to ``None`` or a specific value.
 ```python
-resolved_countries = places.resolve(countries, not_found_value="ignore")
+resolved_countries = places.resolve(countries, not_found="ignore")
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', None]
 ```
 ```python
-resolved_countries = places.resolve(countries, not_found_value="not found")
+resolved_countries = places.resolve(countries, not_found="not found")
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', 'not found']
@@ -168,7 +188,7 @@ print(resolved_countries)
 
 If you know the value for these ambiguouse places, you can also set the value to that.
 ```python
-places.resolve(countries, not_found="not found", custom_mapping={"Gondor": "country/GON"})
+resolved_countries = places.resolve(countries, not_found="not found", custom_mapping={"Gondor": "country/GON"})
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', 'country/GON']
@@ -183,7 +203,7 @@ print(resolved_countries)
 # MultipleCandidatesError: Multiple candidates found for Zimbabwe: ['-19', '-19.015438']
 ```
 
-You can choose how to handle these cases by setting the `multiple_candidates` parameter. By default
+You can choose how to handle these cases by setting the ``multiple_candidates`` parameter. By default
 it will raise an error, but you can also choose to return all candidates, use the first candidate,
 or use the last candidate.
 ```python
