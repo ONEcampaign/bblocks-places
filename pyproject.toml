@@ -17,6 +17,9 @@ dependencies = [
 [tool.poetry]
 packages = [{include = "bblocks/places", from = "src"}]
 
+[[tool.poetry.include]]
+path = "src/bblocks/places/concordance.csv"
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
