@@ -8,6 +8,8 @@ from datacommons_client import DataCommonsClient
 from typing import Optional, Literal
 import pandas as pd
 
+from importlib import resources
+
 from bblocks.places.disambiguator import resolve_places_to_dcids
 from bblocks.places.concordance import (
     map_candidates,
@@ -137,7 +139,8 @@ def read_default_concordance_table() -> pd.DataFrame:
     }
 
     return pd.read_csv(
-        Paths.project / "places" / "concordance.csv", dtype=concordance_dtypes
+        resources.files("bblocks.places").joinpath("concordance.csv"),
+        dtype=concordance_dtypes,
     )
 
 
