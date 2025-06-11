@@ -673,6 +673,7 @@ class PlaceResolver:
                 Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
+                    - "last": use the last candidate.
                     - "ignore": keep the value as a list.
 
             custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
@@ -742,7 +743,7 @@ class PlaceResolver:
         filter_values: str | list[str],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
-        multiple_candidates: Literal["raise", "first", "last"] = "raise",
+        multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     ) -> list[str] | pd.Series:
         """Filter places
 
@@ -767,6 +768,8 @@ class PlaceResolver:
                 Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
+                    - "last": use the last candidate.
+                    - "ignore": keep the value as a list.
 
         Returns:
             The filtered places

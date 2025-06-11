@@ -465,7 +465,7 @@ def filter_places(
     filter_values: str | list[str],
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
-    multiple_candidates: Literal["raise", "first", "last"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
 ) -> pd.Series | list:
     """Filter places
 
@@ -544,7 +544,7 @@ def filter_african_countries(
     places: str | list[str] | pd.Series,
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
-    multiple_candidates: Literal["raise", "first", "last"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
 ):
     """Filter places for African countries
 
