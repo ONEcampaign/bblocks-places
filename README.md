@@ -215,16 +215,16 @@ You can filter places based on some categories like regions or income levels.
 countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
 
 # Let's say we have a list of countries and we want to filter them for high income countries
-filtered_countries = places.filter_places(countries, "income_level", "High income")
+filtered_countries = places.filter_places(countries, {"income_level": "High income"})
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
 
 # Set ``raise_if_empty=True`` to be notified when no places match
-places.filter_places(countries, "region", "Oceania", raise_if_empty=True)
+places.filter_places(countries, {"region": "Oceania"}, raise_if_empty=True)
 
 # You can also filter using multiple categories at once
-lmic_africa = places.filter_places_multiple(
+lmic_africa = places.filter_places(
     countries,
     filters={"region": "Africa", "income_level": "Lower middle income"},
 )
@@ -233,7 +233,7 @@ print(lmic_africa)
 # ['Zimbabwe']
 
 # ``raise_if_empty`` can also be used here
-places.filter_places_multiple(
+places.filter_places(
     countries,
     filters={"region": "Oceania", "income_level": "Low income"},
     raise_if_empty=True,
@@ -257,8 +257,11 @@ functions to do this.
 
 Let's get all the countries that are in Europe
 ```python
-european_countries = places.get_places_by(by="region", filter_values="Europe", \
-                                        place_format="name_official", raise_if_empty=True)
+european_countries = places.get_places(
+    filters={"region": "Europe"},
+    place_format="name_official",
+    raise_if_empty=True,
+)
 print(european_countries)
 # Output:
 # ['Åland Islands', 'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium'...]
@@ -266,7 +269,7 @@ print(european_countries)
 
 You could also get places for multiple categores and values at once. For example Lower middle income countries in Africa
 ```python
-lmic_africa = places.get_places_by_multiple(
+lmic_africa = places.get_places(
     filters={"region": ["Africa"], "income_level": ["Lower middle income"]},
     place_format="name_official",
     raise_if_empty=True,
