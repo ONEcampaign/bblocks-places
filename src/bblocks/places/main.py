@@ -736,6 +736,8 @@ def get_places_by_multiple(
             - m49_code
             - dac_code
 
+        raise_if_empty: Whether to raise a ``ValueError`` if no places match the
+
     Returns:
         A list of place names in the specified format.
 
