@@ -1,6 +1,13 @@
 """Tests for the utils module"""
 
 import pytest
+import types
+import sys
+
+sys.modules.setdefault(
+    "datacommons_client",
+    types.SimpleNamespace(DataCommonsClient=lambda **kwargs: None),
+)
 
 from bblocks.places import utils
 

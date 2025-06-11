@@ -60,4 +60,5 @@ class NotFoundBehavior(str, Enum):
 class MultipleCandidatesBehavior(str, Enum):
     RAISE = "raise"
     FIRST = "first"
+    LAST = "last"
     IGNORE = "ignore"

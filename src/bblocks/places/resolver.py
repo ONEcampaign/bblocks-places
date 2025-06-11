@@ -64,7 +64,7 @@ def handle_not_founds(
 
 def handle_multiple_candidates(
     candidates: dict[str, str | list | None],
-    multiple_candidates: Literal["raise", "first", "ignore"],
+    multiple_candidates: Literal["raise", "first", "last", "ignore"],
 ) -> dict[str, str | list | None]:
     """Handle cases when a place can be resolved to more than one value
 
@@ -74,6 +74,7 @@ def handle_multiple_candidates(
             Options are:
                 - "raise": raise an error.
                 - "first": use the first candidate.
+                - "last": use the last candidate.
                 - "ignore": keep the value as a list.
 
     Returns:
@@ -97,6 +98,12 @@ def handle_multiple_candidates(
                 logger.info(
                     f"Multiple candidates found for {place}. Using first candidate: {cands[0]}"
                 )
+            elif multiple_candidates == "last":
+                # set the value of the candidate to the last value in the list
+                candidates[place] = cands[-1]
+                logger.info(
+                    f"Multiple candidates found for {place}. Using last candidate: {cands[-1]}"
+                )
             elif multiple_candidates == "ignore":
                 # keep the value of the candidate as a list
                 logger.warning(
@@ -105,7 +112,7 @@ def handle_multiple_candidates(
 
             else:
                 raise ValueError(
-                    f"Invalid value for multiple_candidates: {multiple_candidates}. Must be one of ['raise', 'first', 'ignore']"
+                    f"Invalid value for multiple_candidates: {multiple_candidates}. Must be one of ['raise', 'first', 'last', 'ignore']"
                 )
 
     return candidates
@@ -475,7 +482,7 @@ class PlaceResolver:
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] | str = "raise",
-        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str]:
         """Main helper pipeline to resolve places to a desired type
@@ -498,6 +505,7 @@ class PlaceResolver:
                 place. Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
+                    - "last": use the last candidate.
                     - "ignore": keep the value as a list.
             custom_mapping: A dictionary of custom mappings to use.
 
@@ -559,7 +567,7 @@ class PlaceResolver:
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] | str = "raise",
-        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> dict[str, str | list[str] | None]:
         """Resolve places to a mapping dictionary of {place: resolved}
@@ -592,6 +600,7 @@ class PlaceResolver:
                 Default is "raise". Options are:
                     - "raise": raise an error.
                     - "first": use the first candidate.
+                    - "last": use the last candidate.
                     - "ignore": keep the value as a list.
 
             custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
@@ -632,7 +641,7 @@ class PlaceResolver:
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] | str = "raise",
-        multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+        multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
     ) -> str | list[str] | pd.Series:
         """Resolve places
@@ -733,7 +742,7 @@ class PlaceResolver:
         filter_values: str | list[str],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
-        multiple_candidates: Literal["raise", "first"] = "raise",
+        multiple_candidates: Literal["raise", "first", "last"] = "raise",
     ) -> list[str] | pd.Series:
         """Filter places
 
