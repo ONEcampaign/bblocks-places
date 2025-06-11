@@ -145,8 +145,6 @@ as whitespace, capitalization, and punctuation. For example, it will treat "Zimb
 and Cote d'Ivoire is recognized without accent marks. 
 
 ```python
-
-
 resolved_places = places.resolve([" zimbabwe ", "cote d'ivoire"], to_type="iso3_code")
 
 print(resolved_places)
@@ -177,7 +175,7 @@ resolved_countries = places.resolve(countries)
 # PlaceNotFoundError: Place not found: Gondor
 ```
 
-You can also choose to set not found values to None or a specific value.
+You can also choose to set not found values to ``None`` or a specific value.
 ```python
 resolved_countries = places.resolve(countries, not_found="ignore")
 print(resolved_countries)
@@ -208,7 +206,7 @@ print(resolved_countries)
 # MultipleCandidatesError: Multiple candidates found for Zimbabwe: ['-19', '-19.015438']
 ```
 
-You can choose how to handle these cases by setting the `multiple_candidates` parameter. By default
+You can choose how to handle these cases by setting the ``multiple_candidates`` parameter. By default
 it will raise an error, but you can also choose to return all candidates, use the first candidate,
 or use the last candidate.
 ```python
@@ -236,34 +234,51 @@ print(resolved_countries)
 ### Filtering places
 You can filter places based on some categories like regions or income levels.
 
+Let's say we have a list of countries and we want to filter them for high income countries
+
 ```python
 countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
 
-# Let's say we have a list of countries and we want to filter them for high income countries
-filtered_countries = places.filter_places(countries, "income_level", "High income")
+
+filtered_countries = places.filter_places(countries, 
+                                          filters = {"income_level": "High income"})
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
 ```
 
-Set `raise_if_empty=True` to be notified when no places match
+You can filter for multiple values in a category
 
 ```python
-places.filter_places(countries, "region", "Oceania", raise_if_empty=True)
+filtered_countries = places.filter_places(countries, {"region": ["Europe", "Africa"]})
+
+print(filtered_countries)
 # Output:
-# PlaceNotFoundError: No places found for region Oceania
+# ['Zimbabwe', 'Italy', 'Botswana']
 ```
+
+Set ``raise_if_empty=True`` to be notified when no places match
+
+```python
+places.filter_places(countries, {"region": "Oceania"}, raise_if_empty=True)
+# raises ValueError: No places found for filters {'region': 'Oceania'}
+```
+
 
 You can also filter using multiple categories at once
 
 ```python
-lmic_africa = places.filter_places_multiple(countries, filters={"region": "Africa", "income_level": "Lower middle income"})
+lmic_africa = places.filter_places(
+    countries,
+    filters={"region": "Africa", "income_level": "Lower middle income"},
+)
+
 print(lmic_africa)
 # Output:
 # ['Zimbabwe']
 ```
 
-Helper functions for specific filtering exists, for example to filter for African countries
+Helper functions for specific filtering exist, for example to filter for African countries
 
 ```python
 african_countries = places.filter_african_countries(countries)
@@ -281,7 +296,12 @@ functions to do this.
 
 Let's get all the countries that are in Europe
 ```python
-european_countries = places.get_places_by(by="region", filter_values="Europe", place_format="name_official", raise_if_empty=True)
+european_countries = places.get_places(
+    filters={"region": "Europe"},
+    place_format="name_official",
+    raise_if_empty=True,
+)
+
 print(european_countries)
 # Output:
 # ['Åland Islands', 'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium'...]
@@ -289,7 +309,7 @@ print(european_countries)
 
 You could also get places for multiple categores and values at once. For example Lower middle income countries in Africa
 ```python
-lmic_africa = places.get_places_by_multiple(
+lmic_africa = places.get_places(
     filters={"region": ["Africa"], "income_level": ["Lower middle income"]},
     place_format="name_official",
     raise_if_empty=True,

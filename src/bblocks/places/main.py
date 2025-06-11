@@ -461,25 +461,24 @@ def resolve_map(
 
 def filter_places(
     places: list[str] | pd.Series,
-    filter_category: str,
-    filter_values: str | list[str],
+    filters: dict[str, str | list[str]],
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     *,
     raise_if_empty: bool = False,
 ) -> pd.Series | list:
-    """Filter places
+    """Filter places using one or more categories.
 
-    Filter places based on a specific category like "region" for specific values like "Africa".
-    This function can disambiguate places if needed, and filter them based on the specified category
-    and values.
+    This function applies several filters in sequence, returning the places that
+    match all the provided criteria.
 
     Args:
-        places: The places to filter
+        places: The places to filter.
 
-        filter_category: The category to filter the places by. This can be a string or a list of strings.
-            Options are:
+        filters: A mapping of filter categories to the values to match. Values
+            may be a single string or a list of strings.
+            Available filter categories are:
             - region
             - region_code
             - subregion
@@ -488,9 +487,7 @@ def filter_places(
             - intermediate_region
             - income_level
 
-        filter_values: The values to filter the places by. This can be a string or a list of strings.
-
-        from_type:  The original format of the places. Default is None.
+        from_type: The original format of the places. Default is None.
             If None, the places will be disambiguated automatically using Data Commons
             Options are:
             - "dcid"
@@ -520,30 +517,26 @@ def filter_places(
             is returned.
 
     Returns:
-        Filtered places
+        The places that satisfy all filters, in the same type as ``places``.
 
     Raises:
         ValueError: If ``raise_if_empty`` is ``True`` and no places match the
-            filter criteria.
+            provided filters.
     """
 
-    # check if the from_type is valid
     if from_type is not None:
         _validate_place_format(from_type)
 
-    # check if the filter_category is valid
-    _validate_place_target(filter_category)
-
-    # check if the filter_values are valid - should exist in the concordance table
-    if isinstance(filter_values, str):
-        filter_values = [filter_values]
-
-    _validate_filter_values(filter_category, filter_values)
+    for category, values in filters.items():
+        _validate_place_target(category)
+        if not isinstance(values, list):
+            values = [values]
+            filters[category] = values
+        _validate_filter_values(category, values)
 
     result = _country_resolver.filter(
         places=places,
-        filter_category=filter_category,
-        filter_values=filter_values,
+        filters=filters,
         from_type=from_type,
         not_found=not_found,
         multiple_candidates=multiple_candidates,
@@ -556,7 +549,7 @@ def filter_places(
         empty = True
 
     if empty:
-        msg = f"No places found for {filter_category} in {filter_values}"
+        msg = f"No places found for filters {filters}"
         if raise_if_empty:
             raise ValueError(msg)
         logger.warning(msg)
@@ -611,8 +604,7 @@ def filter_african_countries(
 
     return filter_places(
         places=places,
-        filter_category="region",
-        filter_values="Africa",
+        filters={"region": "Africa"},
         from_type=from_type,
         not_found=not_found,
         multiple_candidates=multiple_candidates,
@@ -620,177 +612,24 @@ def filter_african_countries(
     )
 
 
-def filter_places_multiple(
-    places: list[str] | pd.Series,
-    filters: dict[str, str | list[str]],
-    from_type: Optional[str] = None,
-    not_found: Literal["raise", "ignore"] = "raise",
-    multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
-    *,
-    raise_if_empty: bool = False,
-) -> pd.Series | list:
-    """Filter places using multiple categories.
-
-    This function applies several filters in sequence, returning the places that
-    match all the provided criteria.
-
-    Args:
-        places: The places to filter.
-        filters: A mapping of filter categories to the values to match. Values
-            may be a single string or a list of strings.
-        from_type: The original format of ``places``. If ``None`` the places are
-            automatically disambiguated.
-        not_found: How to handle places that cannot be resolved.
-        multiple_candidates: How to handle places that resolve to multiple
-            candidates.
-        raise_if_empty: Whether to raise a ``ValueError`` if the filtered
-
-    Returns:
-        The places that satisfy all filters, in the same type as ``places``.
-
-    Raises:
-        ValueError: If ``raise_if_empty`` is ``True`` and no places match the
-            provided filters.
-    """
-
-    if from_type is not None:
-        _validate_place_format(from_type)
-
-    # normalise and validate filters
-    normalised: dict[str, list[str]] = {}
-    for category, values in filters.items():
-        _validate_place_target(category)
-        if not isinstance(values, list):
-            values = [values]
-        _validate_filter_values(category, values)
-        normalised[category] = values
-
-    # Resolve once to DCIDs to avoid disambiguating at every filtering step
-    dcid_map = resolve_map(
-        places,
-        to_type="dcid",
-        from_type=from_type,
-        not_found=not_found,
-        multiple_candidates=multiple_candidates,
-    )
-
-    # Start with the original list/series to preserve order and duplicates
-    if isinstance(places, list):
-        result = list(places)
-    elif isinstance(places, pd.Series):
-        result = list(places)
-    else:
-        raise ValueError(
-            f"Invalid type for places: {type(places)}. Must be one of [list[str], pd.Series]"
-        )
-
-    for category, values in normalised.items():
-        cat_map = _country_resolver.get_concordance_dict(
-            "dcid", category, include_nulls=True
-        )
-        filtered = []
-        for place in result:
-            dcid = dcid_map.get(place)
-            if isinstance(dcid, list) or dcid is None:
-                continue
-            if cat_map.get(dcid) in values:
-                filtered.append(place)
-        result = filtered
-
-    empty = len(result) == 0
-
-    if empty:
-        msg = f"No places found for filters {filters}"
-        if raise_if_empty:
-            raise ValueError(msg)
-        logger.warning(msg)
-
-    return pd.Series(result) if isinstance(places, pd.Series) else result
 
 
-def get_places_by_multiple(
+def get_places(
     filters: dict[str, str | list[str | int | bool]],
     place_format: str = "dcid",
     *,
     raise_if_empty: bool = False,
 ) -> list[str | int]:
-    """Get places based on multiple filters.
+    """Get places based on one or more filters.
 
-
-    This function can be used to get all places based on multiple filters for multiple categories and values,
-    for example, by region and income level for values like "Africa" and "High income".
-
-    Args:
-        filters: A dictionary of filters to apply. The keys are the categories to filter by and the values are the
-            values to filter by. The values can be a string or a list of strings.
-            Example: {"region": "Africa","income_level": ["High income", "Upper middle income"]}
-
-        place_format: The format of the country names to return. Defaults to "dcid".
-            Available formats are:
-            - dcid
-            - name_official
-            - name_short
-            - iso3_code
-            - iso2_code
-            - iso_numeric_code
-            - m49_code
-            - dac_code
-
-        raise_if_empty: Whether to raise a ``ValueError`` if no places match the
-
-    Returns:
-        A list of place names in the specified format.
-
-    Raises:
-        ValueError: If ``raise_if_empty`` is ``True`` and no places match
-        the provided filters.
-
-    """
-
-    # check if the filter_dict is valid
-    _validate_place_format(place_format)
-
-    for key, value in filters.items():
-        # if the value is not already a list, wrap it in a list
-        if not isinstance(value, list):
-            value = [value]
-            filters[key] = value  # update dict for later use
-
-        # validate each value
-        _validate_filter_values(key, value)
-
-    # filter the concordance table based on the filter
-    result = list(
-        _country_resolver.concordance_table.query(
-            " and ".join([f"{key} in {value}" for key, value in filters.items()])
-        )[place_format]
-        .dropna()
-        .unique()
-    )
-
-    if not result:
-        msg = f"No places found for filters {filters}"
-        if raise_if_empty:
-            raise ValueError(msg)
-        logger.warning(msg)
-
-    return result
-
-
-def get_places_by(
-    by: str,
-    filter_values: str | list[str],
-    place_format: Optional[str] = "dcid",
-    *,
-    raise_if_empty: bool = False,
-) -> list[str | int]:
-    """Get places based on a specific category and values.
-
-    This function can be used to get places based on a specific category like "region" for specific values like "Africa".
+    This function can be used to get all places that match a set of filters, for
+    example by region and income level.
 
     Args:
-        by: The category to filter the places by. This can be a string or a list of strings.
-            Options are:
+        filters: A dictionary of filters to apply. The keys are the categories to filter by
+            and the values are the values to filter for. Each value can be a string
+            or a list of strings. Example: ``{"region": "Africa", "income_level": ["High income"]}``
+            Available categories are:
             - region
             - region_code
             - subregion
@@ -798,11 +637,16 @@ def get_places_by(
             - intermediate_region_code
             - intermediate_region
             - income_level
+            - m49_member
+            - ldc
+            - lldc
+            - sids
+            - un_member
+            - un_observer
+            - un_former_member
 
-        filter_values: The values to filter the places by. This can be a string or a list of strings.
-
-        place_format: The format of the country names to return. Defaults to "dcid".
-            Available formats are:
+        place_format: place_format: The format of the country names to return. Defaults to "dcid".
+            Options are:
             - dcid
             - name_official
             - name_short
@@ -811,29 +655,33 @@ def get_places_by(
             - iso_numeric_code
             - m49_code
             - dac_code
-        raise_if_empty: Whether to raise a ``ValueError`` if no places match the
-            criteria. If ``False`` a warning is logged and an empty list is returned.
 
+        raise_if_empty: Whether to raise a ``ValueError`` if no places match the filters.
+
+    Returns:
+        A list of place names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no places match the provided filters.
     """
 
-    # check if the by is valid
-    _validate_place_target(by)
-
-    if isinstance(filter_values, str):
-        filter_values = [filter_values]
-
-    # check if the filter_values are valid - should exist in the concordance table
-    _validate_filter_values(by, filter_values)
-
-    # check if the place_format is valid
     _validate_place_format(place_format)
 
-    # filter the concordance table
-    mapper = _country_resolver.get_concordance_dict(from_type=place_format, to_type=by)
-    result = [k for k, v in mapper.items() if v in filter_values]
+    for key, value in filters.items():
+        if not isinstance(value, list):
+            value = [value]
+            filters[key] = value
+        _validate_filter_values(key, value)
+
+    query = " and ".join([f"{k} in {v}" for k, v in filters.items()])
+    result = list(
+        _country_resolver.concordance_table.query(query)[place_format]
+        .dropna()
+        .unique()
+    )
 
     if not result:
-        msg = f"No places found for {by} in {filter_values}"
+        msg = f"No places found for filters {filters}"
         if raise_if_empty:
             raise ValueError(msg)
         logger.warning(msg)
@@ -878,7 +726,7 @@ def get_african_countries(
     if exclude_non_un_members:
         filter_dict = {"region": "Africa", "un_member": True}
 
-    return get_places_by_multiple(
+    return get_places(
         filters=filter_dict,
         place_format=place_format,
         raise_if_empty=raise_if_empty,

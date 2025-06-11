@@ -261,7 +261,7 @@ class PlaceResolver:
     and custom_mapping.
 
     The filter method can be used to filter places for values in a specified format. For example,
-    >>> resolver.filter(["Zimbabwe", "Italy"], filter_category="region", filter_value="Africa")
+    >>> resolver.filter(["Zimbabwe", "Italy"], filters={"region": "Africa"})
     >>> # returns ["Zimbabwe"]
 
     *Note the above example only works if the default concordance table is set.
@@ -739,79 +739,72 @@ class PlaceResolver:
     def filter(
         self,
         places: list[str] | pd.Series,
-        filter_category: str,
-        filter_values: str | list[str],
+        filters: dict[str, str | list[str]],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     ) -> list[str] | pd.Series:
-        """Filter places
+        """Filter places using one or more categories.
 
-        This method takes places and filters them for a specific type and value. For example, by type region and for a
-        value "Africa".
+        This method applies multiple filters in sequence and returns the places
+        that satisfy all of them.
 
         Args:
-            places: places to filter
-
-            from_type: the original format of the places. If None, the places will be disambiguated automatically.
-
-            filter_category: the place format to filter by.
-
-            filter_values: the values to filter for.
-
-            not_found: How to handle places that could not be resolved. Default is "raise".
-                Options are:
-                    - "raise": raise an error.
-                    - "ignore": keep the value as None.
-
-            multiple_candidates: How to handle cases when a place can be resolved to multiple values.
-                Default is "raise". Options are:
-                    - "raise": raise an error.
-                    - "first": use the first candidate.
-                    - "last": use the last candidate.
-                    - "ignore": keep the value as a list.
+            places: Places to filter.
+            filters: Mapping of filter categories to the values to match. Each
+                value may be a string or list of strings.
+            from_type: Original format of ``places``. If ``None`` the places are
+                automatically disambiguated.
+            not_found: How to handle places that cannot be resolved.
+            multiple_candidates: How to handle places that resolve to multiple
+                candidates.
 
         Returns:
-            The filtered places
+            The filtered places in the same type as ``places``.
         """
 
-        # ensure filter_values is a list
-        if isinstance(filter_values, str):
-            filter_values = [filter_values]
+        # normalise filter values
+        normalised: dict[str, list[str]] = {}
+        for cat, vals in filters.items():
+            if isinstance(vals, list):
+                normalised[cat] = vals
+            else:
+                normalised[cat] = [vals]
 
-        # if the places is a list ensure it is unique
+        # deduplicate places for resolution
         if isinstance(places, list):
-            # deduplicate while preserving order
-            places_to_filter = list(dict.fromkeys(places))
-        # convert places to a list if it is a pd.Series
+            places_unique = list(dict.fromkeys(places))
         elif isinstance(places, pd.Series):
-            places_to_filter = list(places.unique())
+            places_unique = list(places.unique())
         else:
             raise ValueError(
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        mapper = self.resolve_map(
-            places=places_to_filter,
+        dcid_map = self.resolve_map(
+            places=places_unique,
             from_type=from_type,
-            to_type=filter_category,
+            to_type="dcid",
             not_found=not_found,
             multiple_candidates=multiple_candidates,
         )
 
-        # filter the places based on the filter values
-        filtered_places = [
-            place
-            for place, converted_place in mapper.items()
-            if converted_place in filter_values
-        ]
+        result = places_unique
+        for category, values in normalised.items():
+            cat_map = self.get_concordance_dict("dcid", category, include_nulls=True)
+            filtered = []
+            for place in result:
+                dcid = dcid_map.get(place)
+                if isinstance(dcid, list) or dcid is None:
+                    continue
+                if cat_map.get(dcid) in values:
+                    filtered.append(place)
+            result = filtered
 
-        # return the filtered in the original format
         if isinstance(places, list):
-            return [place for place in places if place in filtered_places]
+            return [p for p in places if p in result]
 
-        # if the places is a pd.Series map the filtered places to the original places
-        return pd.Series([place for place in places if place in filtered_places])
+        return pd.Series([p for p in places if p in result])
 
     def get_concordance_dict(
         self, from_type: str, to_type: str, include_nulls: bool = False
