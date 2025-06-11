@@ -51,7 +51,7 @@ def handle_not_founds(
             if not_found == "raise":
                 raise PlaceNotFoundError(f"Place not found: {place}")
             elif not_found == "ignore":
-                logger.warn(f"Place not found: {place}")
+                logger.warning(f"Place not found: {place}")
                 continue
             else:
                 # set the value of the candidate to the not_found value
@@ -97,7 +97,7 @@ def handle_multiple_candidates(
                 )
             elif multiple_candidates == "ignore":
                 # keep the value of the candidate as a list
-                logger.warn(
+                logger.warning(
                     f"Multiple candidates found for {place}. Keeping all candidates: {cands}"
                 )
 
