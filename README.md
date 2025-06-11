@@ -184,7 +184,8 @@ print(resolved_countries)
 ```
 
 You can choose how to handle these cases by setting the `multiple_candidates` parameter. By default
-it will raise an error, but you can also choose to return all candidates or just the first one.
+it will raise an error, but you can also choose to return all candidates, use the first candidate,
+or use the last candidate.
 ```python
 # return all the candidates
 resolved_countries = places.resolve("Zimbabwe", to_type="latitude", multiple_candidates="ignore")
@@ -198,6 +199,13 @@ resolved_countries = places.resolve("Zimbabwe", to_type="latitude", multiple_can
 print(resolved_countries)
 # Output:
 # '-19'
+```
+```python
+# return the last candidate
+resolved_countries = places.resolve("Zimbabwe", to_type="latitude", multiple_candidates="last")
+print(resolved_countries)
+# Output:
+# '-19.015438'
 ```
 
 ### Filtering places

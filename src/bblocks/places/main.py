@@ -298,7 +298,7 @@ def resolve(
     from_type: Optional[str] = None,
     to_type: Optional[str] = "dcid",
     not_found: Literal["raise", "ignore"] | str = "raise",
-    multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     custom_mapping: Optional[dict] = None,
 ):
     """Resolve places
@@ -351,6 +351,7 @@ def resolve(
             Default is "raise". Options are:
                 - "raise": raise an error.
                 - "first": use the first candidate.
+                - "last": use the last candidate.
                 - "ignore": keep the value as a list.
 
         custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
@@ -380,7 +381,7 @@ def resolve_map(
     to_type: Optional[str] = "dcid",
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] | str = "raise",
-    multiple_candidates: Literal["raise", "first", "ignore"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     custom_mapping: Optional[dict] = None,
 ) -> dict[str, str | int | None | list]:
     """Resolve places to a mapping dictionary of {place: resolved}
@@ -433,6 +434,7 @@ def resolve_map(
             Default is "raise". Options are:
                 - "raise": raise an error.
                 - "first": use the first candidate.
+                - "last": use the last candidate.
                 - "ignore": keep the value as a list.
 
         custom_mapping: A dictionary of custom mappings to use. If this is provided, it will
@@ -463,7 +465,7 @@ def filter_places(
     filter_values: str | list[str],
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
-    multiple_candidates: Literal["raise", "first"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last"] = "raise",
 ) -> pd.Series | list:
     """Filter places
 
@@ -508,6 +510,7 @@ def filter_places(
             Default is "raise". Options are:
                 - "raise": raise an error.
                 - "first": use the first candidate.
+                - "last": use the last candidate.
                 - "ignore": keep the value as a list.
 
     Returns:
@@ -541,7 +544,7 @@ def filter_african_countries(
     places: str | list[str] | pd.Series,
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
-    multiple_candidates: Literal["raise", "first"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last"] = "raise",
 ):
     """Filter places for African countries
 
@@ -573,6 +576,7 @@ def filter_african_countries(
             Default is "raise". Options are:
                 - "raise": raise an error.
                 - "first": use the first candidate.
+                - "last": use the last candidate.
                 - "ignore": keep the value as a list.
     """
 
