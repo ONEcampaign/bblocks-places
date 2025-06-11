@@ -18,3 +18,14 @@ def test_filter_places_multiple():
     )
 
     assert filtered == ["Seychelles"]
+
+
+def test_filter_places_multiple_preserves_duplicates():
+    countries = ["Seychelles", "Zimbabwe", "Seychelles"]
+
+    filtered = filter_places_multiple(
+        countries,
+        filters={"region": "Africa", "income_level": "High income"},
+    )
+
+    assert filtered == ["Seychelles", "Seychelles"]
