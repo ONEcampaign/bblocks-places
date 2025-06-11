@@ -64,7 +64,7 @@ but the package offers more flexibility (jump to the customization section)
 
 Resolve a list of ambiguous countries
 ```python
-countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
+countries = ["Zimbabwe", "Italy", "Botswana", "United States", "Seychelles"]
 resolved_countries = places.resolve(countries)
 print(resolved_countries)
 # Output:
@@ -212,13 +212,22 @@ print(resolved_countries)
 You can filter places based on some categories like regions or income levels.
 
 ```python
-countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
+countries = ["Zimbabwe", "Italy", "Botswana", "United States", "Seychelles"]
 
 # Let's say we have a list of countries and we want to filter them for high income countries
 filtered_countries = places.filter_places(countries, "income_level", "High income")
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
+
+# You can also filter using multiple categories at once
+high_income_africa = places.filter_places_multiple(
+    countries,
+    filters={"region": "Africa", "income_level": "High income"},
+)
+print(high_income_africa)
+# Output:
+# ['Seychelles']
 ```
 
 Helper functions for specific filtering exists, for example to filter for African countries

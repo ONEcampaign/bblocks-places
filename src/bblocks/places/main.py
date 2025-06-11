@@ -590,6 +590,58 @@ def filter_african_countries(
     )
 
 
+def filter_places_multiple(
+    places: list[str] | pd.Series,
+    filters: dict[str, str | list[str]],
+    from_type: Optional[str] = None,
+    not_found: Literal["raise", "ignore"] = "raise",
+    multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
+) -> pd.Series | list:
+    """Filter places using multiple categories.
+
+    This function applies several filters in sequence, returning the places that
+    match all the provided criteria.
+
+    Args:
+        places: The places to filter.
+        filters: A mapping of filter categories to the values to match. Values
+            may be a single string or a list of strings.
+        from_type: The original format of ``places``. If ``None`` the places are
+            automatically disambiguated.
+        not_found: How to handle places that cannot be resolved.
+        multiple_candidates: How to handle places that resolve to multiple
+            candidates.
+
+    Returns:
+        The places that satisfy all filters, in the same type as ``places``.
+    """
+
+    if from_type is not None:
+        _validate_place_format(from_type)
+
+    # normalise and validate filters
+    normalised: dict[str, list[str]] = {}
+    for category, values in filters.items():
+        _validate_place_target(category)
+        if not isinstance(values, list):
+            values = [values]
+        _validate_filter_values(category, values)
+        normalised[category] = values
+
+    result = places
+    for category, values in normalised.items():
+        result = filter_places(
+            places=result,
+            filter_category=category,
+            filter_values=values,
+            from_type=from_type,
+            not_found=not_found,
+            multiple_candidates=multiple_candidates,
+        )
+
+    return result
+
+
 def get_places_by_multiple(
     filters: dict[str, str | list[str | int | bool]],
     place_format: str = "dcid",
