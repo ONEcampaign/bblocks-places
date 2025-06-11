@@ -497,54 +497,34 @@ def filter_places(
     if from_type is not None:
         _validate_place_format(from_type)
 
-    # normalise and validate filters
-    normalised: dict[str, list[str]] = {}
     for category, values in filters.items():
         _validate_place_target(category)
         if not isinstance(values, list):
             values = [values]
+            filters[category] = values
         _validate_filter_values(category, values)
-        normalised[category] = values
 
-    # Resolve once to DCIDs to avoid disambiguating at every filtering step
-    dcid_map = resolve_map(
-        places,
-        to_type="dcid",
+    result = _country_resolver.filter(
+        places=places,
+        filters=filters,
         from_type=from_type,
         not_found=not_found,
         multiple_candidates=multiple_candidates,
     )
 
-    # Start with the original list/series to preserve order and duplicates
-    if isinstance(places, list):
-        result = list(places)
-    elif isinstance(places, pd.Series):
-        result = list(places)
-    else:
-        raise ValueError(
-            f"Invalid type for places: {type(places)}. Must be one of [list[str], pd.Series]"
-        )
+    empty = False
+    if isinstance(result, list) and not result:
+        empty = True
+    elif isinstance(result, pd.Series) and result.empty:
+        empty = True
 
-    for category, values in normalised.items():
-        cat_map = _country_resolver.get_concordance_dict(
-            "dcid", category, include_nulls=True
-        )
-        filtered = []
-        for place in result:
-            dcid = dcid_map.get(place)
-            if isinstance(dcid, list) or dcid is None:
-                continue
-            if cat_map.get(dcid) in values:
-                filtered.append(place)
-        result = filtered
-
-    if len(result) == 0:
+    if empty:
         msg = f"No places found for filters {filters}"
         if raise_if_empty:
             raise ValueError(msg)
         logger.warning(msg)
 
-    return pd.Series(result) if isinstance(places, pd.Series) else result
+    return result
 
 
 def filter_african_countries(
