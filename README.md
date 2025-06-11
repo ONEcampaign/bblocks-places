@@ -219,6 +219,25 @@ filtered_countries = places.filter_places(countries, "income_level", "High incom
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
+
+# Set ``raise_if_empty=True`` to be notified when no places match
+places.filter_places(countries, "region", "Oceania", raise_if_empty=True)
+
+# You can also filter using multiple categories at once
+middle_income_africa = places.filter_places_multiple(
+    countries,
+    filters={"region": "Africa", "income_level": "Middle income"},
+)
+print(middle_income_africa)
+# Output:
+# ['Zimbabwe']
+
+# ``raise_if_empty`` can also be used here
+places.filter_places_multiple(
+    countries,
+    filters={"region": "Oceania", "income_level": "Low income"},
+    raise_if_empty=True,
+)
 ```
 
 Helper functions for specific filtering exists, for example to filter for African countries
