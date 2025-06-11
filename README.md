@@ -224,11 +224,11 @@ print(filtered_countries)
 places.filter_places(countries, "region", "Oceania", raise_if_empty=True)
 
 # You can also filter using multiple categories at once
-middle_income_africa = places.filter_places_multiple(
+lmic_africa = places.filter_places_multiple(
     countries,
-    filters={"region": "Africa", "income_level": "Middle income"},
+    filters={"region": "Africa", "income_level": "Lower middle income"},
 )
-print(middle_income_africa)
+print(lmic_africa)
 # Output:
 # ['Zimbabwe']
 
@@ -264,16 +264,16 @@ print(european_countries)
 # ['Åland Islands', 'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium'...]
 ```
 
-You could also get places for multiple categores and values at once. For example High income countries in Africa
+You could also get places for multiple categores and values at once. For example Lower middle income countries in Africa
 ```python
-hic_africa = places.get_places_by_multiple(
-    filters={"region": ["Africa"], "income_level": ["High income"]},
+lmic_africa = places.get_places_by_multiple(
+    filters={"region": ["Africa"], "income_level": ["Lower middle income"]},
     place_format="name_official",
     raise_if_empty=True,
 )
-print(hic_africa)
+print(lmic_africa)
 # Output:
-# ['Seychelles']
+# ['Zimbabwe']
 ```
 
 Several helper functions exist for specific categories, for example to get all UN member states
