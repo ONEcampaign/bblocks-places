@@ -606,7 +606,8 @@ class PlaceResolver:
             places = [places]
 
         elif isinstance(places, list):
-            places = list(set(places))  # deduplicate
+            # deduplicate while preserving order
+            places = list(dict.fromkeys(places))
 
         elif isinstance(places, pd.Series):
             places = list(places.unique())
@@ -768,7 +769,8 @@ class PlaceResolver:
 
         # if the places is a list ensure it is unique
         if isinstance(places, list):
-            places_to_filter = list(set(places))
+            # deduplicate while preserving order
+            places_to_filter = list(dict.fromkeys(places))
         # convert places to a list if it is a pd.Series
         elif isinstance(places, pd.Series):
             places_to_filter = list(places.unique())
