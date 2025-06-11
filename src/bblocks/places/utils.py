@@ -1,4 +1,4 @@
-""" " """
+"""Utility functions"""
 
 import unicodedata
 import string
