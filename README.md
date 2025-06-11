@@ -224,11 +224,11 @@ print(filtered_countries)
 places.filter_places(countries, "region", "Oceania", raise_if_empty=True)
 
 # You can also filter using multiple categories at once
-high_income_africa = places.filter_places_multiple(
+middle_income_africa = places.filter_places_multiple(
     countries,
     filters={"region": "Africa", "income_level": "Middle income"},
 )
-print(high_income_africa)
+print(middle_income_africa)
 # Output:
 # ['Zimbabwe']
 
