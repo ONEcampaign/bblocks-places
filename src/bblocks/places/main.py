@@ -515,6 +515,10 @@ def filter_places(
                 - "last": use the last candidate.
                 - "ignore": keep the value as a list.
 
+        raise_if_empty: Whether to raise a ``ValueError`` if the filtered
+            result is empty. If ``False`` a warning is logged and an empty list
+            is returned.
+
     Returns:
         Filtered places
 
@@ -639,6 +643,7 @@ def filter_places_multiple(
         not_found: How to handle places that cannot be resolved.
         multiple_candidates: How to handle places that resolve to multiple
             candidates.
+        raise_if_empty: Whether to raise a ``ValueError`` if the filtered
 
     Returns:
         The places that satisfy all filters, in the same type as ``places``.
