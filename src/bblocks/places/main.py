@@ -475,16 +475,46 @@ def filter_places(
 
     Args:
         places: The places to filter.
+
         filters: A mapping of filter categories to the values to match. Values
             may be a single string or a list of strings.
-        from_type: The original format of ``places``. If ``None`` the places are
-            automatically disambiguated.
-        not_found: How to handle places that cannot be resolved.
-        multiple_candidates: How to handle places that resolve to multiple
-            candidates.
-        raise_if_empty: Whether to raise a ``ValueError`` if the filtered result
-            is empty. If ``False`` a warning is logged and an empty list is
-            returned.
+            Available filter categories are:
+            - region
+            - region_code
+            - subregion
+            - subregion_code
+            - intermediate_region_code
+            - intermediate_region
+            - income_level
+
+        from_type: The original format of the places. Default is None.
+            If None, the places will be disambiguated automatically using Data Commons
+            Options are:
+            - "dcid"
+            - "name_official"
+            - "name_short"
+            - "iso3_code"
+            - "iso2_code"
+            - "iso_numeric_code"
+            - "m49_code"
+            - "dac_code"
+
+        not_found: How to handle places that could not be resolved. Default is "raise".
+            Options are:
+                - "raise": raise an error.
+                - "ignore": keep the value as None.
+                - Any other string to set as the value for not found places.
+
+        multiple_candidates: How to handle cases when a place can be resolved to multiple values.
+            Default is "raise". Options are:
+                - "raise": raise an error.
+                - "first": use the first candidate.
+                - "last": use the last candidate.
+                - "ignore": keep the value as a list.
+
+        raise_if_empty: Whether to raise a ``ValueError`` if the filtered
+            result is empty. If ``False`` a warning is logged and an empty list
+            is returned.
 
     Returns:
         The places that satisfy all filters, in the same type as ``places``.
@@ -599,7 +629,33 @@ def get_places(
         filters: A dictionary of filters to apply. The keys are the categories to filter by
             and the values are the values to filter for. Each value can be a string
             or a list of strings. Example: ``{"region": "Africa", "income_level": ["High income"]}``
-        place_format: The format of the place names to return. Defaults to ``"dcid"``.
+            Available categories are:
+            - region
+            - region_code
+            - subregion
+            - subregion_code
+            - intermediate_region_code
+            - intermediate_region
+            - income_level
+            - m49_member
+            - ldc
+            - lldc
+            - sids
+            - un_member
+            - un_observer
+            - un_former_member
+
+        place_format: place_format: The format of the country names to return. Defaults to "dcid".
+            Options are:
+            - dcid
+            - name_official
+            - name_short
+            - iso3_code
+            - iso2_code
+            - iso_numeric_code
+            - m49_code
+            - dac_code
+
         raise_if_empty: Whether to raise a ``ValueError`` if no places match the filters.
 
     Returns:
