@@ -230,7 +230,8 @@ functions to do this.
 
 Let's get all the countries that are in Europe
 ```python
-european_countries = places.get_places_by(by = "region", filter_values="Europe", place_format="name_official")
+european_countries = places.get_places_by(by="region", filter_values="Europe", \
+                                        place_format="name_official", raise_if_empty=True)
 print(european_countries)
 # Output:
 # ['Åland Islands', 'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium'...]
@@ -238,8 +239,11 @@ print(european_countries)
 
 You could also get places for multiple categores and values at once. For example High income countries in Africa
 ```python
-hic_africa = places.get_places_by_multiple(filters = {"region": ["Africa"], "income_level": ["High income"]},
-                                           place_format="name_official")
+hic_africa = places.get_places_by_multiple(
+    filters={"region": ["Africa"], "income_level": ["High income"]},
+    place_format="name_official",
+    raise_if_empty=True,
+)
 print(hic_africa)
 # Output:
 # ['Seychelles']

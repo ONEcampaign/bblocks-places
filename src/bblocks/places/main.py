@@ -6,6 +6,7 @@ that a user can access
 """
 
 from bblocks.places.resolver import PlaceResolver
+from bblocks.places.config import logger
 from typing import Optional, Literal
 import pandas as pd
 
@@ -99,8 +100,15 @@ def _validate_filter_values(filter_category, filter_values: str | list[str]) -> 
         )
 
 
-def _get_list_from_bool(target_field, bool_field):
-    """Helper function to get a list of countries from a boolean field."""
+def _get_list_from_bool(target_field, bool_field, raise_if_empty: bool = False):
+    """Helper function to get a list of countries from a boolean field.
+
+    Args:
+        target_field: The format of the country names to return.
+        bool_field: The boolean field to filter by.
+        raise_if_empty: Whether to raise a ``ValueError`` if the result is empty.
+            If ``False`` a warning is logged and an empty list is returned.
+    """
 
     # validate the target field
     _validate_place_format(target_field)
@@ -109,14 +117,23 @@ def _get_list_from_bool(target_field, bool_field):
         from_type=target_field, to_type=bool_field
     )
 
-    # filter only for value that are True
+    # filter only for values that are True
     countries = {k: v for k, v in countries.items() if v is True}
 
-    # return the keys of the dictionary
-    return list(countries.keys())
+    result = list(countries.keys())
+
+    if not result:
+        msg = f"No places found for boolean field '{bool_field}'"
+        if raise_if_empty:
+            raise ValueError(msg)
+        logger.warning(msg)
+
+    return result
 
 
-def get_un_members(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_un_members(
+    place_format: Optional[str] = "dcid", *, raise_if_empty: bool = False
+) -> list[str | int]:
     """Get a list of UN members in the specified format.
 
     Args:
@@ -133,12 +150,17 @@ def get_un_members(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Returns:
         A list of country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "un_member")
+    return _get_list_from_bool(place_format, "un_member", raise_if_empty=raise_if_empty)
 
 
-def get_un_observers(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_un_observers(
+    place_format: Optional[str] = "dcid", *, raise_if_empty: bool = False
+) -> list[str | int]:
     """Get a list of UN observers in the specified format.
 
     Args:
@@ -155,12 +177,17 @@ def get_un_observers(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Returns:
         A list of country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "un_observer")
+    return _get_list_from_bool(place_format, "un_observer", raise_if_empty=raise_if_empty)
 
 
-def get_m49_places(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_m49_places(
+    place_format: Optional[str] = "dcid", *, raise_if_empty: bool = False
+) -> list[str | int]:
     """Get a list of M49 countries and areas in the specified format.
 
     Args:
@@ -177,12 +204,17 @@ def get_m49_places(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Returns:
         A list of country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "m49_member")
+    return _get_list_from_bool(place_format, "m49_member", raise_if_empty=raise_if_empty)
 
 
-def get_sids(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_sids(
+    place_format: Optional[str] = "dcid", *, raise_if_empty: bool = False
+) -> list[str | int]:
     """Get a list of Small Island Developing States (SIDS) in the specified format.
 
     Args:
@@ -199,12 +231,17 @@ def get_sids(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Returns:
         A list of country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "sids")
+    return _get_list_from_bool(place_format, "sids", raise_if_empty=raise_if_empty)
 
 
-def get_ldc(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_ldc(
+    place_format: Optional[str] = "dcid", *, raise_if_empty: bool = False
+) -> list[str | int]:
     """Get a list of Least Developed Countries (LDC) in the specified format.
 
     Args:
@@ -221,12 +258,17 @@ def get_ldc(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Returns:
         A list of country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "ldc")
+    return _get_list_from_bool(place_format, "ldc", raise_if_empty=raise_if_empty)
 
 
-def get_lldc(place_format: Optional[str] = "dcid") -> list[str | int]:
+def get_lldc(
+    place_format: Optional[str] = "dcid", *, raise_if_empty: bool = False
+) -> list[str | int]:
     """Get a list of Landlocked Developing Countries (LLDC) in the specified format.
 
     Args:
@@ -243,9 +285,12 @@ def get_lldc(place_format: Optional[str] = "dcid") -> list[str | int]:
 
     Returns:
         A list of country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "lldc")
+    return _get_list_from_bool(place_format, "lldc", raise_if_empty=raise_if_empty)
 
 
 def resolve(
@@ -542,7 +587,10 @@ def filter_african_countries(
 
 
 def get_places_by_multiple(
-    filters: dict[str, str | list[str | int | bool]], place_format: str = "dcid"
+    filters: dict[str, str | list[str | int | bool]],
+    place_format: str = "dcid",
+    *,
+    raise_if_empty: bool = False,
 ) -> list[str | int]:
     """Get places based on multiple filters.
 
@@ -569,6 +617,10 @@ def get_places_by_multiple(
     Returns:
         A list of place names in the specified format.
 
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no places match
+        the provided filters.
+
     """
 
     # check if the filter_dict is valid
@@ -584,7 +636,7 @@ def get_places_by_multiple(
         _validate_filter_values(key, value)
 
     # filter the concordance table based on the filter
-    return list(
+    result = list(
         _country_resolver.concordance_table.query(
             " and ".join([f"{key} in {value}" for key, value in filters.items()])
         )[place_format]
@@ -592,9 +644,21 @@ def get_places_by_multiple(
         .unique()
     )
 
+    if not result:
+        msg = f"No places found for filters {filters}"
+        if raise_if_empty:
+            raise ValueError(msg)
+        logger.warning(msg)
+
+    return result
+
 
 def get_places_by(
-    by: str, filter_values: str | list[str], place_format: Optional[str] = "dcid"
+    by: str,
+    filter_values: str | list[str],
+    place_format: Optional[str] = "dcid",
+    *,
+    raise_if_empty: bool = False,
 ) -> list[str | int]:
     """Get places based on a specific category and values.
 
@@ -623,6 +687,9 @@ def get_places_by(
             - iso_numeric_code
             - m49_code
             - dac_code
+        raise_if_empty: Whether to raise a ``ValueError`` if no places match the
+            criteria. If ``False`` a warning is logged and an empty list is returned.
+
     """
 
     # check if the by is valid
@@ -639,11 +706,22 @@ def get_places_by(
 
     # filter the concordance table
     mapper = _country_resolver.get_concordance_dict(from_type=place_format, to_type=by)
-    return [k for k, v in mapper.items() if v in filter_values]
+    result = [k for k, v in mapper.items() if v in filter_values]
+
+    if not result:
+        msg = f"No places found for {by} in {filter_values}"
+        if raise_if_empty:
+            raise ValueError(msg)
+        logger.warning(msg)
+
+    return result
 
 
 def get_african_countries(
-    place_format: Optional[str] = "dcid", exclude_non_un_members: Optional[bool] = True
+    place_format: Optional[str] = "dcid",
+    exclude_non_un_members: Optional[bool] = True,
+    *,
+    raise_if_empty: bool = False,
 ) -> list[str | int]:
     """Get a list of African countries in the specified format.
 
@@ -661,8 +739,14 @@ def get_african_countries(
         exclude_non_un_members: Whether to exclude non-UN members. Defaults to True. If set to False, non-UN member
             countries and areas such as Western Sahara will be included in the list.
 
+        raise_if_empty: Whether to raise a ``ValueError`` if no countries are found.
+            If ``False`` a warning is logged and an empty list is returned.
+
     Returns:
         A list of African country names in the specified format.
+
+    Raises:
+        ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
     filter_dict = {"region": "Africa"}
@@ -670,4 +754,8 @@ def get_african_countries(
     if exclude_non_un_members:
         filter_dict = {"region": "Africa", "un_member": True}
 
-    return get_places_by_multiple(filters=filter_dict, place_format=place_format)
+    return get_places_by_multiple(
+        filters=filter_dict,
+        place_format=place_format,
+        raise_if_empty=raise_if_empty,
+    )
