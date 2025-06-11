@@ -140,7 +140,32 @@ print(resolved_countries)
 
 __Handling ambiguities__
 
-When resolving places, there cases where a place is not found, or there may be multiple candidates for a place. It is 
+The package is designed to handle ambiguities seamlessly. At a most basic level, it can handle common string issues such
+as whitespace, capitalization, and punctuation. For example, it will treat "Zimbabwe" and " zimbabwe " as the same place,
+and Cote d'Ivoire is recognized without accent marks. 
+
+```python
+
+
+resolved_places = places.resolve([" zimbabwe ", "cote d'ivoire"], to_type="iso3_code")
+
+print(resolved_places)
+# Output:
+# ['ZWE', 'CIV']
+```
+
+The package also handles more complex ambiguities such as historical and alternative names. For example:
+
+```python
+resolved_places = places.resolve(["Rhodesia", "Ivory Coast"], to_type="name_official")
+
+print(resolved_places)
+# Output:
+# ['Zimbabwe', 'Côte d’Ivoire']
+
+```
+
+When resolving places, there may be cases where a place is not found, or there may be multiple candidates for a place. It is 
 important to know when these cases occur, so you can handle them appropriately. By default the package will 
 raise an error when there is an ambiguity or a place is not found.
 
@@ -154,13 +179,13 @@ resolved_countries = places.resolve(countries)
 
 You can also choose to set not found values to None or a specific value.
 ```python
-resolved_countries = places.resolve(countries, not_found_value="ignore")
+resolved_countries = places.resolve(countries, not_found="ignore")
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', None]
 ```
 ```python
-resolved_countries = places.resolve(countries, not_found_value="not found")
+resolved_countries = places.resolve(countries, not_found="not found")
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', 'not found']
@@ -168,7 +193,7 @@ print(resolved_countries)
 
 If you know the value for these ambiguouse places, you can also set the value to that.
 ```python
-places.resolve(countries, not_found="not found", custom_mapping={"Gondor": "country/GON"})
+resolved_countries = places.resolve(countries, not_found="not found", custom_mapping={"Gondor": "country/GON"})
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', 'country/GON']
@@ -219,28 +244,27 @@ filtered_countries = places.filter_places(countries, "income_level", "High incom
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
+```
 
-# Set ``raise_if_empty=True`` to be notified when no places match
+Set `raise_if_empty=True` to be notified when no places match
+
+```python
 places.filter_places(countries, "region", "Oceania", raise_if_empty=True)
+# Output:
+# PlaceNotFoundError: No places found for region Oceania
+```
 
-# You can also filter using multiple categories at once
-lmic_africa = places.filter_places_multiple(
-    countries,
-    filters={"region": "Africa", "income_level": "Lower middle income"},
-)
+You can also filter using multiple categories at once
+
+```python
+lmic_africa = places.filter_places_multiple(countries, filters={"region": "Africa", "income_level": "Lower middle income"})
 print(lmic_africa)
 # Output:
 # ['Zimbabwe']
-
-# ``raise_if_empty`` can also be used here
-places.filter_places_multiple(
-    countries,
-    filters={"region": "Oceania", "income_level": "Low income"},
-    raise_if_empty=True,
-)
 ```
 
 Helper functions for specific filtering exists, for example to filter for African countries
+
 ```python
 african_countries = places.filter_african_countries(countries)
 print(african_countries)
@@ -257,8 +281,7 @@ functions to do this.
 
 Let's get all the countries that are in Europe
 ```python
-european_countries = places.get_places_by(by="region", filter_values="Europe", \
-                                        place_format="name_official", raise_if_empty=True)
+european_countries = places.get_places_by(by="region", filter_values="Europe", place_format="name_official", raise_if_empty=True)
 print(european_countries)
 # Output:
 # ['Åland Islands', 'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium'...]
