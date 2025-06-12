@@ -12,7 +12,7 @@ from bblocks.places.main import (
     get_african_countries,
     # resolvers and filters
     resolve,
-    filter_places,
+    filter,
     resolve_map,
     filter_african_countries,
     # Category-based filters
