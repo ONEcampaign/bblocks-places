@@ -239,9 +239,8 @@ Let's say we have a list of countries and we want to filter them for high income
 ```python
 countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
 
-
-filtered_countries = places.filter_places(countries, 
-                                          filters = {"income_level": "High income"})
+filtered_countries = places.filter(countries,
+                                   filters={"income_level": "High income"})
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
@@ -250,7 +249,7 @@ print(filtered_countries)
 You can filter for multiple values in a category
 
 ```python
-filtered_countries = places.filter_places(countries, {"region": ["Europe", "Africa"]})
+filtered_countries = places.filter(countries, {"region": ["Europe", "Africa"]})
 
 print(filtered_countries)
 # Output:
@@ -260,7 +259,7 @@ print(filtered_countries)
 Set ``raise_if_empty=True`` to be notified when no places match
 
 ```python
-places.filter_places(countries, {"region": "Oceania"}, raise_if_empty=True)
+places.filter(countries, {"region": "Oceania"}, raise_if_empty=True)
 # raises ValueError: No places found for filters {'region': 'Oceania'}
 ```
 
@@ -268,7 +267,7 @@ places.filter_places(countries, {"region": "Oceania"}, raise_if_empty=True)
 You can also filter using multiple categories at once
 
 ```python
-lmic_africa = places.filter_places(
+lmic_africa = places.filter(
     countries,
     filters={"region": "Africa", "income_level": "Lower middle income"},
 )
