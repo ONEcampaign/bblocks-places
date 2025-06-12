@@ -1,0 +1,10 @@
+site_name: tools/bblocks/places
+
+nav:
+    - index.md
+    - Why bblocks-places: why-bblocks-places.md
+    - Getting started: getting-started.md
+    - Resolve places: resolve-places.md
+    - Filter places: filter-places.md
+    - Get places: get-places.md
+    - Customization: customization.md

@@ -459,7 +459,7 @@ def resolve_map(
     )
 
 
-def filter_places(
+def filter(
     places: list[str] | pd.Series,
     filters: dict[str, str | list[str]],
     from_type: Optional[str] = None,
@@ -602,7 +602,7 @@ def filter_african_countries(
             is returned.
     """
 
-    return filter_places(
+    return filter(
         places=places,
         filters={"region": "Africa"},
         from_type=from_type,
