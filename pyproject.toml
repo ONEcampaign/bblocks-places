@@ -25,6 +25,7 @@ path = "src/bblocks/places/concordance.csv"
 black = "^25.1.0"
 pytest = "^8.3.5"
 mkdocs-material = "^9.6.14"
+pytest-cov = "^6.2.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
