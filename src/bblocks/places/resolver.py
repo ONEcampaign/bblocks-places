@@ -725,7 +725,7 @@ class PlaceResolver:
             for p in places:
                 if pd.isna(p):
                     if ignore_nulls:
-                        result.append(None)
+                        result.append(p)
                     else:
                         raise ValueError("Null values found in places input")
                 else:
