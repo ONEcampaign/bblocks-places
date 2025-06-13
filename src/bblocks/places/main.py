@@ -182,7 +182,9 @@ def get_un_observers(
         ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "un_observer", raise_if_empty=raise_if_empty)
+    return _get_list_from_bool(
+        place_format, "un_observer", raise_if_empty=raise_if_empty
+    )
 
 
 def get_m49_places(
@@ -209,7 +211,9 @@ def get_m49_places(
         ValueError: If ``raise_if_empty`` is ``True`` and no countries are found.
     """
 
-    return _get_list_from_bool(place_format, "m49_member", raise_if_empty=raise_if_empty)
+    return _get_list_from_bool(
+        place_format, "m49_member", raise_if_empty=raise_if_empty
+    )
 
 
 def get_sids(
@@ -300,6 +304,8 @@ def resolve(
     not_found: Literal["raise", "ignore"] | str = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     custom_mapping: Optional[dict] = None,
+    *,
+    ignore_nulls: bool = True,
 ):
     """Resolve places
 
@@ -358,6 +364,9 @@ def resolve(
             override any other mappings. Disambiguation and concordance will not be run for those places.
             The keys are the original places and the values are the resolved places.
 
+        ignore_nulls: If ``True`` null values are ignored during resolution and left as ``None``.
+            A warning is logged for ignored values. If ``False`` and nulls are present, a ``ValueError`` is raised.
+
     Returns:
         Resolved places
     """
@@ -373,6 +382,7 @@ def resolve(
         not_found=not_found,
         multiple_candidates=multiple_candidates,
         custom_mapping=custom_mapping,
+        ignore_nulls=ignore_nulls,
     )
 
 
@@ -383,6 +393,8 @@ def resolve_map(
     not_found: Literal["raise", "ignore"] | str = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
     custom_mapping: Optional[dict] = None,
+    *,
+    ignore_nulls: bool = True,
 ) -> dict[str, str | int | None | list]:
     """Resolve places to a mapping dictionary of {place: resolved}
 
@@ -441,6 +453,9 @@ def resolve_map(
             override any other mappings. Disambiguation and concordance will not be run for those places.
             The keys are the original places and the values are the resolved places.
 
+        ignore_nulls: If ``True`` null values are ignored during resolution and left as ``None``.
+            A warning is logged for ignored values. If ``False`` and nulls are present, a ``ValueError`` is raised.
+
     Returns:
         A dictionary mapping the places to the desired format.
     """
@@ -456,6 +471,7 @@ def resolve_map(
         not_found=not_found,
         multiple_candidates=multiple_candidates,
         custom_mapping=custom_mapping,
+        ignore_nulls=ignore_nulls,
     )
 
 
@@ -612,8 +628,6 @@ def filter_african_countries(
     )
 
 
-
-
 def get_places(
     filters: dict[str, str | list[str | int | bool]],
     place_format: str = "dcid",
@@ -675,9 +689,7 @@ def get_places(
 
     query = " and ".join([f"{k} in {v}" for k, v in filters.items()])
     result = list(
-        _country_resolver.concordance_table.query(query)[place_format]
-        .dropna()
-        .unique()
+        _country_resolver.concordance_table.query(query)[place_format].dropna().unique()
     )
 
     if not result:
