@@ -143,3 +143,48 @@ def test_get_concordance_dict_income_level_drops_nulls(master_concordance_df):
         "cpv": "Lower middle income",
     }
     assert result == expected
+
+
+# ——————————————————————————————————————————————————————————————————————————
+# _map_single_or_list tests
+# ——————————————————————————————————————————————————————————————————————————
+
+@pytest.fixture(scope="module")
+def iso_to_dcid(master_concordance_df):
+    # reuse the same concordance fixture to build a simple lookup
+    return concordance.get_concordance_dict(
+        master_concordance_df, from_type="iso3_code", to_type="dcid"
+    )
+
+def test_map_single_or_list_multiple_hits(iso_to_dcid):
+    """Given a list of values, _map_single_or_list should:
+    - clean each entry,
+    - look it up in the concordance dict,
+    - drop any misses,
+    - and return a list of all matched values.
+    """
+    # mix of hits and one miss
+    vals = ["ZWE", "XXX", "CPV"]
+    result = concordance._map_single_or_list(vals, iso_to_dcid)
+
+    # "ZWE" -> "country/ZWE", "XXX" dropped, "CPV" -> "country/CPV"
+    assert isinstance(result, list)
+    assert result == ["country/ZWE", "country/CPV"]
+
+
+def test_map_single_or_list_scalar_miss(iso_to_dcid):
+    """A scalar value not in the dict should return None."""
+    assert concordance._map_single_or_list("XYZ", iso_to_dcid) is None
+
+def test_map_single_or_list_all_misses(iso_to_dcid):
+    """A list where none of the cleaned keys match should return None."""
+    assert concordance._map_single_or_list(["AAA", "BBB"], iso_to_dcid) is None
+
+def test_map_single_or_list_single_hit(iso_to_dcid):
+    """If exactly one entry in the list matches, return that single value."""
+    vals = ["XXX", "ITA", "YYY"]  # only "ITA" is in the dict
+    assert concordance._map_single_or_list(vals, iso_to_dcid) == "country/ITA"
+
+def test_map_single_or_list_empty_list(iso_to_dcid):
+    """An empty list should return None."""
+    assert concordance._map_single_or_list([], iso_to_dcid) is None
