@@ -8,15 +8,30 @@ from bblocks.places.utils import clean_string
 
 
 def validate_concordance_table(concordance_table: pd.DataFrame) -> None:
-    """Validate the concordance table to ensure it has the required column "dcid" and at least two columns."""
-
-    # At least 2 columns are required
-    if len(concordance_table.columns) < 2:
-        raise ValueError(f"Concordance table must have at least 2 columns")
+    """Validate the concordance table to ensure it has
+    - the required column "dcid"
+    - at least one row
+    - at least two columns of which one is "dcid"
+    - no null values in "dcid"
+    - unique values in "dcid"
+    """
 
     # Check if the concordance table has the required column "dcid"
     if "dcid" not in concordance_table.columns:
         raise ValueError(f"Concordance table must have a column named 'dcid'")
+
+    if concordance_table.shape[0] == 0:
+        raise ValueError("concordance table must have at least one row")
+
+    if concordance_table["dcid"].isnull().any():
+        raise ValueError("`dcid` column must not contain null values")
+
+    if concordance_table["dcid"].duplicated().any():
+        raise ValueError("`dcid` values must be unique")
+
+    # At least 2 columns are required
+    if len(concordance_table.columns) < 2:
+        raise ValueError(f"Concordance table must have at least 2 columns")
 
 
 def get_concordance_dict(
