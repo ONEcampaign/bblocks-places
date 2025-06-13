@@ -137,7 +137,7 @@ def handle_missing_values(
     for place, val in candidates.items():
         if val is None and dcid_map.get(place) is not None:
             logger.warning(
-                f"No value found for {place} when mapping to '{to_type}'."
+                f"No value found for '{place}' when mapping to '{to_type}'. Resolving to None."
             )
 
     return candidates
@@ -413,6 +413,9 @@ class PlaceResolver:
         not_found: Literal["raise", "ignore"] | str = "raise",
     ) -> dict[str, str | list | None]:
         """Disambiguate places then map them to ``to_type``.
+
+        This method uses the Data Commons API and/or any custom disambiguation rules
+        to disambiguate places, then concords them to the desired type.
 
         Args:
             to_type: The desired type to map the places to.
