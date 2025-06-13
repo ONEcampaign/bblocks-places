@@ -118,6 +118,31 @@ def handle_multiple_candidates(
     return candidates
 
 
+def handle_missing_values(
+    candidates: dict[str, str | list | None],
+    dcid_map: dict[str, str | list | None],
+    to_type: str,
+) -> dict[str, str | list | None]:
+    """Warn when a place has a DCID but no value for ``to_type``.
+
+    Args:
+        candidates: Mapping of places to resolved values.
+        dcid_map: Mapping of places to their DCIDs.
+        to_type: The property or concordance field being mapped to.
+
+    Returns:
+        The ``candidates`` mapping unchanged.
+    """
+
+    for place, val in candidates.items():
+        if val is None and dcid_map.get(place) is not None:
+            logger.warning(
+                f"No value found for {place} when mapping to '{to_type}'."
+            )
+
+    return candidates
+
+
 def read_default_concordance_table() -> pd.DataFrame:
     """Read the default concordance table"""
 
@@ -381,100 +406,98 @@ class PlaceResolver:
         return candidates
 
     def _resolve_with_disambiguation(
-        self, to_type: str, places_to_map: list[str]
+        self,
+        to_type: str,
+        places_to_map: list[str],
+        *,
+        not_found: Literal["raise", "ignore"] | str = "raise",
     ) -> dict[str, str | list | None]:
-        """The mapping pipeline that disambiguates the places and maps them to the desired type.
-
-        This method uses the Data Commons API and/or any custom disambiguation rules
-        to disambiguate places, then concords them to the desired type.
+        """Disambiguate places then map them to ``to_type``.
 
         Args:
             to_type: The desired type to map the places to.
             places_to_map: A list of places to map.
+            not_found: Behaviour when a place cannot be disambiguated.
 
         Returns:
-            A dictionary of candidates where the keys are the original names and the values are the mapped values.
+            Mapping of the original places to the resolved values.
         """
 
-        # disambiguate the places
-        candidates = resolve_places_to_dcids(
+        dcid_map = resolve_places_to_dcids(
             dc_client=self._dc_client,
             entities=places_to_map,
             entity_type=self._dc_entity_type,
             disambiguation_dict=self._custom_disambiguation,
         )
 
-        # if to_type is dcid then there is no need to map the candidates
+        dcid_map = handle_not_founds(candidates=dcid_map, not_found=not_found)
+
         if to_type == "dcid":
-            return candidates
+            return dcid_map
 
-        # if the to_type is in the concordance table, then map the candidates using the concordance table
-
-        # if the to_type is in the concordance table, then we use the concordance table
         if (
             self._concordance_table is not None
             and to_type in self._concordance_table.columns
         ):
-            return map_candidates(
+            candidates = map_candidates(
                 concordance_table=self._concordance_table,
-                candidates=candidates,
+                candidates=dcid_map,
                 to_type=to_type,
             )
+        else:
+            candidates = self._map_candidates_to_dc_property(
+                candidates=dcid_map,
+                dc_property=to_type,
+            )
 
-        # else if the to_type is not in the concordance table, then we use Node
-        return self._map_candidates_to_dc_property(
-            candidates=candidates,
-            dc_property=to_type,
-        )
+        return handle_missing_values(candidates, dcid_map, to_type)
 
     def _resolve_without_disambiguation(
-        self, places_to_map: list[str], from_type: str, to_type: str
+        self,
+        places_to_map: list[str],
+        from_type: str,
+        to_type: str,
+        *,
+        not_found: Literal["raise", "ignore"] | str = "raise",
     ) -> dict[str, str | list | None]:
-        """The mapping pipeline that doesn't require disambiguation.
+        """Resolve when the original ``from_type`` is known.
 
-        This method uses a concordance table or Node to map the places to the desired type, without needing to
-        disambiguate them first. If the target type is in the concordance table, it uses that to map the places.
-        Otherwise, it uses Node to map the places, by first mapping places to dcid then using the dcid to get the
-        desired type.
-
-        Args:
-            places_to_map: A list of places to map.
-            from_type: The original type of the places.
-            to_type: The desired type to map the places to.
-
-        Returns:
-            A dictionary of candidates where the keys are the original names and the values are the mapped values.
-
+        Places are first mapped to ``dcid`` using the concordance table and then
+        converted to ``to_type`` either via the concordance table or Data Commons
+        Node.
         """
 
-        # if the from_type is in the concordance table, then use the concordance table to map the places
-        if (
-            self._concordance_table is not None
-            and to_type in self._concordance_table.columns
-        ):
-            return map_places(
-                concordance_table=self._concordance_table,
-                places=places_to_map,
-                from_type=from_type,
-                to_type=to_type,
-            )
-
-        # Otherwise, use Node to map the places
-
-        # Map the places to dcid before using Node
         if from_type != "dcid":
-            candidates = map_places(
+            dcid_map = map_places(
                 concordance_table=self._concordance_table,
                 places=places_to_map,
                 from_type=from_type,
                 to_type="dcid",
             )
         else:
-            # if the from_type is already dcid, then no need to map it - create a mapping dict of dcid to dcid
-            candidates = {place: place for place in places_to_map}
+            dcid_map = {place: place for place in places_to_map}
 
-        # use Node to map the candidates to the desired type
-        return self._map_candidates_to_dc_property(candidates, to_type)
+        dcid_map = handle_not_founds(dcid_map, not_found)
+
+        if to_type == "dcid":
+            return dcid_map
+
+        if (
+            self._concordance_table is not None
+            and to_type in self._concordance_table.columns
+        ):
+            candidates = map_candidates(
+                concordance_table=self._concordance_table,
+                candidates=dcid_map,
+                to_type=to_type,
+            )
+        else:
+            candidates = self._map_candidates_to_dc_property(
+                candidates=dcid_map,
+                dc_property=to_type,
+            )
+
+        return handle_missing_values(candidates, dcid_map, to_type)
 
     def _resolve(
         self,
@@ -523,33 +546,29 @@ class PlaceResolver:
         if not places_to_map:
             return custom_mapping
 
-        # if from type is not provided, then we need to disambiguate the places
         if not from_type:
-            # disambiguate the places
             candidates = self._resolve_with_disambiguation(
-                to_type=to_type, places_to_map=places_to_map
+                to_type=to_type,
+                places_to_map=places_to_map,
+                not_found=not_found,
             )
-
-        # if the from_type is provided but is not in the concordance table, then we need to disambiguate the places
         elif from_type and (
             self._concordance_table is None
             or from_type not in self._concordance_table.columns
         ):
-            # disambiguate the places
             candidates = self._resolve_with_disambiguation(
-                to_type=to_type, places_to_map=places_to_map
+                to_type=to_type,
+                places_to_map=places_to_map,
+                not_found=not_found,
             )
-
-        # if the from_type is provided and is in the concordance table, then we can use the concordance table to map the places
         else:
             candidates = self._resolve_without_disambiguation(
                 places_to_map=places_to_map,
                 from_type=from_type,
                 to_type=to_type,
+                not_found=not_found,
             )
 
-        # handle not found
-        candidates = handle_not_founds(candidates=candidates, not_found=not_found)
         # handle multiple candidates
         candidates = handle_multiple_candidates(
             candidates=candidates, multiple_candidates=multiple_candidates
