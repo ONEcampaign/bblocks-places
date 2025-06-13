@@ -129,3 +129,77 @@ def test_custom_disambiguation_matches(entity, disamb_dict, expected):
 def test_custom_disambiguation_missing_returns_none():
     disamb_dict = {"a": "A"}
     assert disambiguator.custom_disambiguation("b", disamb_dict) is None
+
+# --- Tests for resolve_places_to_dcids --- #
+
+def test_resolve_places_empty_list():
+    """Empty entities list should give empty result."""
+    client = FakeDCClient(response_map={})
+    result = disambiguator.resolve_places_to_dcids(client, [], "Type")
+    assert result == {}
+
+def test_resolve_places_no_disamb_no_chunk():
+    """
+    No disambiguation dict and chunk_size=None → single API call,
+    raw lists preserved.
+    """
+    response_map = {
+        (("A", "B"), "T"): {"A": ["1"], "B": ["2"]}
+    }
+    client = FakeDCClient(response_map)
+    result = disambiguator.resolve_places_to_dcids(
+        client, ["A", "B"], "T", disambiguation_dict=None, chunk_size=None
+    )
+    assert result == {"A": ["1"], "B": ["2"]}
+
+def test_resolve_places_chunking_merges_batches():
+    """
+    chunk_size>0 splits the list, makes multiple calls, and merges them.
+    """
+    response_map = {
+        (("A", "B"), "T"): {"A": ["1"], "B": ["2"]},
+        (("C",), "T"): {"C": ["3"]}
+    }
+    client = FakeDCClient(response_map)
+    # chunk_size=2 → ["A","B"] & ["C"]
+    result = disambiguator.resolve_places_to_dcids(
+        client, ["A", "B", "C"], "T", disambiguation_dict=None, chunk_size=2
+    )
+    assert result == {"A": ["1"], "B": ["2"], "C": ["3"]}
+
+def test_resolve_places_with_disambiguation_prefilter():
+    """
+    Entities in disambiguation_dict are taken first and not sent to API;
+    the rest are fetched.
+    """
+    response_map = {
+        (("Y",), "T"): {"Y": ["yid"]}
+    }
+    client = FakeDCClient(response_map)
+    disamb = {"X": "xid"}
+    result = disambiguator.resolve_places_to_dcids(
+        client,
+        ["X", "Y"],
+        "T",
+        disambiguation_dict=disamb,
+        chunk_size=None
+    )
+    assert result == {"X": "xid", "Y": ["yid"]}
+
+def test_resolve_places_not_found_becomes_none():
+    """
+    If the API returns no entries for the requested entities,
+    resolve_places_to_dcids should return an empty dict (no keys).
+    """
+    response_map = {
+        (("Z",), "T"): {}  # server returns no mapping for "Z"
+    }
+    client = FakeDCClient(response_map)
+    result = disambiguator.resolve_places_to_dcids(
+        client,
+        ["Z"],
+        "T",
+        disambiguation_dict=None,
+        chunk_size=None
+    )
+    assert result == {}
