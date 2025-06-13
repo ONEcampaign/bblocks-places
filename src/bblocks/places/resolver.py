@@ -569,6 +569,8 @@ class PlaceResolver:
         not_found: Literal["raise", "ignore"] | str = "raise",
         multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
+        *,
+        ignore_nulls: bool = True,
     ) -> dict[str, str | list[str] | None]:
         """Resolve places to a mapping dictionary of {place: resolved}
 
@@ -607,24 +609,34 @@ class PlaceResolver:
                 override any other mappings. Disambiguation and concordance will not be run for those places.
                 The keys are the original places and the values are the resolved places.
 
+            ignore_nulls: If ``True`` null values in ``places`` will be ignored and left unresolved.
+                A warning is logged when nulls are dropped. If ``False`` and nulls are present,
+                a ``ValueError`` is raised.
+
         Returns:
             A dictionary mapping the places to the desired format.
         """
 
         if isinstance(places, str):
             places = [places]
-
         elif isinstance(places, list):
-            # deduplicate while preserving order
             places = list(dict.fromkeys(places))
-
         elif isinstance(places, pd.Series):
             places = list(places.unique())
-
         else:
             raise ValueError(
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
+
+        null_places = [p for p in places if pd.isna(p)]
+        if null_places:
+            if ignore_nulls:
+                logger.warning(
+                    "Null values detected and will be ignored when resolving places"
+                )
+                places = [p for p in places if not pd.isna(p)]
+            else:
+                raise ValueError("Null values found in places input")
 
         return self._resolve(
             places=places,
@@ -643,6 +655,8 @@ class PlaceResolver:
         not_found: Literal["raise", "ignore"] | str = "raise",
         multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
         custom_mapping: Optional[dict[str, str]] = None,
+        *,
+        ignore_nulls: bool = True,
     ) -> str | list[str] | pd.Series:
         """Resolve places
 
@@ -680,6 +694,10 @@ class PlaceResolver:
                 override any other mappings. Disambiguation and concordance will not be run for those places.
                 The keys are the original places and the values are the resolved places.
 
+            ignore_nulls: If ``True`` null values in ``places`` will be ignored and left unresolved.
+                A warning is logged when nulls are dropped. If ``False`` and nulls are present,
+                a ``ValueError`` is raised.
+
         Returns:
             Resolved places in the desired format
         """
@@ -692,6 +710,7 @@ class PlaceResolver:
             not_found=not_found,
             multiple_candidates=multiple_candidates,
             custom_mapping=custom_mapping,
+            ignore_nulls=ignore_nulls,
         )
 
         # convert back to the original format replacing the original places with the resolved places
@@ -699,10 +718,19 @@ class PlaceResolver:
             return mapper.get(places)
 
         elif isinstance(places, pd.Series):
-            return places.map(mapper)
+            return places.map(lambda p: mapper.get(p) if not pd.isna(p) else pd.NA)
 
         else:
-            return [mapper.get(p) for p in places]
+            result = []
+            for p in places:
+                if pd.isna(p):
+                    if ignore_nulls:
+                        result.append(None)
+                    else:
+                        raise ValueError("Null values found in places input")
+                else:
+                    result.append(mapper.get(p))
+            return result
 
     @property
     def concordance_table(self) -> pd.DataFrame:
