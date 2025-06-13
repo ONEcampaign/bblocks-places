@@ -63,61 +63,83 @@ def test_valid_concordance_table_passes():
 # get_concordance_dict tests
 # ——————————————————————————————————————————————————————————————————————————
 
-def test_identity_map_same_from_and_to():
-    """Test that when from_type and to_type are the same, it returns a mapping of cleaned values to original values."""
-    df = pd.DataFrame({
-        "foo": ["A B", "C-D", None, "   E_f!"],
+@pytest.fixture(scope="module")
+def master_concordance_df():
+    """Fixture for a sample concordance DataFrame with various columns."""
+
+    return pd.DataFrame({
+        "dcid": ["country/ZWE", "country/ITA", "country/FRA", "nuts/FI2", "country/CPV"],
+        "name_official": ['Zimbabwe', 'Italy', 'France', 'Åland Islands', 'Cabo Verde'],
+        "iso3_code": ['ZWE', 'ITA', 'FRA', 'ALA', 'CPV'],
+        "income_level": ['Lower middle income', 'High income', 'High income', None, 'Lower middle income']
     })
-    result = concordance.get_concordance_dict(df, "foo", "foo")
-    # clean_string("A B") -> "ab", "C-D" -> "cd", "   E_f!" -> "ef"
-    assert result == {
-        "ab": "A B",
-        "cd": "C-D",
-        "ef": "   E_f!",
+
+
+def test_get_concordance_dict_identity_mapping(master_concordance_df):
+    """When from_type == to_type, each dcid should map to itself,with the key cleaned via clean_string."""
+    result = concordance.get_concordance_dict(
+        master_concordance_df, "dcid", "dcid"
+    )
+
+    expected = {
+        "countryzwe": "country/ZWE",
+        "countryita": "country/ITA",
+        "countryfra": "country/FRA",
+        "nutsfi2":    "nuts/FI2",
+        "countrycpv": "country/CPV",
     }
+    assert result == expected
+
+def test_get_concordance_dict_cross_mapping_name_official_to_dcid(master_concordance_df):
+    """When from_type != to_type, should map cleaned name_official → dcid, dropping any rows where dcid is null (none here)."""
+    result = concordance.get_concordance_dict(
+        master_concordance_df,
+        from_type="name_official",
+        to_type="dcid",
+    )
+
+    expected = {
+        "zimbabwe":       "country/ZWE",
+        "italy":          "country/ITA",
+        "france":         "country/FRA",
+        "alandislands":   "nuts/FI2",
+        "caboverde":      "country/CPV",
+    }
+    assert result == expected
 
 
-# def test_cross_column_mapping_drops_nulls_and_cleans_keys():
-#     df = pd.DataFrame({
-#         "country": ["Côte d'Ivoire", " Foo Bar ", None],
-#         "dcid":    ["country/CI",         None,         "country/XX"],
-#     })
-#     result = concordance.get_concordance_dict(df, "country", "dcid")
-#     # Only the first row survives; clean_string("Côte d'Ivoire") -> "cotedivoire"
-#     assert result == {
-#         "cotedivoire": "country/CI"
-#     }
-#
-#
-# def test_missing_from_or_to_column_raises_keyerror():
-#     df = pd.DataFrame({
-#         "a": [1, 2],
-#         "b": [3, 4],
-#     })
-#     with pytest.raises(KeyError):
-#         concordance.get_concordance_dict(df, "nonexistent", "a")
-#     with pytest.raises(KeyError):
-#         concordance.get_concordance_dict(df, "a", "nonexistent")
-#
-#
-# def test_duplicate_cleaned_keys_last_one_wins():
-#     df = pd.DataFrame({
-#         "code": ["X", " x ", "Y"],
-#         "dcid": ["id1", "id2", "id3"],
-#     })
-#     result = concordance.get_concordance_dict(df, "code", "dcid")
-#     # "X" and " x " both clean to "x", so the second ("id2") should overwrite the first
-#     assert result == {
-#         "x": "id2",
-#         "y": "id3",
-#     }
-#
-#
-# def test_all_null_to_column_yields_empty_dict():
-#     df = pd.DataFrame({
-#         "from": ["a", "b", "c"],
-#         "to":   [None, None, None],
-#     })
-#     result = concordance.get_concordance_dict(df, "from", "to")
-#     assert result == {}
+def test_get_concordance_dict_cross_mapping_iso3_code_to_dcid(master_concordance_df):
+    """Cross‐column mapping for iso3_code → dcid, cleaning the ISO codes to lower‐case keys."""
+    result = concordance.get_concordance_dict(
+        master_concordance_df,
+        from_type="iso3_code",
+        to_type="dcid",
+    )
 
+    expected = {
+        "zwe": "country/ZWE",
+        "ita": "country/ITA",
+        "fra": "country/FRA",
+        "ala": "nuts/FI2",
+        "cpv": "country/CPV",
+    }
+    assert result == expected
+
+def test_get_concordance_dict_income_level_drops_nulls(master_concordance_df):
+    """
+    Mapping from `iso3_code` → `income_level` should drop any rows
+    where `income_level` is null (i.e. 'ALA').
+    """
+    result = concordance.get_concordance_dict(
+        master_concordance_df,
+        from_type="iso3_code",
+        to_type="income_level",
+    )
+
+    expected = {
+        "zwe": "Lower middle income",
+        "ita": "High income",
+        "fra": "High income",
+        "cpv": "Lower middle income",
+    }
+    assert result == expected
