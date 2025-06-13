@@ -171,7 +171,6 @@ def test_map_single_or_list_multiple_hits(iso_to_dcid):
     assert isinstance(result, list)
     assert result == ["country/ZWE", "country/CPV"]
 
-
 def test_map_single_or_list_scalar_miss(iso_to_dcid):
     """A scalar value not in the dict should return None."""
     assert concordance._map_single_or_list("XYZ", iso_to_dcid) is None
@@ -188,3 +187,243 @@ def test_map_single_or_list_single_hit(iso_to_dcid):
 def test_map_single_or_list_empty_list(iso_to_dcid):
     """An empty list should return None."""
     assert concordance._map_single_or_list([], iso_to_dcid) is None
+
+
+# —————————————————————————————————————————————————————————————————————————
+# map_places tests
+# —————————————————————————————————————————————————————————————————————————
+
+def test_map_places_basic_hits(master_concordance_df):
+    """Basic success case: every place in the list maps to a single dcid."""
+    places = ["Zimbabwe", "Italy", "France"]
+    result = concordance.map_places(
+        master_concordance_df,
+        places,
+        from_type="name_official",
+        to_type="dcid",
+    )
+    assert result == {
+        "Zimbabwe": "country/ZWE",
+        "Italy":    "country/ITA",
+        "France":   "country/FRA",
+    }
+
+def test_map_candidates_none_candidate_stays_none(master_concordance_df):
+    """
+    A None candidate value should remain None in the output.
+    """
+    candidates = {"Atlantis": None}
+    result = concordance.map_candidates(
+        master_concordance_df,
+        candidates,
+        "iso3_code",  # mapping DCID → iso3_code
+    )
+    assert result == {"Atlantis": None}
+
+def test_map_candidates_single_string_hit(master_concordance_df):
+    """
+    A single‐string candidate that matches a DCID should map to its iso3_code.
+    """
+    candidates = {"Zimbabwe": "country/ZWE"}
+    result = concordance.map_candidates(
+        master_concordance_df,
+        candidates,
+        "iso3_code",
+    )
+    assert result == {"Zimbabwe": "ZWE"}
+
+def test_map_candidates_single_string_miss(master_concordance_df):
+    """
+    A single‐string candidate not found in the concordance should map to None.
+    """
+    candidates = {"Unknown": "country/XXX"}
+    result = concordance.map_candidates(
+        master_concordance_df,
+        candidates,
+        "iso3_code",
+    )
+    assert result == {"Unknown": None}
+
+def test_map_candidates_list_single_hit(master_concordance_df):
+    """
+    A list candidate with exactly one hit (others miss) should return that single value.
+    """
+    candidates = {"Mix": ["country/ITA", "country/XXX"]}
+    result = concordance.map_candidates(
+        master_concordance_df,
+        candidates,
+        "iso3_code",
+    )
+    assert result == {"Mix": "ITA"}
+
+def test_map_candidates_list_multiple_hits(master_concordance_df):
+    """
+    A list candidate with multiple hits should return a list of matched values.
+    """
+    candidates = {"Union": ["country/ZWE", "country/FRA", "country/XXX"]}
+    result = concordance.map_candidates(
+        master_concordance_df,
+        candidates,
+        "iso3_code",
+    )
+    assert isinstance(result["Union"], list)
+    assert set(result["Union"]) == {"ZWE", "FRA"}
+
+def test_map_candidates_list_all_misses(master_concordance_df):
+    """
+    A list candidate where none match should return None.
+    """
+    candidates = {"Nothing": ["country/XXX", "country/YYY"]}
+    result = concordance.map_candidates(
+        master_concordance_df,
+        candidates,
+        "iso3_code",
+    )
+    assert result == {"Nothing": None}
+
+def test_map_candidates_empty_input(master_concordance_df):
+    """
+    An empty candidates dict should return an empty dict.
+    """
+    result = concordance.map_candidates(
+        master_concordance_df,
+        {},
+        "iso3_code",
+    )
+    assert result == {}
+
+
+# —————————————————————————————————————————————————————————————————————————
+# fetch_properties tests
+# —————————————————————————————————————————————————————————————————————————
+
+# Mocking DataCommonsClient and related classes for tests
+
+class FakeNode:
+    """Simulates the DataCommons Node object with value and name attributes."""
+    def __init__(self, value=None, name=None):
+        self.value = value
+        self.name = name
+
+class FakeResponse:
+    """Simulates the response from fetch_property_values()."""
+    def __init__(self, properties):
+        # properties: dict[str, FakeNode or list[FakeNode]]
+        self._properties = properties
+
+    def get_properties(self):
+        return self._properties
+
+class FakeNodeClient:
+    """Simulates the `client.node` interface."""
+    def __init__(self, response_map):
+        """
+        response_map: dict[tuple(dcids, property), dict[str, FakeNode | list[FakeNode]]]
+        """
+        self._response_map = response_map
+
+    def fetch_property_values(self, dcids, dc_property):
+        # Use the tuple of dcids and property name to find the fake response
+        key = (tuple(dcids), dc_property)
+        properties = self._response_map.get(key, {})
+        return FakeResponse(properties)
+
+class FakeDCClient:
+    """Simulates the DataCommonsClient for use in fetch_properties tests."""
+    def __init__(self, response_map):
+        # The .node attribute provides fetch_property_values(...)
+        self.node = FakeNodeClient(response_map)
+
+
+def test_fetch_properties_empty_input():
+    """
+    If dcids list is empty, fetch_properties should return an empty dict.
+    """
+    fake_client = FakeDCClient(response_map={})
+    result = concordance.fetch_properties(fake_client, [], "population")
+    assert result == {}
+
+
+def test_fetch_properties_single_node_value():
+    """
+    Single‐node response with a non‐null .value should return that value.
+    """
+    response_map = {
+        (("ID1",), "population"): {
+            "ID1": FakeNode(value="1000", name=None)
+        }
+    }
+    fake_client = FakeDCClient(response_map)
+    result = concordance.fetch_properties(fake_client, ["ID1"], "population")
+    assert result == {"ID1": "1000"}
+
+
+def test_fetch_properties_single_node_name_fallback():
+    """
+    Single‐node response with .value None but .name present should return .name.
+    """
+    response_map = {
+        (("ID2",), "prop"): {
+            "ID2": FakeNode(value=None, name="Name2")
+        }
+    }
+    fake_client = FakeDCClient(response_map)
+    result = concordance.fetch_properties(fake_client, ["ID2"], "prop")
+    assert result == {"ID2": "Name2"}
+
+
+def test_fetch_properties_multi_node_mixed():
+    """
+    Multi‐node response mixing value and name should return a list of both.
+    """
+    response_map = {
+        (("ID3",), "prop"): {
+            "ID3": [
+                FakeNode(value="A", name=None),
+                FakeNode(value=None, name="B")
+            ]
+        }
+    }
+    fake_client = FakeDCClient(response_map)
+    result = concordance.fetch_properties(fake_client, ["ID3"], "prop")
+    assert isinstance(result["ID3"], list)
+    assert result["ID3"] == ["A", "B"]
+
+
+def test_fetch_properties_multi_node_all_null():
+    """
+    Multi‐node response where all nodes have neither value nor name should yield None.
+    """
+    response_map = {
+        (("ID4",), "prop"): {
+            "ID4": [ FakeNode(value=None, name=None) ]
+        }
+    }
+    fake_client = FakeDCClient(response_map)
+    result = concordance.fetch_properties(fake_client, ["ID4"], "prop")
+    assert result == {"ID4": None}
+
+
+def test_fetch_properties_mixed_dcids():
+    """
+    Mixed-case: one with .value, one with name fallback, one list, one all-null.
+    """
+    response_map = {
+        (("A","B","C","D"), "prop"): {
+            "A": FakeNode(value="ValA", name=None),
+            "B": FakeNode(value=None, name="NameB"),
+            "C": [
+                FakeNode(value="C1", name=None),
+                FakeNode(value=None, name="C2")
+            ],
+            "D": [ FakeNode(value=None, name=None) ]
+        }
+    }
+    fake_client = FakeDCClient(response_map)
+    result = concordance.fetch_properties(fake_client, ["A","B","C","D"], "prop")
+    assert result == {
+        "A": "ValA",
+        "B": "NameB",
+        "C": ["C1", "C2"],
+        "D": None
+    }
