@@ -103,3 +103,29 @@ def test_fetch_dcids_by_name_with_chunking_and_normalization():
         "B": None,
         "C": ["3"],
     }
+
+@pytest.mark.parametrize(
+    "entity, disamb_dict, expected",
+    [
+        # Exact match
+        ("foo",       {"foo": "X"},      "X"),
+        # Case-insensitive
+        ("FOO",       {"foo": "X"},      "X"),
+        # ASCII-hyphen punctuation-insensitive
+        ("foo bar",   {"Foo-Bar": "Y"},  "Y"),
+        ("FOO-BAR!",  {"Foo-Bar": "Y"},  "Y"),
+        # Whitespace trimming
+        ("  test  ",  {"test": "T"},      "T"),
+        # Accent folding
+        ("cote",      {"Côte": "Z"},      "Z"),
+        ("CÔTE",      {"Côte": "Z"},      "Z"),
+        # Combining-mark normalization
+        ("Co\u0302te",{"Côte": "Z"},      "Z"),  # Côte
+    ],
+)
+def test_custom_disambiguation_matches(entity, disamb_dict, expected):
+    assert disambiguator.custom_disambiguation(entity, disamb_dict) == expected
+
+def test_custom_disambiguation_missing_returns_none():
+    disamb_dict = {"a": "A"}
+    assert disambiguator.custom_disambiguation("b", disamb_dict) is None
