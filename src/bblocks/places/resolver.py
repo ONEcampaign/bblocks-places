@@ -694,8 +694,8 @@ class PlaceResolver:
                 override any other mappings. Disambiguation and concordance will not be run for those places.
                 The keys are the original places and the values are the resolved places.
 
-            ignore_nulls: If ``True`` null values in ``places`` will be ignored and left unresolved.
-                A warning is logged when nulls are dropped. If ``False`` and nulls are present,
+            ignore_nulls: If ``True`` null values in ``places`` will be ignored and left unresolved as
+                the original value. A warning is logged when nulls are dropped. If ``False`` and nulls are present,
                 a ``ValueError`` is raised.
 
         Returns:
@@ -718,7 +718,8 @@ class PlaceResolver:
             return mapper.get(places)
 
         elif isinstance(places, pd.Series):
-            return places.map(lambda p: mapper.get(p) if not pd.isna(p) else pd.NA)
+            resolved_list = [p if pd.isna(p) else mapper.get(p)for p in places]
+            return pd.Series(resolved_list, index=places.index)
 
         else:
             result = []
