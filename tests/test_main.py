@@ -413,3 +413,76 @@ def test_main_filter_empty_raises(monkeypatch):
             raise_if_empty=True
         )
     assert "No places found for filters {'region': ['R1']}" in str(exc.value)
+
+
+# --------------------------------------------------
+# Tests for filter_african_countries
+# --------------------------------------------------
+
+def test_filter_african_countries_delegates_to_filter(monkeypatch):
+    """filter_african_countries should call main.filter with region='Africa'."""
+    captured = {}
+    def fake_filter(places, filters, from_type, not_found, multiple_candidates, raise_if_empty):
+        captured.update({
+            "places": places,
+            "filters": filters,
+            "from_type": from_type,
+            "not_found": not_found,
+            "multiple_candidates": multiple_candidates,
+            "raise_if_empty": raise_if_empty,
+        })
+        return ["DZ", "NG"]
+    monkeypatch.setattr(main, "filter", fake_filter)
+
+    out = main.filter_african_countries(
+        places=["X","Y"],
+        from_type="name_official",
+        not_found="ignore",
+        multiple_candidates="first",
+        raise_if_empty=True
+    )
+    assert out == ["DZ", "NG"]
+    assert captured == {
+        "places": ["X","Y"],
+        "filters": {"region": "Africa"},
+        "from_type": "name_official",
+        "not_found": "ignore",
+        "multiple_candidates": "first",
+        "raise_if_empty": True,
+    }
+
+def test_filter_african_countries_default_flags(monkeypatch):
+    """With no args besides places, defaults should be applied."""
+    captured = {}
+    def fake_filter(places, filters, from_type, not_found, multiple_candidates, raise_if_empty):
+        captured.update({
+            "places": places,
+            "filters": filters,
+            "from_type": from_type,
+            "not_found": not_found,
+            "multiple_candidates": multiple_candidates,
+            "raise_if_empty": raise_if_empty,
+        })
+        return []
+    monkeypatch.setattr(main, "filter", fake_filter)
+
+    # call with only places
+    out = main.filter_african_countries(places="A")
+    assert out == []
+    # defaults: from_type=None, not_found='raise', multiple_candidates='raise', raise_if_empty=False
+    assert captured == {
+        "places": "A",
+        "filters": {"region": "Africa"},
+        "from_type": None,
+        "not_found": "raise",
+        "multiple_candidates": "raise",
+        "raise_if_empty": False,
+    }
+
+def test_filter_african_countries_invalid_format_raises():
+    """Invalid from_type should cause filter_african_countries to raise via main.filter."""
+    with pytest.raises(ValueError):
+        main.filter_african_countries(
+            places=["A", "B"],
+            from_type="bad_format"
+        )
