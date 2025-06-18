@@ -123,5 +123,6 @@ print(ui_africa)
 Visit the [documentation page](https://docs.one.org/tools/bblocks/places/) for the full package documentation and examples.
 
 ## Contributing
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to 
-get started, report bugs, fix issues, and submit enhancements.
+Contributions are welcome! Please see the
+[CONTRIBUTING](https://github.com/ONEcampaign/bblocks-places/blob/main/CONTRIBUTING.md) 
+page for details on how to get started, report bugs, fix issues, and submit enhancements.
