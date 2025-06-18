@@ -2,6 +2,7 @@
 
 import pytest
 import pandas as pd
+import logging
 
 from bblocks.places import resolver
 from bblocks.places.resolver import PlaceResolver
@@ -252,3 +253,281 @@ def test_add_custom_disambiguation_updates_existing_dict():
     assert returned is pr
     # Original entry plus the new one
     assert pr._custom_disambiguation == {"A": "dc/A", "B": "dc/B"}
+
+
+# -------------------------------------------------
+# Test resolve_map method
+# -------------------------------------------------
+
+def test_resolve_map_basic_concordance_mapping():
+    """Basic mapping: resolve_map uses concordance_table when to_type exists."""
+    # build a tiny concordance table
+    df = pd.DataFrame({
+        "dcid": ["dc/1", "dc/2"],
+        "name": ["Alpha", "Beta"],
+        "region": ["RegA", "RegB"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    # map names → regions
+    result = pr.resolve_map(["Alpha", "Beta"], from_type="name", to_type="region")
+    assert result == {"Alpha": "RegA", "Beta": "RegB"}
+
+def test_resolve_map_not_found_ignore_returns_none():
+    """When a place isn’t in the concordance and not_found='ignore', it yields None."""
+    df = pd.DataFrame({
+        "dcid": ["dc/1"],
+        "name": ["Alpha"],
+        "region": ["RegA"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_map(["Gamma"], from_type="name", to_type="region", not_found="ignore")
+    assert result == {"Gamma": None}
+
+def test_resolve_map_custom_mapping_overrides_concordance():
+    """custom_mapping keys bypass concordance entirely."""
+    df = pd.DataFrame({
+        "dcid": ["dc/1", "dc/2"],
+        "name": ["X", "Y"],
+        "region": ["OldX", "OldY"]
+    })
+    # even though concordance says X→OldX, custom_mapping should win
+    custom = {"X": "NewX"}
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_map(["X", "Y"], from_type="name", to_type="region", custom_mapping=custom)
+    assert result == {"X": "NewX", "Y": "OldY"}
+
+
+# -------------------------------------------------
+# Test resolve method
+# -------------------------------------------------
+
+def test_resolve_string_to_scalar():
+    """A single place string returns its mapped scalar value."""
+    df = pd.DataFrame({
+        "dcid": ["c/1"],
+        "name": ["Alpha"],
+        "region": ["RegA"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    assert pr.resolve("Alpha", from_type="name", to_type="region") == "RegA"
+
+def test_resolve_list_to_list_with_ignore():
+    """A list of places returns a list, with None for missing when not_found='ignore'."""
+    df = pd.DataFrame({
+        "dcid": ["c/1"],
+        "name": ["Alpha"],
+        "region": ["RegA"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve(
+        ["Alpha", "Gamma"],
+        from_type="name",
+        to_type="region",
+        not_found="ignore"
+    )
+    assert result == ["RegA", None]
+
+def test_resolve_series_preserves_index_and_type():
+    """Pandas Series input returns a Series with identical index and corresponding values."""
+    df = pd.DataFrame({
+        "dcid": ["c/1"],
+        "name": ["Alpha"],
+        "region": ["RegA"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    series_in = pd.Series(["Alpha", "Gamma"], index=["i", "j"])
+    series_out = pr.resolve(
+        series_in,
+        from_type="name",
+        to_type="region",
+        not_found="ignore"
+    )
+    assert isinstance(series_out, pd.Series)
+    assert list(series_out.index) == ["i", "j"]
+    assert list(series_out.values) == ["RegA", None]
+
+def test_resolve_missing_raises_and_ignore_nulls_bypasses():
+    """not_found='raise' triggers PlaceNotFoundError; ignore_nulls=True with not_found='ignore' yields None."""
+    df = pd.DataFrame({
+        "dcid": ["c/1"],
+        "name": ["Alpha"],
+        "region": ["RegA"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+
+    # missing with not_found='raise'
+    with pytest.raises(PlaceNotFoundError):
+        pr.resolve("Gamma", from_type="name", to_type="region", not_found="raise")
+
+    # missing but ignore_nulls=True and not_found='ignore'
+    result = pr.resolve(
+        "Gamma",
+        from_type="name",
+        to_type="region",
+        not_found="ignore",
+        ignore_nulls=True
+    )
+    assert result is None
+
+def test_resolve_custom_mapping_overrides_concordance():
+    """Custom mapping entry takes precedence over concordance_table."""
+    df = pd.DataFrame({
+        "dcid": ["c/X", "c/Y"],
+        "name": ["X", "Y"],
+        "region": ["OldX", "OldY"]
+    })
+    custom_map = {"X": "NewX"}
+    pr = PlaceResolver(concordance_table=df)
+
+    # X should use custom_map, Y falls back to concordance
+    assert pr.resolve(
+        "X",
+        from_type="name",
+        to_type="region",
+        custom_mapping=custom_map
+    ) == "NewX"
+    assert pr.resolve(
+        "Y",
+        from_type="name",
+        to_type="region",
+        custom_mapping=custom_map
+    ) == "OldY"
+
+
+# -------------------------------------------------
+# Tests for the filter method
+# -------------------------------------------------
+
+def test_filter_list_basic_region():
+    """Filtering a list of names by a single region returns only matching names."""
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2", "c3"],
+        "name": ["A", "B", "C"],
+        "region": ["R1", "R2", "R1"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.filter(
+        ["A", "B", "C"],
+        filters={"region": "R1"},
+        from_type="name"
+    )
+    assert result == ["A", "C"]
+
+def test_filter_list_multiple_criteria():
+    """Applying multiple filters in sequence yields the intersection of matches."""
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2", "c3", "c4"],
+        "name": ["A", "B", "C", "D"],
+        "region": ["R1", "R2", "R1", "R2"],
+        "group": ["G1", "G1", "G2", "G2"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.filter(
+        ["A", "B", "C", "D"],
+        filters={"region": ["R1"], "group": "G2"},
+        from_type="name"
+    )
+    assert result == ["C"]
+
+def test_filter_series_returns_series_of_matching_values():
+    """Filtering a pandas Series returns a new Series containing only matching entries."""
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2", "c3"],
+        "name": ["A", "B", "C"],
+        "region": ["R1", "R2", "R1"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    series_in = pd.Series(["A", "B", "C", "A"])
+    series_out = pr.filter(
+        series_in,
+        filters={"region": "R1"},
+        from_type="name"
+    )
+    assert isinstance(series_out, pd.Series)
+    # Should include only A, C, A in original order
+    assert list(series_out.values) == ["A", "C", "A"]
+
+def test_filter_invalid_places_type_raises():
+    """Passing a non-list, non-Series as places raises ValueError."""
+    df = pd.DataFrame({
+        "dcid": ["c1"],
+        "name": ["A"],
+        "region": ["R1"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    with pytest.raises(ValueError):
+        pr.filter(("A", "B"), filters={"region": "R1"}, from_type="name")
+
+def test_filter_unknown_category_raises_keyerror():
+    """Filtering by a category not in concordance table raises KeyError."""
+    df = pd.DataFrame({
+        "dcid": ["c1"],
+        "name": ["A"],
+        "region": ["R1"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    with pytest.raises(KeyError):
+        pr.filter(["A"], filters={"unknown_category": "X"}, from_type="name")
+
+
+# -------------------------------------------------
+# Tests for the get_concordance_dict method
+# -------------------------------------------------
+
+def test_get_concordance_dict_error_on_no_table():
+    """Raises ValueError if the resolver has no concordance table defined."""
+    df = pd.DataFrame({
+        "dcid": ["c1"],
+        "name": ["A"],
+        "region": ["R1"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    # simulate missing table
+    pr._concordance_table = None
+    with pytest.raises(ValueError) as exc:
+        pr.get_concordance_dict("name", "region")
+    assert "No concordance table is defined" in str(exc.value)
+
+def test_get_concordance_dict_same_column_logs_warning_and_identity(caplog):
+    """When from_type == to_type, returns identity mapping and logs a warning."""
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2", "c3"],
+        "name": ["A", "B", "C"],
+        "region": ["R1", "R2", "R3"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+
+    caplog.set_level(logging.WARNING, logger="bblocks.places.resolver")
+    mapping = pr.get_concordance_dict("name", "name")
+
+    # mapping should be identity on the 'name' column
+    expected = {"A": "A", "B": "B", "C": "C"}
+    assert mapping == expected
+
+    # and we should have logged exactly that warning
+    logs = [r.getMessage() for r in caplog.records]
+    assert any("from_type and to_type are the same" in msg for msg in logs)
+
+def test_get_concordance_dict_drops_nulls_by_default():
+    """By default (include_nulls=False), entries with null target values are removed."""
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2", "c3"],
+        "name": ["A", "B", "C"],
+        "region": ["X", None, "Z"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    mapping = pr.get_concordance_dict("name", "region")
+    # "B" had a null region, so it should be dropped
+    assert mapping == {"A": "X", "C": "Z"}
+
+def test_get_concordance_dict_include_nulls_returns_none():
+    """With include_nulls=True, nulls are kept and represented as None."""
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2", "c3"],
+        "name": ["A", "B", "C"],
+        "region": ["X", None, "Z"]
+    })
+    pr = PlaceResolver(concordance_table=df)
+    mapping = pr.get_concordance_dict("name", "region", include_nulls=True)
+    # "B" should map explicitly to None
+    assert mapping == {"A": "X", "B": None, "C": "Z"}
