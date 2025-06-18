@@ -1,9 +1,10 @@
+# bblocks-places
+
+[![PyPI](https://img.shields.io/pypi/v/bblocks_places.svg)](https://pypi.org/project/bblocks_places/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bblocks_places.svg)](https://pypi.org/project/bblocks_places/)
 [![Docs](https://img.shields.io/badge/docs-bblocks-blue)](https://docs.one.org/tools/bblocks/places/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/ONEcampaign/bblocks-places/graph/badge.svg?token=3ONEA8JQTC)](https://codecov.io/gh/ONEcampaign/bblocks-places)
-
-
-# bblocks-places
 
 __Resolve and standardize places and work with political and geographic groupings__
 
