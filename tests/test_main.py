@@ -2,6 +2,7 @@
 
 import pytest
 import pandas as pd
+import logging
 
 from bblocks.places import main
 
@@ -304,3 +305,111 @@ def test_get_places_invalid_place_format():
     """get_places should reject invalid place_format before querying."""
     with pytest.raises(ValueError):
         main.get_places(filters={'region': 'R1'}, place_format='not_a_format')
+
+
+# --------------------------------------------------
+# Tests for resolve_map
+# --------------------------------------------------
+
+
+def test_main_resolve_map_delegates(monkeypatch):
+    """main.resolve_map should pass args through to _country_resolver.resolve_map."""
+    captured = {}
+    def fake_resolve_map(**kwargs):
+        captured.update(kwargs)
+        return {"X": "x"}
+    monkeypatch.setattr(main._country_resolver, "resolve_map", fake_resolve_map)
+
+    places = ["A","B"]
+    out = main.resolve_map(
+        places,
+        to_type="region",
+        from_type="name_official",
+        not_found="ignore",
+        multiple_candidates="first",
+        custom_mapping={"A": "override"},
+        ignore_nulls=True
+    )
+    assert out == {"X": "x"}
+    assert captured == {
+        "places": places,
+        "to_type": "region",
+        "from_type": "name_official",
+        "not_found": "ignore",
+        "multiple_candidates": "first",
+        "custom_mapping": {"A": "override"},
+        "ignore_nulls": True,
+    }
+
+def test_main_resolve_map_invalid_from_type():
+    """Invalid from_type should error before delegating."""
+    with pytest.raises(ValueError):
+        main.resolve_map(["A"], from_type="not_a_format")
+
+
+# --------------------------------------------------
+# Tests for filter
+# --------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def dummy_table(monkeypatch):
+    """Provide a dummy concordance table so validation passes."""
+    import pandas as pd
+    df = pd.DataFrame({
+        "dcid": ["c1", "c2"],
+        "region": ["R1", "R2"],
+        "group": ["G1", "G2"],
+    })
+    monkeypatch.setattr(main._country_resolver, "_concordance_table", df)
+    return df
+
+def test_main_filter_delegates(monkeypatch):
+    """main.filter should validate inputs and pass through to _country_resolver.filter."""
+    captured = {}
+    def fake_filter(**kwargs):
+        captured.update(kwargs)
+        return ["A", "C"]
+    monkeypatch.setattr(main._country_resolver, "filter", fake_filter)
+
+    result = main.filter(
+        places=["A", "B", "C"],
+        filters={"region": "R1"},
+        from_type="name_official",
+        not_found="ignore",
+        multiple_candidates="last",
+        raise_if_empty=True
+    )
+    assert result == ["A", "C"]
+    assert captured == {
+        "places": ["A", "B", "C"],
+        "filters": {"region": ["R1"]},
+        "from_type": "name_official",
+        "not_found": "ignore",
+        "multiple_candidates": "last",
+    }
+
+def test_main_filter_empty_warns_and_returns_empty(monkeypatch, caplog):
+    """If resolver.filter returns empty list and raise_if_empty=False, logs a warning."""
+    monkeypatch.setattr(main._country_resolver, "filter", lambda **kw: [])
+    caplog.set_level(logging.WARNING, logger="bblocks.places.main")
+
+    out = main.filter(
+        places=["A", "B"],
+        filters={"region": "R1"},
+        from_type="name_official",
+        raise_if_empty=False
+    )
+    assert out == []
+    assert "No places found for filters {'region': ['R1']}" in caplog.text
+
+def test_main_filter_empty_raises(monkeypatch):
+    """If resolver.filter returns empty list and raise_if_empty=True, raises ValueError."""
+    monkeypatch.setattr(main._country_resolver, "filter", lambda **kw: [])
+    with pytest.raises(ValueError) as exc:
+        main.filter(
+            places=["A"],
+            filters={"region": "R1"},
+            from_type="name_official",
+            raise_if_empty=True
+        )
+    assert "No places found for filters {'region': ['R1']}" in str(exc.value)
