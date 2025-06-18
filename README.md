@@ -1,3 +1,8 @@
+[![Docs](https://img.shields.io/badge/docs-bblocks-blue)](https://docs.one.org/tools/bblocks/places/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![codecov](https://codecov.io/gh/ONEcampaign/bblocks-places/graph/badge.svg?token=3ONEA8JQTC)](https://codecov.io/gh/ONEcampaign/bblocks-places)
+
+
 # bblocks-places
 A package for resolving, standardizing, and work with countries, regions, and other geographical or political entities.
 
