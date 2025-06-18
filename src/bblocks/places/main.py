@@ -464,7 +464,7 @@ def resolve_map(
     if from_type is not None:
         _validate_place_format(from_type)
 
-    return _country_resolver.resolve_map(
+    return _country_resolver.get_places_map(
         places=places,
         to_type=to_type,
         from_type=from_type,

@@ -303,7 +303,7 @@ def test_resolve_map_basic_concordance_mapping():
     )
     pr = PlaceResolver(concordance_table=df)
     # map names → regions
-    result = pr.resolve_map(["Alpha", "Beta"], from_type="name", to_type="region")
+    result = pr.get_places_map(["Alpha", "Beta"], from_type="name", to_type="region")
     assert result == {"Alpha": "RegA", "Beta": "RegB"}
 
 
@@ -311,7 +311,7 @@ def test_resolve_map_not_found_ignore_returns_none():
     """When a place isn’t in the concordance and not_found='ignore', it yields None."""
     df = pd.DataFrame({"dcid": ["dc/1"], "name": ["Alpha"], "region": ["RegA"]})
     pr = PlaceResolver(concordance_table=df)
-    result = pr.resolve_map(
+    result = pr.get_places_map(
         ["Gamma"], from_type="name", to_type="region", not_found="ignore"
     )
     assert result == {"Gamma": None}
@@ -325,7 +325,7 @@ def test_resolve_map_custom_mapping_overrides_concordance():
     # even though concordance says X→OldX, custom_mapping should win
     custom = {"X": "NewX"}
     pr = PlaceResolver(concordance_table=df)
-    result = pr.resolve_map(
+    result = pr.get_places_map(
         ["X", "Y"], from_type="name", to_type="region", custom_mapping=custom
     )
     assert result == {"X": "NewX", "Y": "OldY"}
@@ -561,7 +561,7 @@ def test_resolve_map_not_found_raise_raises():
     )
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(PlaceNotFoundError):
-        pr.resolve_map(
+        pr.get_places_map(
             ["A", "B"],  # "B" isn't in the table
             from_type="name",
             to_type="region",
@@ -579,7 +579,7 @@ def test_resolve_map_default_to_dcid():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.resolve_map(["A", "B"], from_type="name")
+    result = pr.get_places_map(["A", "B"], from_type="name")
     assert result == {"A": "d1", "B": "d2"}
 
 
@@ -592,7 +592,7 @@ def test_resolve_map_from_type_dcid_to_region():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.resolve_map(["d1", "d2"], from_type="dcid", to_type="region")
+    result = pr.get_places_map(["d1", "d2"], from_type="dcid", to_type="region")
     assert result == {"d1": "R1", "d2": "R2"}
 
 
@@ -608,7 +608,7 @@ def test_resolve_map_ignore_nulls_logs_and_filters(caplog):
     pr = PlaceResolver(concordance_table=df)
     caplog.set_level(logging.WARNING, logger="bblocks.places.resolver")
 
-    result = pr.resolve_map(
+    result = pr.get_places_map(
         [None, "A"], from_type="name", to_type="region", ignore_nulls=True
     )
     assert "Null values detected and will be ignored" in caplog.text
@@ -627,7 +627,7 @@ def test_resolve_map_ignore_nulls_false_raises():
     )
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(ValueError):
-        pr.resolve_map([None], from_type="name", to_type="region", ignore_nulls=False)
+        pr.get_places_map([None], from_type="name", to_type="region", ignore_nulls=False)
 
 
 def test_resolve_map_custom_mapping_prevents_not_found_raise():
@@ -642,7 +642,7 @@ def test_resolve_map_custom_mapping_prevents_not_found_raise():
     pr = PlaceResolver(concordance_table=df)
 
     custom = {"B": "CustomVal"}
-    result = pr.resolve_map(
+    result = pr.get_places_map(
         ["A", "B"],
         from_type="name",
         to_type="region",

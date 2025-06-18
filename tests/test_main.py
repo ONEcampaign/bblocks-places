@@ -363,7 +363,7 @@ def test_main_resolve_map_delegates(monkeypatch):
         captured.update(kwargs)
         return {"X": "x"}
 
-    monkeypatch.setattr(main._country_resolver, "resolve_map", fake_resolve_map)
+    monkeypatch.setattr(main._country_resolver, "get_places_map", fake_resolve_map)
 
     places = ["A", "B"]
     out = main.resolve_map(

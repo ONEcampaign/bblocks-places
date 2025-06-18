@@ -124,7 +124,7 @@ You might not want to replace all the original places with their resolved values
 You can also get a dictionary of the resolved places, which you can use to map back to the original values.
 
 ```python
-resolved_countries_dict = places.resolve_map(countries, to_type="iso3_code")
+resolved_countries_dict = places.get_places_map(countries, to_type="iso3_code")
 
 print(resolved_countries_dict)
 # Output:

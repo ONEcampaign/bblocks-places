@@ -228,12 +228,12 @@ class PlaceResolver:
 
     The `resolve_map` method will return a dictionary of the original places to the resolved places. For example:
 
-    >>> resolver.resolve_map(["Zimbabwe", "Italy"], to_type="countryAlpha3Code")
+    >>> resolver.get_places_map(["Zimbabwe", "Italy"], to_type="countryAlpha3Code")
     >>> # returns {"Zimbabwe": "ZWE", "Italy": "ITA"}
 
     If you know the original format of the places, and they are specified in the concordance table, you can
     specify the from_type parameter. For example,
-    >>> resolver.resolve_map(["Zimbabwe", "Italy"], from_type="name_official", to_type="countryAlpha3Code")
+    >>> resolver.get_places_map(["Zimbabwe", "Italy"], from_type="name_official", to_type="countryAlpha3Code")
 
     If there is no concordance table or if the `to_type` is not in the concordance table, the method will
     attempt to resolve the places using Data Commons. As in above, "countryAlpha3Code" is not in the concordance table,
@@ -243,26 +243,26 @@ class PlaceResolver:
     There may be cases when a place cannot be resolved to a value. By default the method will raise an error. But you
     can choose how to handle these cases. Options include "ignore" which sets the value to None, or any other string
     which will set the value to that string. For example, if you want to ignore not found places, you can do:
-    >>> resolver.resolve_map(["Zimbabwe", "some invalid place"], to_type="countryAlpha3Code", not_found="ignore")
+    >>> resolver.get_places_map(["Zimbabwe", "some invalid place"], to_type="countryAlpha3Code", not_found="ignore")
     >>> # returns {"Zimbabwe": "ZWE", "some invalid place": None}
 
     Or if you want to set the value to "not found", you can do:
-    >>> resolver.resolve_map(["Zimbabwe", "some invalid place"], to_type="countryAlpha3Code", not_found="not found")
+    >>> resolver.get_places_map(["Zimbabwe", "some invalid place"], to_type="countryAlpha3Code", not_found="not found")
     >>> # returns {"Zimbabwe": "ZWE", "some invalid place": "not found"}
 
     There may be cases when a place can be resolved to more than one value. By default the method will raise an error.
     But you can choose how to handle these cases. Options include "ignore" which keeps the value as a list containing
     all the candidates, or "first" which will use the first candidate. For example, if you want to ignore multiple
     candidates, you can do:
-    >>> resolver.resolve_map(["Zimbabwe", "Place multiple"], to_type="countryAlpha3Code", multiple_candidates="ignore")
+    >>> resolver.get_places_map(["Zimbabwe", "Place multiple"], to_type="countryAlpha3Code", multiple_candidates="ignore")
     >>> # returns {"Zimbabwe": "ZWE", "Place multiple": ["candidate1", "candidate2"]}
 
     Or if you want to use the first candidate, you can do:
-    >>> resolver.resolve_map(["Zimbabwe", "Place multiple"], to_type="countryAlpha3Code", multiple_candidates="first")
+    >>> resolver.get_places_map(["Zimbabwe", "Place multiple"], to_type="countryAlpha3Code", multiple_candidates="first")
     >>> # returns {"Zimbabwe": "ZWE", "Place multiple": "candidate1"}
 
     Additionally any custom mappings can be provided. For example, if you want to map "Zimbabwe" to "ZIM", you can do:
-    >>> resolver.resolve_map(["Zimbabwe", "Italy"], to_type="countryAlpha3Code", custom_mapping={"Zimbabwe": "ZIM"})
+    >>> resolver.get_places_map(["Zimbabwe", "Italy"], to_type="countryAlpha3Code", custom_mapping={"Zimbabwe": "ZIM"})
     >>> # returns {"Zimbabwe": "ZIM", "Italy": "ITA"}
 
     The custom mapping will override any other mappings. Disambiguation and concordance will not be run for
@@ -582,7 +582,7 @@ class PlaceResolver:
 
         return candidates
 
-    def resolve_map(
+    def get_places_map(
         self,
         places: str | list[str] | pd.Series,
         from_type: Optional[str] = None,
@@ -593,7 +593,7 @@ class PlaceResolver:
         *,
         ignore_nulls: bool = True,
     ) -> dict[str, str | list[str] | None]:
-        """Resolve places to a mapping dictionary of {place: resolved}
+        """Get a dictionary of places to their resolved formats such as: {place: resolved}
 
         This method takes places, it disambiguates them if needed, and maps them to the desired format, then returns
         a dictionary of the original places to the resolved places. It also handles custom mappings, not found
@@ -724,7 +724,7 @@ class PlaceResolver:
         """
 
         # get a mapping dictionary for the places
-        mapper = self.resolve_map(
+        mapper = self.get_places_map(
             places=places,
             from_type=from_type,
             to_type=to_type,
@@ -831,7 +831,7 @@ class PlaceResolver:
                 f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
             )
 
-        dcid_map = self.resolve_map(
+        dcid_map = self.get_places_map(
             places=places_unique,
             from_type=from_type,
             to_type="dcid",
