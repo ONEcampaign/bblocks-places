@@ -115,3 +115,104 @@ def test_validate_filter_values_rejects_invalid_value(monkeypatch):
     with pytest.raises(ValueError) as exc:
         main._validate_filter_values('subregion', ['Southern Asia', 'Atlantis'])
     assert "Invalid filter values" in str(exc.value)
+
+
+# ----------------------------------------------
+# Tests for boolean getters
+# ----------------------------------------------
+
+
+# Only the getters that go through _get_list_from_bool
+BOOLEAN_GETTERS = [
+    (main.get_un_members, "un_member"),
+    (main.get_un_observers, "un_observer"),
+    (main.get_m49_places, "m49_member"),
+    (main.get_sids, "sids"),
+    (main.get_ldc, "ldc"),
+    (main.get_lldc, "lldc"),
+]
+
+@pytest.mark.parametrize("func,bool_field", BOOLEAN_GETTERS)
+def test_boolean_getter_returns_only_true(monkeypatch, func, bool_field):
+    """Each getter should return only the keys with True values."""
+    sample = {"A": True, "B": False, "C": True}
+    # stub get_concordance_dict on the resolver
+    monkeypatch.setattr(
+        main._country_resolver,
+        "get_concordance_dict",
+        lambda from_type, to_type: sample
+    )
+    out = func(place_format="dcid")
+    assert out == ["A", "C"]
+
+@pytest.mark.parametrize("func,bool_field", BOOLEAN_GETTERS)
+def test_boolean_getter_empty_returns_empty_list(monkeypatch, caplog, func, bool_field):
+    """When no entries are True, each getter returns [] and logs a warning by default."""
+    monkeypatch.setattr(
+        main._country_resolver,
+        "get_concordance_dict",
+        lambda from_type, to_type: {"X": False}
+    )
+    caplog.set_level("WARNING")
+    out = func(place_format="dcid")
+    assert out == []
+    assert f"No places found for boolean field '{bool_field}'" in caplog.text
+
+@pytest.mark.parametrize("func,bool_field", BOOLEAN_GETTERS)
+def test_boolean_getter_empty_raise_if_empty(monkeypatch, func, bool_field):
+    """When no entries are True and raise_if_empty=True, each getter should raise ValueError."""
+    monkeypatch.setattr(
+        main._country_resolver,
+        "get_concordance_dict",
+        lambda from_type, to_type: {"X": False}
+    )
+    with pytest.raises(ValueError) as exc:
+        func(place_format="dcid", raise_if_empty=True)
+    assert f"No places found for boolean field '{bool_field}'" in str(exc.value)
+
+def test_boolean_getter_invalid_format_raises():
+    """Passing an invalid place_format raises before fetching anything."""
+    with pytest.raises(ValueError):
+        main.get_un_members(place_format="not_a_format")
+
+# --------------------------------------------------
+# get_african_countries uses get_places → test separately
+# --------------------------------------------------
+
+def test_get_african_countries_delegates_to_get_places(monkeypatch):
+    """get_african_countries should simply call get_places with region='Africa' (+ un_member)."""
+    called = {}
+    def fake_get_places(filters, place_format, raise_if_empty=False):
+        called['filters'] = filters
+        called['fmt'] = place_format
+        called['raise'] = raise_if_empty
+        return ["X", "Y"]
+    monkeypatch.setattr(main, "get_places", fake_get_places)
+
+    out = main.get_african_countries(place_format="name_official", exclude_non_un_members=True)
+    assert out == ["X", "Y"]
+    assert called['filters'] == {"region": "Africa", "un_member": True}
+    assert called['fmt'] == "name_official"
+    assert called['raise'] is False
+
+def test_get_african_countries_without_excluding_non_un(monkeypatch):
+    """exclude_non_un_members=False should not include the un_member filter."""
+    called = {}
+    monkeypatch.setattr(main, "get_places", lambda filters, place_format, raise_if_empty=False: [])
+    # run with exclude_non_un_members=False
+    main.get_african_countries(place_format="dcid", exclude_non_un_members=False, raise_if_empty=False)
+    # filters should only be region=Africa
+    # (we can't inspect inside lambda, so do a real fake)
+    def track(filters, place_format, raise_if_empty=False):
+        called['filters'] = filters
+    monkeypatch.setattr(main, "get_places", track)
+    main.get_african_countries(exclude_non_un_members=False)
+    assert called['filters'] == {"region": "Africa"}
+
+def test_get_african_countries_raise_if_empty(monkeypatch):
+    """get_african_countries should propagate raise_if_empty to get_places."""
+    def fake_get_places(filters, place_format, raise_if_empty=False):
+        raise ValueError("boom")
+    monkeypatch.setattr(main, "get_places", fake_get_places)
+    with pytest.raises(ValueError):
+        main.get_african_countries(raise_if_empty=True)
