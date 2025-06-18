@@ -531,3 +531,105 @@ def test_get_concordance_dict_include_nulls_returns_none():
     mapping = pr.get_concordance_dict("name", "region", include_nulls=True)
     # "B" should map explicitly to None
     assert mapping == {"A": "X", "B": None, "C": "Z"}
+
+
+# -------------------------------------------------
+# Additional tests
+# -------------------------------------------------
+
+def test_resolve_map_not_found_raise_raises():
+    """not_found='raise' should error on any unmapped place."""
+    df = pd.DataFrame({
+        "dcid": ["d1"],
+        "name": ["A"],
+        "region": ["R1"],
+    })
+    pr = PlaceResolver(concordance_table=df)
+    with pytest.raises(PlaceNotFoundError):
+        pr.resolve_map(
+            ["A", "B"],          # "B" isn't in the table
+            from_type="name",
+            to_type="region",
+            not_found="raise",
+        )
+
+def test_resolve_map_default_to_dcid():
+    """When to_type is omitted, resolve_map returns the DCID by default."""
+    df = pd.DataFrame({
+        "dcid": ["d1", "d2"],
+        "name": ["A", "B"],
+        "region": ["R1", "R2"],
+    })
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_map(["A", "B"], from_type="name")
+    assert result == {"A": "d1", "B": "d2"}
+
+def test_resolve_map_from_type_dcid_to_region():
+    """If from_type='dcid', resolve_map skips map_places and uses map_candidates."""
+    df = pd.DataFrame({
+        "dcid": ["d1", "d2"],
+        "region": ["R1", "R2"],
+    })
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_map(
+        ["d1", "d2"],
+        from_type="dcid",
+        to_type="region"
+    )
+    assert result == {"d1": "R1", "d2": "R2"}
+
+def test_resolve_map_ignore_nulls_logs_and_filters(caplog):
+    """ignore_nulls=True should warn about None and drop null entries upfront."""
+    df = pd.DataFrame({
+        "dcid": ["d1"],
+        "name": ["A"],
+        "region": ["R1"],
+    })
+    pr = PlaceResolver(concordance_table=df)
+    caplog.set_level(logging.WARNING, logger="bblocks.places.resolver")
+
+    result = pr.resolve_map(
+        [None, "A"],
+        from_type="name",
+        to_type="region",
+        ignore_nulls=True
+    )
+    assert "Null values detected and will be ignored" in caplog.text
+    # Only "A" remains after filtering out None
+    assert result == {"A": "R1"}
+
+def test_resolve_map_ignore_nulls_false_raises():
+    """ignore_nulls=False should raise ValueError on any null input."""
+    df = pd.DataFrame({
+        "dcid": ["d1"],
+        "name": ["A"],
+        "region": ["R1"],
+    })
+    pr = PlaceResolver(concordance_table=df)
+    with pytest.raises(ValueError):
+        pr.resolve_map(
+            [None],
+            from_type="name",
+            to_type="region",
+            ignore_nulls=False
+        )
+
+def test_resolve_map_custom_mapping_prevents_not_found_raise():
+    """custom_mapping entries bypass not_found='raise' and get returned."""
+    df = pd.DataFrame({
+        "dcid": ["d1"],
+        "name": ["A"],
+        "region": ["R1"],
+    })
+    pr = PlaceResolver(concordance_table=df)
+
+    custom = {"B": "CustomVal"}
+    result = pr.resolve_map(
+        ["A", "B"],
+        from_type="name",
+        to_type="region",
+        not_found="raise",
+        custom_mapping=custom
+    )
+    # "A" comes from the table, "B" from custom_mapping, no error
+    assert result == {"A": "R1", "B": "CustomVal"}
