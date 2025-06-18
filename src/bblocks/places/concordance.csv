@@ -152,7 +152,7 @@ Montserrat,Montserrat,country/MSR,MS,MSR,500,500,19,Americas,419,Latin America a
 Morocco,Morocco,country/MAR,MA,MAR,504,504,2,Africa,15,Northern Africa,TRUE,,,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,136,Lower middle income
 Mozambique,Mozambique,country/MOZ,MZ,MOZ,508,508,2,Africa,202,Sub-Saharan Africa,TRUE,14,Eastern Africa,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,259,Low income
 Myanmar,Myanmar,country/MMR,MM,MMR,104,104,142,Asia,35,South-eastern Asia,TRUE,,,TRUE,FALSE,FALSE,TRUE,FALSE,FALSE,635,Lower middle income
-Namibia,Namibia,country/NAM,,NAM,516,516,2,Africa,202,Sub-Saharan Africa,TRUE,18,Southern Africa,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,275,Upper middle income
+Namibia,Namibia,country/NAM,NA,NAM,516,516,2,Africa,202,Sub-Saharan Africa,TRUE,18,Southern Africa,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,275,Upper middle income
 Nauru,Nauru,country/NRU,NR,NRU,520,520,9,Oceania,57,Micronesia,TRUE,,,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,845,High income
 Nepal,Nepal,country/NPL,NP,NPL,524,524,142,Asia,34,Southern Asia,TRUE,,,TRUE,TRUE,FALSE,TRUE,FALSE,FALSE,660,Lower middle income
 Netherlands (Kingdom of the),Netherlands,country/NLD,NL,NLD,528,528,150,Europe,155,Western Europe,TRUE,,,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,7,High income
