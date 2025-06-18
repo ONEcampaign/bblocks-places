@@ -242,6 +242,19 @@ print(zim_iso3)
 
 1. You can also instantiate the object without specifying `concordance_table` which by default will be set to `None`
 
+
+Another way to instantiate the object is by using the `from_concordance_csv` class method. This method allows you to
+instantiate the object from a CSV file containing a concordance table. 
+
+```python
+custom_resolver = places.PlaceResolver.from_concordance_csv("path/to/concordance.csv")
+```
+
+This will instantiate the object with a concordance table loaded from the CSV file.
+You can also specify other attributes such as `custom_disambiguation` and `dc_entity_type` 
+when constructing the object this way.
+
+
 ## Specify the place type
 
 The Data Commons resolve endpoint allows you to specify the entity types you want to resolve for. 

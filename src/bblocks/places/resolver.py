@@ -766,7 +766,7 @@ class PlaceResolver:
 
     @classmethod
     def from_concordance_csv(
-        cls, concordance_csv_path: PathLike, *args, **kwargs
+        cls, concordance_csv_path: str | PathLike, *args, **kwargs
     ) -> "PlaceResolver":
         """Create a PlaceResolver instance using a CSV file for the concordance table.
 
