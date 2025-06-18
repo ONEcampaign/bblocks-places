@@ -1,7 +1,7 @@
 [project]
 name = "bblocks-places"
 version = "0.0.1"
-description = ""
+description = "Resolve and standardize places and work with political and geographic groupings"
 authors = [
     {name = "ONE Campaign"},
     {name = "Luca Picci",email = "lpicci96@gmail.com"}
@@ -24,9 +24,16 @@ path = "src/bblocks/places/concordance.csv"
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 pytest = "^8.3.5"
-mkdocs-material = "^9.6.14"
 pytest-cov = "^6.2.1"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs-material = "^9.6.14"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+repository = "https://github.com/ONEcampaign/bblocks-places"
+documentation = "https://docs.one.org/tools/bblocks/places/"
+homepage = "https://docs.one.org/tools/bblocks/places/"
