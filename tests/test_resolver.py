@@ -373,7 +373,9 @@ def test_resolve_missing_raises_and_ignore_nulls_bypasses():
 
     # missing with not_found='raise'
     with pytest.raises(PlaceNotFoundError):
-        pr.resolve_places("Gamma", from_type="name", to_type="region", not_found="raise")
+        pr.resolve_places(
+            "Gamma", from_type="name", to_type="region", not_found="raise"
+        )
 
     # missing but ignore_nulls=True and not_found='ignore'
     result = pr.resolve_places(
@@ -396,11 +398,15 @@ def test_resolve_custom_mapping_overrides_concordance():
 
     # X should use custom_map, Y falls back to concordance
     assert (
-        pr.resolve_places("X", from_type="name", to_type="region", custom_mapping=custom_map)
+        pr.resolve_places(
+            "X", from_type="name", to_type="region", custom_mapping=custom_map
+        )
         == "NewX"
     )
     assert (
-        pr.resolve_places("Y", from_type="name", to_type="region", custom_mapping=custom_map)
+        pr.resolve_places(
+            "Y", from_type="name", to_type="region", custom_mapping=custom_map
+        )
         == "OldY"
     )
 
@@ -420,7 +426,9 @@ def test_filter_list_basic_region():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.filter_places(["A", "B", "C"], filters={"region": "R1"}, from_type="name")
+    result = pr.filter_places(
+        ["A", "B", "C"], filters={"region": "R1"}, from_type="name"
+    )
     assert result == ["A", "C"]
 
 
