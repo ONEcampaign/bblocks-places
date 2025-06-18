@@ -24,30 +24,30 @@ from bblocks.places.config import (
 )
 
 # Default concordance table dtypes
-DEFAULT_CONCORDANCE_DTYPES: dict= {
-        "dcid": "string",
-        "name_official": "string",
-        "name_short": "string",
-        "iso2_code": "string",
-        "iso3_code": "string",
-        "iso_numeric_code": "Int64",  # Nullable integer
-        "m49_code": "Int64",
-        "region_code": "Int64",
-        "region": "string",
-        "subregion_code": "Int64",
-        "subregion": "string",
-        "m49_member": "boolean",
-        "intermediate_region_code": "Int64",
-        "intermediate_region": "string",
-        "ldc": "boolean",
-        "lldc": "boolean",
-        "sids": "boolean",
-        "un_member": "boolean",
-        "un_observer": "boolean",
-        "un_former_member": "boolean",
-        "dac_code": "Int64",
-        "income_level": "string",
-    }
+DEFAULT_CONCORDANCE_DTYPES: dict = {
+    "dcid": "string",
+    "name_official": "string",
+    "name_short": "string",
+    "iso2_code": "string",
+    "iso3_code": "string",
+    "iso_numeric_code": "Int64",  # Nullable integer
+    "m49_code": "Int64",
+    "region_code": "Int64",
+    "region": "string",
+    "subregion_code": "Int64",
+    "subregion": "string",
+    "m49_member": "boolean",
+    "intermediate_region_code": "Int64",
+    "intermediate_region": "string",
+    "ldc": "boolean",
+    "lldc": "boolean",
+    "sids": "boolean",
+    "un_member": "boolean",
+    "un_observer": "boolean",
+    "un_former_member": "boolean",
+    "dac_code": "Int64",
+    "income_level": "string",
+}
 
 
 def handle_not_founds(
@@ -739,7 +739,7 @@ class PlaceResolver:
             return mapper.get(places)
 
         elif isinstance(places, pd.Series):
-            resolved_list = [p if pd.isna(p) else mapper.get(p)for p in places]
+            resolved_list = [p if pd.isna(p) else mapper.get(p) for p in places]
             return pd.Series(resolved_list, index=places.index)
 
         else:

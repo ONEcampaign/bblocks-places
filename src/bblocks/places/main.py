@@ -630,9 +630,11 @@ def filter_african_countries(
             is returned.
     """
 
-    filters = {"region": "Africa",
-               "un_member": True} if exclude_non_un_members else {"region": "Africa"
-               }
+    filters = (
+        {"region": "Africa", "un_member": True}
+        if exclude_non_un_members
+        else {"region": "Africa"}
+    )
 
     return filter(
         places=places,
