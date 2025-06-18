@@ -30,10 +30,10 @@ Lets start with a very simple example. Say we have a list of countries with non 
 countries = ["zimbabwe", " Italy ", "USA", "Cote d'ivoire"]
 ```
 
-We can easily resolve these names to a standard format such as ISO3 codes 
+We can easily resolve these names to a standard format such as ISO3 codes
 
 ```python
-resolved_countries = places.resolve(countries, to_type="iso3_code")
+resolved_countries = places.resolve_places(countries, to_type="iso3_code")
 
 print(resolved_countries)
 # Output:
@@ -48,8 +48,7 @@ import pandas as pd
 df = pd.DataFrame({"country": countries})
 
 # Add the ISO3 codes to the DataFrame
-df["iso3_code"] = places.resolve(df["country"], to_type="iso3_code")
-
+df["iso3_code"] = places.resolve_places(df["country"], to_type="iso3_code")
 
 print(df)
 # Output:
@@ -66,8 +65,8 @@ Let's say that we are only interested in countries in Africa. It is easy to filt
 `filter_places` function.
 
 ```python title="Filter for African countries"
-african_countries = places.filter(countries,
-                                  filters={"region": "Africa"})
+african_countries = places.filter_places(countries,
+                                         filters={"region": "Africa"})
 
 print(african_countries)
 # Output:

@@ -14,7 +14,7 @@ You can filter these countries using the `filter` function. For example, let's f
 for countries in Africa.
 
 ```python
-african_countries = places.filter(countries, filters={"region": "Africa"})
+african_countries = places.filter_places(countries, filters={"region": "Africa"})
 
 print(african_countries)
 # Output:
@@ -26,9 +26,9 @@ print(african_countries)
 You can filter for multiple categories. For example, let's filter for lower middle income countries in Africa.
 
 ```python
-lmic_africa = places.filter(countries, 
-                            filters={"region": "Africa", 
-                                     "income_level": "Lower middle income"})
+lmic_africa = places.filter_places(countries,
+                                   filters={"region": "Africa",
+                                            "income_level": "Lower middle income"})
 
 print(lmic_africa)
 # Output:
@@ -44,9 +44,9 @@ clear warning to alert the user.
 For example let's filter for high income countries in Africa.
 
 ```python
-hic_africa = places.filter(countries, 
-                           filters={"region": "Africa", 
-                                    "income_level": "High income"})
+hic_africa = places.filter_places(countries,
+                                  filters={"region": "Africa",
+                                           "income_level": "High income"})
 
 print(hic_africa)
 # Output:
@@ -58,9 +58,9 @@ You can also choose to raise an error when no places match the filter criteria b
 parameter to `True`.
 
 ```python
-hic_africa = places.filter(countries, 
-                           filters={"region": "Africa", 
-                                    "income_level": "High income"})
+hic_africa = places.filter_places(countries,
+                                  filters={"region": "Africa",
+                                           "income_level": "High income"})
 
 # Output:
 # ValueError: No places found for filters {'region': ['Africa'], 'income_level': ['High income']}

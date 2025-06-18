@@ -297,7 +297,7 @@ def get_lldc(
     return _get_list_from_bool(place_format, "lldc", raise_if_empty=raise_if_empty)
 
 
-def resolve(
+def resolve_places(
     places: str | list[str] | pd.Series,
     from_type: Optional[str] = None,
     to_type: Optional[str] = "dcid",
@@ -375,7 +375,7 @@ def resolve(
     if from_type is not None:
         _validate_place_format(from_type)
 
-    return _country_resolver.resolve(
+    return _country_resolver.resolve_places(
         places=places,
         to_type=to_type,
         from_type=from_type,
@@ -386,7 +386,7 @@ def resolve(
     )
 
 
-def resolve_map(
+def map_places(
     places: str | list[str] | pd.Series,
     to_type: Optional[str] = "dcid",
     from_type: Optional[str] = None,
@@ -464,7 +464,7 @@ def resolve_map(
     if from_type is not None:
         _validate_place_format(from_type)
 
-    return _country_resolver.get_places_map(
+    return _country_resolver.map_places(
         places=places,
         to_type=to_type,
         from_type=from_type,
@@ -475,7 +475,7 @@ def resolve_map(
     )
 
 
-def filter(
+def filter_places(
     places: list[str] | pd.Series,
     filters: dict[str, str | list[str] | bool],
     from_type: Optional[str] = None,
@@ -558,7 +558,7 @@ def filter(
             filters[category] = values
         _validate_filter_values(category, values)
 
-    result = _country_resolver.filter(
+    result = _country_resolver.filter_places(
         places=places,
         filters=filters,
         from_type=from_type,
@@ -636,7 +636,7 @@ def filter_african_countries(
         else {"region": "Africa"}
     )
 
-    return filter(
+    return filter_places(
         places=places,
         filters=filters,
         from_type=from_type,

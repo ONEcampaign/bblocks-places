@@ -26,7 +26,7 @@ places will be resolved to their Data Commons `DCIDs`
 ```python
 from bblocks import places
 
-resolved_countries = places.resolve(countries)
+resolved_countries = places.resolve_places(countries)
 
 print(resolved_countries)
 # Output:
@@ -38,7 +38,7 @@ print(resolved_countries)
 You can also resolve these places to other formats such as offical names, ISO3 codes, or to a grouping such as region.
 
 ```python title="Resolve to official names"
-resolved_countries = places.resolve(countries, to_type="name_official")
+resolved_countries = places.resolve_places(countries, to_type="name_official")
 
 print(resolved_countries)
 # Output:
@@ -46,7 +46,7 @@ print(resolved_countries)
 ```
 
 ```python title="Resolve to ISO3 codes"
-resolved_countries = places.resolve(countries, to_type="iso3_code")
+resolved_countries = places.resolve_places(countries, to_type="iso3_code")
 
 print(resolved_countries)
 # Output:
@@ -54,7 +54,7 @@ print(resolved_countries)
 ```
 
 ```python title="Resolve to regions"
-resolved_countries = places.resolve(countries, to_type="region")
+resolved_countries = places.resolve_places(countries, to_type="region")
 
 print(resolved_countries)
 # Output:
@@ -86,7 +86,7 @@ property in the knowledge graph. For example, let's resolve the countries to the
 Data Commons property [`administrativeCapital`](https://datacommons.org/browser/administrativeCapital).
 
 ```python
-resolved_countries = places.resolve(countries, to_type="administrativeCapital")
+resolved_countries = places.resolve_places(countries, to_type="administrativeCapital")
 
 print(resolved_countries)
 # Output:
@@ -100,7 +100,7 @@ different place types and use custom mappings. [Jump to the customization page](
 
 ## Pandas support
 
-`bblocks-places` offers support for working with pandas Series and DataFrames easily and efficiently. 
+`bblocks-places` offers support for working with pandas Series and DataFrames easily and efficiently.
 
 ```python
 import pandas as pd
@@ -108,7 +108,7 @@ import pandas as pd
 df = pd.DataFrame({"country": countries})
 
 # Let's add the ISO3 codes to the DataFrame
-df["iso3_code"] = places.resolve(df["country"], to_type="iso3_code")
+df["iso3_code"] = places.resolve_places(df["country"], to_type="iso3_code")
 print(df)
 # Output:
 #       country         iso3_code
@@ -124,7 +124,7 @@ You might not want to replace all the original places with their resolved values
 You can also get a dictionary of the resolved places, which you can use to map back to the original values.
 
 ```python
-resolved_countries_dict = places.get_places_map(countries, to_type="iso3_code")
+resolved_countries_dict = places.map_places(countries, to_type="iso3_code")
 
 print(resolved_countries_dict)
 # Output:
@@ -146,9 +146,9 @@ iso3_codes = ["ZWE", "ITA", "BWA", "USA"]
 Let's resolve these ISO3 codes to their official names, by specifying their original format.
 
 ```python
-resolved_countries = places.resolve(iso3_codes, 
-                                    from_type="iso3_code", 
-                                    to_type="name_official")
+resolved_countries = places.resolve_places(iso3_codes,
+                                           from_type="iso3_code",
+                                           to_type="name_official")
 
 print(resolved_countries)
 # Output:
@@ -163,8 +163,8 @@ such as whitespace, capitalization, and punctuation. For example, it will treat 
 " zimbabwe " as the same place, and Cote d'Ivoire is recognized without accent marks.
 
 ```python
-resolved_places = places.resolve([" zimbabwe ", "cote d'ivoire"], 
-                                 to_type="name_official")
+resolved_places = places.resolve_places([" zimbabwe ", "cote d'ivoire"],
+                                        to_type="name_official")
 
 print(resolved_places)
 # Output:
@@ -175,8 +175,8 @@ The package also handles more complex ambiguities such as historical and alterna
 Rhodesia and Ivory Coast.
 
 ```python
-resolved_places = places.resolve(["Rhodesia", "Ivory Coast"], 
-                                 to_type="name_official")
+resolved_places = places.resolve_places(["Rhodesia", "Ivory Coast"],
+                                        to_type="name_official")
 
 print(resolved_places)
 # Output:
@@ -198,7 +198,7 @@ countries = ["Zimbabwe", "Italy", "Botswana", "United States", "Gondor"]
 Trying to resolve these countries will raise an error
 
 ```python
-resolved_countries = places.resolve(countries)
+resolved_countries = places.resolve_places(countries)
 
 # Output:
 # PlaceNotFoundError: Place not found: Gondor
@@ -209,7 +209,7 @@ You can choose to ignore them in which case their resolved
 values will be set to `None` or you can specify a value for not found places such as `"place not found"`
 
 ```python title="Ignore not found places"
-resolved_countries = places.resolve(countries, not_found="ignore")
+resolved_countries = places.resolve_places(countries, not_found="ignore")
 
 print(resolved_countries)
 # Output:
@@ -217,7 +217,7 @@ print(resolved_countries)
 ```
 
 ```python title="Set a value for not found places"
-resolved_countries = places.resolve(countries, not_found="not found")
+resolved_countries = places.resolve_places(countries, not_found="not found")
 
 print(resolved_countries)
 # Output:
@@ -230,7 +230,7 @@ There may be instances where a place could be resolved to multiple values. By de
 For example, trying to resolve a place to it's latitude, a short and detailed latidude exists.
 
 ```python
-zim_lat = places.resolve("Zimbabwe", to_type="latitude")
+zim_lat = places.resolve_places("Zimbabwe", to_type="latitude")
 
 print(zim_lat)
 # Output:
@@ -244,20 +244,19 @@ You can choose how to handle these cases by setting the `multiple_candidates` to
 - `ignore` - Return all the candidates
 
 ```python title="Use the first candidate"
-zim_lat = places.resolve("Zimbabwe", 
-                         to_type="latitude", 
-                         multiple_candidates="first")
+zim_lat = places.resolve_places("Zimbabwe",
+                                to_type="latitude",
+                                multiple_candidates="first")
 
 print(zim_lat)
 # Output:
 # '-19'
 ```
 
-
 ```python title="Use the last candidate"
-zim_lat = places.resolve("Zimbabwe", 
-                         to_type="latitude", 
-                         multiple_candidates="last")
+zim_lat = places.resolve_places("Zimbabwe",
+                                to_type="latitude",
+                                multiple_candidates="last")
 
 print(zim_lat)
 # Output:
@@ -265,9 +264,9 @@ print(zim_lat)
 ```
 
 ```python title="Use all the candidates"
-zim_lat = places.resolve("Zimbabwe", 
-                         to_type="latitude", 
-                         multiple_candidates="ignore")
+zim_lat = places.resolve_places("Zimbabwe",
+                                to_type="latitude",
+                                multiple_candidates="ignore")
 
 print(zim_lat)
 # Output:
@@ -281,8 +280,8 @@ For cases where a place cannot be resolved or you want to map a place to a diffe
 
 ```python
 countries = ["Zimbabwe", "Italy", "Botswana", "United States", "Gondor"]
-resolved_countries = places.resolve(countries, 
-                                    custom_mapping={"Gondor": "country/GON"})
+resolved_countries = places.resolve_places(countries,
+                                           custom_mapping={"Gondor": "country/GON"})
 
 print(resolved_countries)
 # Output:

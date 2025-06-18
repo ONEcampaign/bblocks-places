@@ -303,7 +303,7 @@ def test_resolve_map_basic_concordance_mapping():
     )
     pr = PlaceResolver(concordance_table=df)
     # map names → regions
-    result = pr.get_places_map(["Alpha", "Beta"], from_type="name", to_type="region")
+    result = pr.map_places(["Alpha", "Beta"], from_type="name", to_type="region")
     assert result == {"Alpha": "RegA", "Beta": "RegB"}
 
 
@@ -311,7 +311,7 @@ def test_resolve_map_not_found_ignore_returns_none():
     """When a place isn’t in the concordance and not_found='ignore', it yields None."""
     df = pd.DataFrame({"dcid": ["dc/1"], "name": ["Alpha"], "region": ["RegA"]})
     pr = PlaceResolver(concordance_table=df)
-    result = pr.get_places_map(
+    result = pr.map_places(
         ["Gamma"], from_type="name", to_type="region", not_found="ignore"
     )
     assert result == {"Gamma": None}
@@ -325,7 +325,7 @@ def test_resolve_map_custom_mapping_overrides_concordance():
     # even though concordance says X→OldX, custom_mapping should win
     custom = {"X": "NewX"}
     pr = PlaceResolver(concordance_table=df)
-    result = pr.get_places_map(
+    result = pr.map_places(
         ["X", "Y"], from_type="name", to_type="region", custom_mapping=custom
     )
     assert result == {"X": "NewX", "Y": "OldY"}
@@ -340,14 +340,14 @@ def test_resolve_string_to_scalar():
     """A single place string returns its mapped scalar value."""
     df = pd.DataFrame({"dcid": ["c/1"], "name": ["Alpha"], "region": ["RegA"]})
     pr = PlaceResolver(concordance_table=df)
-    assert pr.resolve("Alpha", from_type="name", to_type="region") == "RegA"
+    assert pr.resolve_places("Alpha", from_type="name", to_type="region") == "RegA"
 
 
 def test_resolve_list_to_list_with_ignore():
     """A list of places returns a list, with None for missing when not_found='ignore'."""
     df = pd.DataFrame({"dcid": ["c/1"], "name": ["Alpha"], "region": ["RegA"]})
     pr = PlaceResolver(concordance_table=df)
-    result = pr.resolve(
+    result = pr.resolve_places(
         ["Alpha", "Gamma"], from_type="name", to_type="region", not_found="ignore"
     )
     assert result == ["RegA", None]
@@ -358,7 +358,7 @@ def test_resolve_series_preserves_index_and_type():
     df = pd.DataFrame({"dcid": ["c/1"], "name": ["Alpha"], "region": ["RegA"]})
     pr = PlaceResolver(concordance_table=df)
     series_in = pd.Series(["Alpha", "Gamma"], index=["i", "j"])
-    series_out = pr.resolve(
+    series_out = pr.resolve_places(
         series_in, from_type="name", to_type="region", not_found="ignore"
     )
     assert isinstance(series_out, pd.Series)
@@ -373,10 +373,10 @@ def test_resolve_missing_raises_and_ignore_nulls_bypasses():
 
     # missing with not_found='raise'
     with pytest.raises(PlaceNotFoundError):
-        pr.resolve("Gamma", from_type="name", to_type="region", not_found="raise")
+        pr.resolve_places("Gamma", from_type="name", to_type="region", not_found="raise")
 
     # missing but ignore_nulls=True and not_found='ignore'
-    result = pr.resolve(
+    result = pr.resolve_places(
         "Gamma",
         from_type="name",
         to_type="region",
@@ -396,11 +396,11 @@ def test_resolve_custom_mapping_overrides_concordance():
 
     # X should use custom_map, Y falls back to concordance
     assert (
-        pr.resolve("X", from_type="name", to_type="region", custom_mapping=custom_map)
+        pr.resolve_places("X", from_type="name", to_type="region", custom_mapping=custom_map)
         == "NewX"
     )
     assert (
-        pr.resolve("Y", from_type="name", to_type="region", custom_mapping=custom_map)
+        pr.resolve_places("Y", from_type="name", to_type="region", custom_mapping=custom_map)
         == "OldY"
     )
 
@@ -420,7 +420,7 @@ def test_filter_list_basic_region():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.filter(["A", "B", "C"], filters={"region": "R1"}, from_type="name")
+    result = pr.filter_places(["A", "B", "C"], filters={"region": "R1"}, from_type="name")
     assert result == ["A", "C"]
 
 
@@ -435,7 +435,7 @@ def test_filter_list_multiple_criteria():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.filter(
+    result = pr.filter_places(
         ["A", "B", "C", "D"],
         filters={"region": ["R1"], "group": "G2"},
         from_type="name",
@@ -454,7 +454,7 @@ def test_filter_series_returns_series_of_matching_values():
     )
     pr = PlaceResolver(concordance_table=df)
     series_in = pd.Series(["A", "B", "C", "A"])
-    series_out = pr.filter(series_in, filters={"region": "R1"}, from_type="name")
+    series_out = pr.filter_places(series_in, filters={"region": "R1"}, from_type="name")
     assert isinstance(series_out, pd.Series)
     # Should include only A, C, A in original order
     assert list(series_out.values) == ["A", "C", "A"]
@@ -465,7 +465,7 @@ def test_filter_invalid_places_type_raises():
     df = pd.DataFrame({"dcid": ["c1"], "name": ["A"], "region": ["R1"]})
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(ValueError):
-        pr.filter(("A", "B"), filters={"region": "R1"}, from_type="name")
+        pr.filter_places(("A", "B"), filters={"region": "R1"}, from_type="name")
 
 
 def test_filter_unknown_category_raises_keyerror():
@@ -473,7 +473,7 @@ def test_filter_unknown_category_raises_keyerror():
     df = pd.DataFrame({"dcid": ["c1"], "name": ["A"], "region": ["R1"]})
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(KeyError):
-        pr.filter(["A"], filters={"unknown_category": "X"}, from_type="name")
+        pr.filter_places(["A"], filters={"unknown_category": "X"}, from_type="name")
 
 
 # -------------------------------------------------
@@ -561,7 +561,7 @@ def test_resolve_map_not_found_raise_raises():
     )
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(PlaceNotFoundError):
-        pr.get_places_map(
+        pr.map_places(
             ["A", "B"],  # "B" isn't in the table
             from_type="name",
             to_type="region",
@@ -579,7 +579,7 @@ def test_resolve_map_default_to_dcid():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.get_places_map(["A", "B"], from_type="name")
+    result = pr.map_places(["A", "B"], from_type="name")
     assert result == {"A": "d1", "B": "d2"}
 
 
@@ -592,7 +592,7 @@ def test_resolve_map_from_type_dcid_to_region():
         }
     )
     pr = PlaceResolver(concordance_table=df)
-    result = pr.get_places_map(["d1", "d2"], from_type="dcid", to_type="region")
+    result = pr.map_places(["d1", "d2"], from_type="dcid", to_type="region")
     assert result == {"d1": "R1", "d2": "R2"}
 
 
@@ -608,7 +608,7 @@ def test_resolve_map_ignore_nulls_logs_and_filters(caplog):
     pr = PlaceResolver(concordance_table=df)
     caplog.set_level(logging.WARNING, logger="bblocks.places.resolver")
 
-    result = pr.get_places_map(
+    result = pr.map_places(
         [None, "A"], from_type="name", to_type="region", ignore_nulls=True
     )
     assert "Null values detected and will be ignored" in caplog.text
@@ -627,7 +627,7 @@ def test_resolve_map_ignore_nulls_false_raises():
     )
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(ValueError):
-        pr.get_places_map([None], from_type="name", to_type="region", ignore_nulls=False)
+        pr.map_places([None], from_type="name", to_type="region", ignore_nulls=False)
 
 
 def test_resolve_map_custom_mapping_prevents_not_found_raise():
@@ -642,7 +642,7 @@ def test_resolve_map_custom_mapping_prevents_not_found_raise():
     pr = PlaceResolver(concordance_table=df)
 
     custom = {"B": "CustomVal"}
-    result = pr.get_places_map(
+    result = pr.map_places(
         ["A", "B"],
         from_type="name",
         to_type="region",
