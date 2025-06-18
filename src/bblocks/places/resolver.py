@@ -789,7 +789,7 @@ class PlaceResolver:
     def filter(
         self,
         places: list[str] | pd.Series,
-        filters: dict[str, str | list[str]],
+        filters: dict[str, str | list[str] | bool],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",
         multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
@@ -802,7 +802,7 @@ class PlaceResolver:
         Args:
             places: Places to filter.
             filters: Mapping of filter categories to the values to match. Each
-                value may be a string or list of strings.
+                value may be a string or list of strings, or a boolean value.
             from_type: Original format of ``places``. If ``None`` the places are
                 automatically disambiguated.
             not_found: How to handle places that cannot be resolved.

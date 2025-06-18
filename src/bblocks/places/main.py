@@ -477,7 +477,7 @@ def resolve_map(
 
 def filter(
     places: list[str] | pd.Series,
-    filters: dict[str, str | list[str]],
+    filters: dict[str, str | list[str] | bool],
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
@@ -493,7 +493,8 @@ def filter(
         places: The places to filter.
 
         filters: A mapping of filter categories to the values to match. Values
-            may be a single string or a list of strings.
+            may be a single string or a list of strings or a boolean for
+            filters such as `un_member`
             Available filter categories are:
             - region
             - region_code
@@ -502,6 +503,13 @@ def filter(
             - intermediate_region_code
             - intermediate_region
             - income_level
+            - m49_member: M49 country list member. `True` for M49 countries, `False` for non-M49 countries.
+            - ldc: Least Developed Countries. `True` for LDCs, `False` for non-LDCs.
+            - lldc: Landlocked Developing Countries. `True` for LLDCs, `False` for non-LLDCs.
+            - sids: Small Island Developing States. `True` for SIDS, `False` for non-SIDS.
+            - un_member: UN member states. `True` for UN members, `False` for non-UN members.
+            - un_observer: UN observer states. `True` for UN observers, `False` for non-UN observers.
+            - un_former_member: Former UN member states. `True` for former UN members, `False` for non-former UN members.
 
         from_type: The original format of the places. Default is None.
             If None, the places will be disambiguated automatically using Data Commons
@@ -544,7 +552,7 @@ def filter(
         _validate_place_format(from_type)
 
     for category, values in filters.items():
-        _validate_place_target(category)
+        # _validate_place_target(category)
         if not isinstance(values, list):
             values = [values]
             filters[category] = values
@@ -575,6 +583,7 @@ def filter(
 
 def filter_african_countries(
     places: str | list[str] | pd.Series,
+    exclude_non_un_members: Optional[bool] = True,
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
     multiple_candidates: Literal["raise", "first", "last", "ignore"] = "raise",
@@ -588,6 +597,9 @@ def filter_african_countries(
 
     Args:
         places: The places to filter
+
+        exclude_non_un_members: Whether to exclude non-UN members. Defaults to True. If set to False, non-UN member
+            countries and areas such as Western Sahara will be included in the list.
 
         from_type:  The original format of the places. Default is None.
             If None, the places will be disambiguated automatically using Data Commons
@@ -618,9 +630,13 @@ def filter_african_countries(
             is returned.
     """
 
+    filters = {"region": "Africa",
+               "un_member": True} if exclude_non_un_members else {"region": "Africa"
+               }
+
     return filter(
         places=places,
-        filters={"region": "Africa"},
+        filters=filters,
         from_type=from_type,
         not_found=not_found,
         multiple_candidates=multiple_candidates,
