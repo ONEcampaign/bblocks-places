@@ -63,10 +63,10 @@ def test_resolve_delegates_to_country_resolver(monkeypatch):
         captured.update(kwargs)
         return ["RESULT"]
 
-    monkeypatch.setattr(main._country_resolver, "resolve", fake_resolve)
+    monkeypatch.setattr(main._country_resolver, "resolve_places", fake_resolve)
 
     places = ["Alpha", "Beta"]
-    out = main.resolve(
+    out = main.resolve_places(
         places,
         from_type="name_official",
         to_type="region",
@@ -89,7 +89,7 @@ def test_resolve_delegates_to_country_resolver(monkeypatch):
 def test_resolve_invalid_from_type_raises_before_delegate():
     """main.resolve should validate from_type and raise on invalid values."""
     with pytest.raises(ValueError):
-        main.resolve(["A"], from_type="not_a_format")
+        main.resolve_places(["A"], from_type="not_a_format")
 
 
 # ----------------------------------------------
@@ -363,10 +363,10 @@ def test_main_resolve_map_delegates(monkeypatch):
         captured.update(kwargs)
         return {"X": "x"}
 
-    monkeypatch.setattr(main._country_resolver, "resolve_map", fake_resolve_map)
+    monkeypatch.setattr(main._country_resolver, "map_places", fake_resolve_map)
 
     places = ["A", "B"]
-    out = main.resolve_map(
+    out = main.map_places(
         places,
         to_type="region",
         from_type="name_official",
@@ -390,7 +390,7 @@ def test_main_resolve_map_delegates(monkeypatch):
 def test_main_resolve_map_invalid_from_type():
     """Invalid from_type should error before delegating."""
     with pytest.raises(ValueError):
-        main.resolve_map(["A"], from_type="not_a_format")
+        main.map_places(["A"], from_type="not_a_format")
 
 
 # --------------------------------------------------
@@ -422,9 +422,9 @@ def test_main_filter_delegates(monkeypatch):
         captured.update(kwargs)
         return ["A", "C"]
 
-    monkeypatch.setattr(main._country_resolver, "filter", fake_filter)
+    monkeypatch.setattr(main._country_resolver, "filter_places", fake_filter)
 
-    result = main.filter(
+    result = main.filter_places(
         places=["A", "B", "C"],
         filters={"region": "R1"},
         from_type="name_official",
@@ -444,10 +444,10 @@ def test_main_filter_delegates(monkeypatch):
 
 def test_main_filter_empty_warns_and_returns_empty(monkeypatch, caplog):
     """If resolver.filter returns empty list and raise_if_empty=False, logs a warning."""
-    monkeypatch.setattr(main._country_resolver, "filter", lambda **kw: [])
+    monkeypatch.setattr(main._country_resolver, "filter_places", lambda **kw: [])
     caplog.set_level(logging.WARNING, logger="bblocks.places.main")
 
-    out = main.filter(
+    out = main.filter_places(
         places=["A", "B"],
         filters={"region": "R1"},
         from_type="name_official",
@@ -459,9 +459,9 @@ def test_main_filter_empty_warns_and_returns_empty(monkeypatch, caplog):
 
 def test_main_filter_empty_raises(monkeypatch):
     """If resolver.filter returns empty list and raise_if_empty=True, raises ValueError."""
-    monkeypatch.setattr(main._country_resolver, "filter", lambda **kw: [])
+    monkeypatch.setattr(main._country_resolver, "filter_places", lambda **kw: [])
     with pytest.raises(ValueError) as exc:
-        main.filter(
+        main.filter_places(
             places=["A"],
             filters={"region": "R1"},
             from_type="name_official",
@@ -484,7 +484,7 @@ def test_filter_african_countries_delegates_to_filter(monkeypatch):
         return ["DZ", "NG"]
 
     # Stub out main.filter (the resolver wrapper), so no real logic runs.
-    monkeypatch.setattr(main, "filter", fake_filter)
+    monkeypatch.setattr(main, "filter_places", fake_filter)
 
     out = main.filter_african_countries(
         places=["USA", "CAN"],
@@ -513,7 +513,7 @@ def test_filter_african_countries_uses_defaults(monkeypatch):
         captured.update(kwargs)
         return []
 
-    monkeypatch.setattr(main, "filter", fake_filter)
+    monkeypatch.setattr(main, "filter_places", fake_filter)
 
     out = main.filter_african_countries(places=["ZA"])
     assert out == []

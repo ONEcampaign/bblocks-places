@@ -36,9 +36,8 @@ The `custom_resolver` will use the concordance table that comes with the package
 disambiguation rules defined in the package, and only resolve for the Data Commons entity type `Country`.
 It will also rely on the ONE Campaign Data Commons instance to resolve places.
 
-
 ```python
-resolved_places = custom_resolver.resolve(countries, to_type="iso3_code")
+resolved_places = custom_resolver.resolve_places(countries, to_type="iso3_code")
 
 print(resolved_places)
 # Output:
@@ -74,7 +73,7 @@ For example let's say we want to resolve "Gondor" to its (fictitious) DCID which
 Calling `resolve` will raise an error. But we can set the `custom_mapping` parameter:
 
 ```python hl_lines="3"
-gondor_dcid = custom_resolver.resolve("Gondor",
+gondor_dcid = custom_resolver.resolve_places("Gondor",
                                              custom_mapping={"Gondor": "country/GON"})
 
 print(gondor_dcid)
@@ -90,7 +89,7 @@ is recognised automatically.
 ```python
 custom_resolver.add_custom_disambiguation({"Gondor": "country/GON"})
 
-gondor_dcid = resolved_countries = custom_resolver.resolve("Gondor")
+gondor_dcid = resolved_countries = custom_resolver.resolve_places("Gondor")
 
 print(gondor_dcid)
 # Output:
@@ -101,7 +100,7 @@ The `add_custom_disambiguation` is used to add a mapping of a place name to its 
 common issues such as white space and mixed capitalisation. For example:
 
 ```python
-gondor_dcid = custom_resolver.resolve(" gondor")
+gondor_dcid = custom_resolver.resolve_places(" gondor")
 
 print(gondor_dcid)
 # Output:
@@ -119,7 +118,7 @@ Republic of Congo (DRC)? The default behaviour of the package in this case is to
 
 custom_resolver.add_custom_disambiguation({"Congo": "country/COD"})
 
-congo_name = resolved_countries = custom_resolver.resolve("Congo", to_type="name_official")
+congo_name = resolved_countries = custom_resolver.resolve_places("Congo", to_type="name_official")
 
 print(congo_name)
 # Output:
@@ -149,7 +148,7 @@ custom_resolver = places.PlaceResolver(concordance_table="default",
 Now let's get the DCID for "Gondor"
 
 ```python
-gondor_dcid = custom_resolver.resolve(" gondor")
+gondor_dcid = custom_resolver.resolve_places(" gondor")
 
 print(gondor_dcid)
 # Output:
@@ -214,7 +213,7 @@ Now let's instantiate a custom `PlaceResolver` object with our concordance table
 ```python hl_lines="1"
 custom_resolver = places.PlaceResolver(concordance_table=concordance_df)
 
-gondor_region = custom_resolver.resolve("Gondor", from_type="name", to_type="region")
+gondor_region = custom_resolver.resolve_places("Gondor", from_type="name", to_type="region")
 
 print(gondor_region)
 # Output:
@@ -232,9 +231,9 @@ You can also choose to not use a concordance table at all, in which case Data Co
 place resolution
 
 ```python
-custom_resolver = places.PlaceResolver(concordance_table=None) # (1)! 
+custom_resolver = places.PlaceResolver(concordance_table=None)  # (1)! 
 
-zim_iso3 = custom_resolver.resolve("Zimbabwe ", to_type="countryAlpha3Code")
+zim_iso3 = custom_resolver.resolve_places("Zimbabwe ", to_type="countryAlpha3Code")
 
 print(zim_iso3)
 # Output:
@@ -255,9 +254,9 @@ For example the name "Italy" can refer to the country in Europe or the city in T
 By not specifying the entity type, all types are considered where there may be multiple candidates for a place.
 
 ```python
-custom_resolver = places.PlaceResolver(dc_entity_type=None) # (1)!
+custom_resolver = places.PlaceResolver(dc_entity_type=None)  # (1)!
 
-print(custom_resolver.resolve("Italy", to_type="name"))
+print(custom_resolver.resolve_places("Italy", to_type="name"))
 # Output:
 # MultipleCandidatesError: Multiple candidates found for Italy : ['Italy', ['Italy', 'Italy, Texas']]
 
@@ -270,16 +269,15 @@ The entity type can be set to any [Data Commons place type](https://docs.datacom
 ```python title="Country place type"
 custom_resolver = places.PlaceResolver(dc_entity_type="Country")
 
-print(custom_resolver.resolve("Italy", to_type="name"))
+print(custom_resolver.resolve_places("Italy", to_type="name"))
 # Output:
 # 'Italy'
 ```
 
-
 ```python title="City place type"
 custom_resolver = places.PlaceResolver(dc_entity_type="City")
 
-print(custom_resolver.resolve("Italy Texas", to_type="name"))
+print(custom_resolver.resolve_places("Italy Texas", to_type="name"))
 # Output:
 # 'Italy'
 ```

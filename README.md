@@ -68,9 +68,10 @@ In most cases, analysts are working with country-level data. Convenient function
 but the package offers more flexibility (jump to the customization section)
 
 Resolve a list of ambiguous countries
+
 ```python
 countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
-resolved_countries = places.resolve(countries)
+resolved_countries = places.resolve_places(countries)
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA']
@@ -78,16 +79,18 @@ print(resolved_countries)
 
 By default this will resolve countries to their Data Commons IDs (DCIDs). You can specify a different format
 for example ISO3
+
 ```python
-resolved_countries = places.resolve(countries, to_type="iso3_code")
+resolved_countries = places.resolve_places(countries, to_type="iso3_code")
 print(resolved_countries)
 # Output:
 # ['ZWE', 'ITA', 'BWA', 'USA']
 ```
 
 Places can also be resolved to standard groupings like region or income level
+
 ```python
-resolved_countries = places.resolve(countries, to_type="region")
+resolved_countries = places.resolve_places(countries, to_type="region")
 print(resolved_countries)
 # Output:
 # ['Africa', 'Europe', 'Africa', 'Americas']
@@ -98,20 +101,23 @@ concordance table call `places.get_default_concordance_table()`
 
 You can also resolve places to a format that is not in the default concordance table. For example to get countries'
 capitals, which are known in the Data Commons graph as property `administrativeCapital`, you can run:
+
 ```python
-resolved_countries = places.resolve(countries, to_type="administrativeCapital")
+resolved_countries = places.resolve_places(countries, to_type="administrativeCapital")
 print(resolved_countries)
 # Output:
 # ['Harare', 'Rome', 'Gaborone', 'District of Columbia']
 ```
 
 Resolving places in a pandas DataFrame is also easy and efficient.
+
 ```python 
 import pandas as pd
+
 df = pd.DataFrame({"country": ["Zimbabwe", "Italy", "Botswana", "United States"]})
 
 # Let's add the ISO3 codes to the DataFrame
-df["iso3_code"] = places.resolve(df["country"], to_type="iso3_code")
+df["iso3_code"] = places.resolve_places(df["country"], to_type="iso3_code")
 print(df)
 # Output:
 #      country          iso3_code
@@ -123,8 +129,9 @@ print(df)
 
 You might not want to replace all the original places with their resolved versions. You can also get
 a dictionary of the resolved places, which you can use to map back to the original values.
+
 ```python
-resolved_countries_dict = places.resolve_map(countries, to_type="iso3_code")
+resolved_countries_dict = places.map_places(countries, to_type="iso3_code")
 print(resolved_countries_dict)
 # Output:
 # {'Zimbabwe': 'ZWE', 'Italy': 'ITA', 'Botswana': 'BWA', 'United States': 'USA'}
@@ -137,7 +144,7 @@ disambiguate them.
 ```python
 # Let's say we have a list of ISO3 codes and we want to convert them to ISO2 codes
 iso3_codes = ["ZWE", "ITA", "BWA", "USA"]
-resolved_countries = places.resolve(iso3_codes, from_type="iso3_code", to_type="iso2_code")
+resolved_countries = places.resolve_places(iso3_codes, from_type="iso3_code", to_type="iso2_code")
 print(resolved_countries)
 # Output:
 # ['ZW', 'IT', 'BW', 'US']
@@ -147,10 +154,10 @@ __Handling ambiguities__
 
 The package is designed to handle ambiguities seamlessly. At a most basic level, it can handle common string issues such
 as whitespace, capitalization, and punctuation. For example, it will treat "Zimbabwe" and " zimbabwe " as the same place,
-and Cote d'Ivoire is recognized without accent marks. 
+and Cote d'Ivoire is recognized without accent marks.
 
 ```python
-resolved_places = places.resolve([" zimbabwe ", "cote d'ivoire"], to_type="iso3_code")
+resolved_places = places.resolve_places([" zimbabwe ", "cote d'ivoire"], to_type="iso3_code")
 
 print(resolved_places)
 # Output:
@@ -160,7 +167,7 @@ print(resolved_places)
 The package also handles more complex ambiguities such as historical and alternative names. For example:
 
 ```python
-resolved_places = places.resolve(["Rhodesia", "Ivory Coast"], to_type="name_official")
+resolved_places = places.resolve_places(["Rhodesia", "Ivory Coast"], to_type="name_official")
 
 print(resolved_places)
 # Output:
@@ -175,28 +182,31 @@ raise an error when there is an ambiguity or a place is not found.
 ```python
 # Let's say we have a list of countries with some ambiguous names like "Gondor" from the Lord of the Rings
 countries = ["Zimbabwe", "Italy", "Botswana", "United States", "Gondor"]
-resolved_countries = places.resolve(countries)
+resolved_countries = places.resolve_places(countries)
 # Output:
 # PlaceNotFoundError: Place not found: Gondor
 ```
 
 You can also choose to set not found values to ``None`` or a specific value.
+
 ```python
-resolved_countries = places.resolve(countries, not_found="ignore")
+resolved_countries = places.resolve_places(countries, not_found="ignore")
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', None]
 ```
+
 ```python
-resolved_countries = places.resolve(countries, not_found="not found")
+resolved_countries = places.resolve_places(countries, not_found="not found")
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', 'not found']
 ```
 
 If you know the value for these ambiguouse places, you can also set the value to that.
+
 ```python
-resolved_countries = places.resolve(countries, not_found="not found", custom_mapping={"Gondor": "country/GON"})
+resolved_countries = places.resolve_places(countries, not_found="not found", custom_mapping={"Gondor": "country/GON"})
 print(resolved_countries)
 # Output:
 # ['country/ZWE', 'country/ITA', 'country/BWA', 'country/USA', 'country/GON']
@@ -204,8 +214,9 @@ print(resolved_countries)
 
 There are situations where a place is ambiguous and has multiple candidates. For example resolving to
 latitudes, a detailed or a shorter latidude exists.
+
 ```python
-resolved_countries = places.resolve("Zimbabwe", to_type="latitude")
+resolved_countries = places.resolve_places("Zimbabwe", to_type="latitude")
 print(resolved_countries)
 # Output:
 # MultipleCandidatesError: Multiple candidates found for Zimbabwe: ['-19', '-19.015438']
@@ -214,23 +225,26 @@ print(resolved_countries)
 You can choose how to handle these cases by setting the ``multiple_candidates`` parameter. By default
 it will raise an error, but you can also choose to return all candidates, use the first candidate,
 or use the last candidate.
+
 ```python
 # return all the candidates
-resolved_countries = places.resolve("Zimbabwe", to_type="latitude", multiple_candidates="ignore")
+resolved_countries = places.resolve_places("Zimbabwe", to_type="latitude", multiple_candidates="ignore")
 print(resolved_countries)
 # Output:
 # ['-19', '-19.015438']
 ```
+
 ```python
 # return the first candidate
-resolved_countries = places.resolve("Zimbabwe", to_type="latitude", multiple_candidates="first")
+resolved_countries = places.resolve_places("Zimbabwe", to_type="latitude", multiple_candidates="first")
 print(resolved_countries)
 # Output:
 # '-19'
 ```
+
 ```python
 # return the last candidate
-resolved_countries = places.resolve("Zimbabwe", to_type="latitude", multiple_candidates="last")
+resolved_countries = places.resolve_places("Zimbabwe", to_type="latitude", multiple_candidates="last")
 print(resolved_countries)
 # Output:
 # '-19.015438'
@@ -244,8 +258,8 @@ Let's say we have a list of countries and we want to filter them for high income
 ```python
 countries = ["Zimbabwe", "Italy", "Botswana", "United States"]
 
-filtered_countries = places.filter(countries,
-                                   filters={"income_level": "High income"})
+filtered_countries = places.filter_places(countries,
+                                          filters={"income_level": "High income"})
 print(filtered_countries)
 # Output:
 # ['Italy', 'United States']
@@ -254,7 +268,7 @@ print(filtered_countries)
 You can filter for multiple values in a category
 
 ```python
-filtered_countries = places.filter(countries, {"region": ["Europe", "Africa"]})
+filtered_countries = places.filter_places(countries, {"region": ["Europe", "Africa"]})
 
 print(filtered_countries)
 # Output:
@@ -264,7 +278,7 @@ print(filtered_countries)
 Set ``raise_if_empty=True`` to be notified when no places match
 
 ```python
-places.filter(countries, {"region": "Oceania"}, raise_if_empty=True)
+places.filter_places(countries, {"region": "Oceania"}, raise_if_empty=True)
 # raises ValueError: No places found for filters {'region': 'Oceania'}
 ```
 
@@ -272,7 +286,7 @@ places.filter(countries, {"region": "Oceania"}, raise_if_empty=True)
 You can also filter using multiple categories at once
 
 ```python
-lmic_africa = places.filter(
+lmic_africa = places.filter_places(
     countries,
     filters={"region": "Africa", "income_level": "Lower middle income"},
 )
@@ -367,8 +381,9 @@ custom_resolver = places.PlaceResolver(concordance_table=concordance_df)
 ```
 
 This will allow you to run some custom resolutions like
+
 ```python
-gondor_region = custom_resolver.resolve("Gondor", from_type="name", to_type="region")
+gondor_region = custom_resolver.resolve_places("Gondor", from_type="name", to_type="region")
 print(gondor_region)
 # Output:
 # 'Middle-earth'
@@ -390,8 +405,9 @@ custom_resolver = places.PlaceResolver(concordance_table=concordance_df, custom_
 ```
 
 This will allow you to resolve these places, bypassing the Data Commons resolver
+
 ```python
-name = custom_resolver.resolve("gondor ", to_type="name")
+name = custom_resolver.resolve_places("gondor ", to_type="name")
 print(name)
 # Output:
 # 'Gondor'
@@ -406,8 +422,9 @@ custom_resolver = places.PlaceResolver(concordance_table=None)
 ```
 
 This will allow use the Data Commons graph for all resolutions
+
 ```python
-iso3 = custom_resolver.resolve("Zimbabwe ", to_type="countryAlpha3Code")
+iso3 = custom_resolver.resolve_places("Zimbabwe ", to_type="countryAlpha3Code")
 print(iso3)
 # Output:
 # 'ZWE'
@@ -420,16 +437,17 @@ several ambiguous cases. For example the name "Italy" can refer to the country o
 
 ```python
 # not specifying the entity type might cause ambiguous cases
-custom_resolver = places.PlaceResolver(concordance_table = None, custom_disambiguation = None)
-print(custom_resolver.resolve("Italy", to_type="name"))
+custom_resolver = places.PlaceResolver(concordance_table=None, custom_disambiguation=None)
+print(custom_resolver.resolve_places("Italy", to_type="name"))
 # Output:
 # MultipleCandidatesError: Multiple candidates found for Italy : ['Italy', ['Italy', 'Italy, Texas']]
 ```
 
 Specifying the entity type will prevent this
+
 ```python
 custom_resolver = places.PlaceResolver(concordance_table=None, custom_disambiguation=None, dc_entity_type="Country")
-print(custom_resolver.resolve("Italy", to_type="name"))
+print(custom_resolver.resolve_places("Italy", to_type="name"))
 # Output:
 # 'Italy'
 ```

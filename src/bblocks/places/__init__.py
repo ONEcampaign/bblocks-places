@@ -11,9 +11,9 @@ from bblocks.places.main import (
     get_lldc,
     get_african_countries,
     # resolvers and filters
-    resolve,
-    filter,
-    resolve_map,
+    resolve_places,
+    filter_places,
+    map_places,
     filter_african_countries,
     # Category-based filters
     get_places,
