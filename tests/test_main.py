@@ -420,59 +420,48 @@ def test_main_filter_empty_raises(monkeypatch):
 # --------------------------------------------------
 
 def test_filter_african_countries_delegates_to_filter(monkeypatch):
-    """filter_african_countries should call main.filter with region='Africa'."""
+    """filter_african_countries should forward all args to main.filter with both filters."""
     captured = {}
-    def fake_filter(places, filters, from_type, not_found, multiple_candidates, raise_if_empty):
-        captured.update({
-            "places": places,
-            "filters": filters,
-            "from_type": from_type,
-            "not_found": not_found,
-            "multiple_candidates": multiple_candidates,
-            "raise_if_empty": raise_if_empty,
-        })
+    def fake_filter(**kwargs):
+        captured.update(kwargs)
         return ["DZ", "NG"]
+
+    # Stub out main.filter (the resolver wrapper), so no real logic runs.
     monkeypatch.setattr(main, "filter", fake_filter)
 
     out = main.filter_african_countries(
-        places=["X","Y"],
+        places=["USA", "CAN"],
+        exclude_non_un_members=True,
         from_type="name_official",
         not_found="ignore",
-        multiple_candidates="first",
+        multiple_candidates="last",
         raise_if_empty=True
     )
     assert out == ["DZ", "NG"]
     assert captured == {
-        "places": ["X","Y"],
-        "filters": {"region": "Africa"},
+        "places": ["USA", "CAN"],
+        "filters": {"region": "Africa", "un_member": True},
         "from_type": "name_official",
         "not_found": "ignore",
-        "multiple_candidates": "first",
+        "multiple_candidates": "last",
         "raise_if_empty": True,
     }
 
-def test_filter_african_countries_default_flags(monkeypatch):
-    """With no args besides places, defaults should be applied."""
+def test_filter_african_countries_uses_defaults(monkeypatch):
+    """With only places (as a list), filter_african_countries applies defaults correctly."""
     captured = {}
-    def fake_filter(places, filters, from_type, not_found, multiple_candidates, raise_if_empty):
-        captured.update({
-            "places": places,
-            "filters": filters,
-            "from_type": from_type,
-            "not_found": not_found,
-            "multiple_candidates": multiple_candidates,
-            "raise_if_empty": raise_if_empty,
-        })
+    def fake_filter(**kwargs):
+        captured.update(kwargs)
         return []
+
     monkeypatch.setattr(main, "filter", fake_filter)
 
-    # call with only places
-    out = main.filter_african_countries(places="A")
+    out = main.filter_african_countries(places=["ZA"])
     assert out == []
-    # defaults: from_type=None, not_found='raise', multiple_candidates='raise', raise_if_empty=False
+    # Defaults: exclude_non_un_members=True, from_type=None, not_found='raise', multiple_candidates='raise', raise_if_empty=False
     assert captured == {
-        "places": "A",
-        "filters": {"region": "Africa"},
+        "places": ["ZA"],
+        "filters": {"region": "Africa", "un_member": True},
         "from_type": None,
         "not_found": "raise",
         "multiple_candidates": "raise",
