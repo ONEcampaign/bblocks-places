@@ -216,3 +216,91 @@ def test_get_african_countries_raise_if_empty(monkeypatch):
     monkeypatch.setattr(main, "get_places", fake_get_places)
     with pytest.raises(ValueError):
         main.get_african_countries(raise_if_empty=True)
+
+
+#  --------------------------------------------------
+# Tests for get_places
+#  --------------------------------------------------
+
+def test_get_places_basic_filter(monkeypatch):
+    """get_places returns matching values from the concordance_table."""
+    df = pd.DataFrame({
+        'dcid': ['c1', 'c2', 'c3', 'c4'],
+        'name_official': ['A', 'B', 'C', 'D'],
+        'region': ['R1', 'R2', 'R1', 'R3'],
+        'income_level': ['High', 'Low', 'High', 'Low']
+    })
+    monkeypatch.setattr(main._country_resolver, '_concordance_table', df)
+
+    result = main.get_places(
+        filters={'region': 'R1'},
+        place_format='name_official',
+        raise_if_empty=False
+    )
+    assert set(result) == {'A', 'C'}
+
+def test_get_places_multiple_filters(monkeypatch):
+    """get_places handles multiple filter keys and list values correctly."""
+    df = pd.DataFrame({
+        'dcid': ['c1', 'c2', 'c3', 'c4', 'c5'],
+        'name_official': ['A', 'B', 'C', 'D', 'E'],
+        'region': ['R1', 'R2', 'R1', 'R2', 'R1'],
+        'income_level': ['High', 'High', 'Low', 'Low', 'High']
+    })
+    monkeypatch.setattr(main._country_resolver, '_concordance_table', df)
+
+    result = main.get_places(
+        filters={'region': ['R1', 'R2'], 'income_level': 'High'},
+        place_format='name_official',
+        raise_if_empty=False
+    )
+    assert set(result) == {'A', 'B', 'E'}
+
+def test_get_places_empty_warns_and_returns_empty(monkeypatch, caplog):
+    """
+    When filters are individually valid but yield no rows (R2 & High here),
+    get_places logs a warning and returns [].
+    """
+    df = pd.DataFrame({
+        'dcid': ['c1', 'c2', 'c3'],
+        'name_official': ['A', 'B', 'C'],
+        'region': ['R1', 'R2', 'R1'],
+        'income_level': ['High', 'Low', 'Low']
+    })
+    monkeypatch.setattr(main._country_resolver, '_concordance_table', df)
+
+    caplog.set_level('WARNING', logger='bblocks.places.main')
+    result = main.get_places(
+        filters={'region': 'R2', 'income_level': 'High'},
+        place_format='name_official',
+        raise_if_empty=False
+    )
+    assert result == []
+    # Values get coerced to lists in-place
+    assert "No places found for filters {'region': ['R2'], 'income_level': ['High']}" in caplog.text
+
+def test_get_places_empty_raises(monkeypatch):
+    """
+    When filters are individually valid but yield no rows and raise_if_empty=True,
+    get_places should raise ValueError.
+    """
+    df = pd.DataFrame({
+        'dcid': ['c1', 'c2', 'c3'],
+        'name_official': ['A', 'B', 'C'],
+        'region': ['R1', 'R2', 'R1'],
+        'income_level': ['High', 'Low', 'Low']
+    })
+    monkeypatch.setattr(main._country_resolver, '_concordance_table', df)
+
+    with pytest.raises(ValueError) as exc:
+        main.get_places(
+            filters={'region': 'R2', 'income_level': 'High'},
+            place_format='name_official',
+            raise_if_empty=True
+        )
+    assert "No places found for filters {'region': ['R2'], 'income_level': ['High']}" in str(exc.value)
+
+def test_get_places_invalid_place_format():
+    """get_places should reject invalid place_format before querying."""
+    with pytest.raises(ValueError):
+        main.get_places(filters={'region': 'R1'}, place_format='not_a_format')
