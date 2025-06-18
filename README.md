@@ -120,4 +120,4 @@ print(ui_africa)
 # 'Mauritius', 'Namibia', 'Seychelles', 'South Africa']
 ```
 
-Visit [documentation](https://docs.one.org/tools/bblocks/places/) for the full documentation and examples.
+Visit the [documentation page](https://docs.one.org/tools/bblocks/places/) for the full package documentation and examples.
