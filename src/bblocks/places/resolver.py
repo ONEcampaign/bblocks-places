@@ -19,10 +19,35 @@ from bblocks.places.concordance import (
 )
 from bblocks.places.config import (
     logger,
-    Paths,
     PlaceNotFoundError,
     MultipleCandidatesError,
 )
+
+# Default concordance table dtypes
+DEFAULT_CONCORDANCE_DTYPES: dict= {
+        "dcid": "string",
+        "name_official": "string",
+        "name_short": "string",
+        "iso2_code": "string",
+        "iso3_code": "string",
+        "iso_numeric_code": "Int64",  # Nullable integer
+        "m49_code": "Int64",
+        "region_code": "Int64",
+        "region": "string",
+        "subregion_code": "Int64",
+        "subregion": "string",
+        "m49_member": "boolean",
+        "intermediate_region_code": "Int64",
+        "intermediate_region": "string",
+        "ldc": "boolean",
+        "lldc": "boolean",
+        "sids": "boolean",
+        "un_member": "boolean",
+        "un_observer": "boolean",
+        "un_former_member": "boolean",
+        "dac_code": "Int64",
+        "income_level": "string",
+    }
 
 
 def handle_not_founds(
@@ -35,9 +60,9 @@ def handle_not_founds(
         candidates: A dict of candidates.
         not_found: How to handle not founds.
             Options are:
-                - "raise": raise an error.
-                - "ignore": keep the value as None.
-                - Any other string to set as the value for not found places.
+            - `raise`: raise an error.
+            - `ignore`: keep the value as None.
+            - Any other string to set as the value for not found places.
 
     Returns:
         The candidates with not found places handled
@@ -146,34 +171,8 @@ def handle_missing_values(
 def read_default_concordance_table() -> pd.DataFrame:
     """Read the default concordance table"""
 
-    concordance_dtypes = {
-        "dcid": "string",
-        "name_official": "string",
-        "name_short": "string",
-        "iso2_code": "string",
-        "iso3_code": "string",
-        "iso_numeric_code": "Int64",  # Nullable integer
-        "m49_code": "Int64",
-        "region_code": "Int64",
-        "region": "string",
-        "subregion_code": "Int64",
-        "subregion": "string",
-        "intermediate_region_code": "Int64",
-        "intermediate_region": "string",
-        "ldc": "boolean",
-        "lldc": "boolean",
-        "sids": "boolean",
-        "un_member": "boolean",
-        "un_observer": "boolean",
-        "un_former_member": "boolean",
-        "dac_code": "Int64",
-        "income_level": "string",
-    }
-
-    return pd.read_csv(
-        resources.files("bblocks.places").joinpath("concordance.csv"),
-        dtype=concordance_dtypes,
-    )
+    path = resources.files("bblocks.places").joinpath("concordance.csv")
+    return pd.read_csv(path, dtype=DEFAULT_CONCORDANCE_DTYPES)
 
 
 class PlaceResolver:
