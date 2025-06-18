@@ -32,7 +32,6 @@ def test_simple_clean_string(input_str, expected):
     [
         # Non‐Latin characters should be preserved
         ("漢字", "漢字"),
-
         # Combining marks only get stripped out entirely
         ("\u0301\u0300", ""),
     ],
@@ -42,14 +41,13 @@ def test_clean_string_non_latin_and_combining(input_str, expected):
     assert utils.clean_string(input_str) == expected
 
 
-
 @pytest.mark.parametrize(
     "input_str, expected",
     [
-        ("co-operation",      "cooperation"),   # hyphen
-        ("end_to_end",        "endtoend"),      # underscore
-        ("[brackets]",        "brackets"),      # square braces
-        ("{curly}",           "curly"),         # curly braces
+        ("co-operation", "cooperation"),  # hyphen
+        ("end_to_end", "endtoend"),  # underscore
+        ("[brackets]", "brackets"),  # square braces
+        ("{curly}", "curly"),  # curly braces
     ],
 )
 def test_clean_string_various_punctuation(input_str, expected):
@@ -60,11 +58,11 @@ def test_clean_string_various_punctuation(input_str, expected):
 @pytest.mark.parametrize(
     "lst, chunk_size, expected",
     [
-        ([], 3, []),                             # empty list
-        ([1, 2, 3, 4], 2, [[1, 2], [3, 4]]),     # exact multiple
+        ([], 3, []),  # empty list
+        ([1, 2, 3, 4], 2, [[1, 2], [3, 4]]),  # exact multiple
         ([1, 2, 3, 4, 5], 2, [[1, 2], [3, 4], [5]]),  # remainder at end
-        ([1, 2, 3], 1, [[1], [2], [3]]),         # singleton chunks
-        ([1, 2], 5, [[1, 2]]),                   # chunk size larger than list
+        ([1, 2, 3], 1, [[1], [2], [3]]),  # singleton chunks
+        ([1, 2], 5, [[1, 2]]),  # chunk size larger than list
     ],
 )
 def test_split_list_various(lst, chunk_size, expected):
