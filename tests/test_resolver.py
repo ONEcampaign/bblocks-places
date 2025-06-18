@@ -1,8 +1,10 @@
 """Tests for the resolver module."""
 
 import pytest
+import pandas as pd
 
 from bblocks.places import resolver
+from bblocks.places.resolver import PlaceResolver
 from bblocks.places.config import PlaceNotFoundError, MultipleCandidatesError
 
 # ----------------------------------------
@@ -107,3 +109,146 @@ def test_read_default_concordance_table_has_exact_columns():
     expected = set(resolver.DEFAULT_CONCORDANCE_DTYPES.keys())
     assert set(df.columns) == expected, f"Got columns: {df.columns.tolist()}"
     assert len(df.columns) == len(expected)
+
+
+# ----------------------------------------
+# Tests for the PlaceResolver class
+# ----------------------------------------
+
+
+# Tests for __init__ method
+def test_init_with_no_concordance_table():
+    """concordance_table=None should set _concordance_table to None."""
+    pr = PlaceResolver(concordance_table=None)
+    assert pr._concordance_table is None
+
+
+def test_init_with_default_concordance_table(monkeypatch):
+    """concordance_table='default' should load class _CONCORDANCE_TABLE and validate it."""
+    dummy_df = pd.DataFrame({"dcid": ["X"], "foo": ["bar"]})
+    called = {}
+
+    # stub out the class‐level table and the validator
+    monkeypatch.setattr(resolver.PlaceResolver, "_CONCORDANCE_TABLE", dummy_df)
+    monkeypatch.setattr(resolver, "validate_concordance_table",
+                        lambda df: called.setdefault("validated", df))
+
+    pr = PlaceResolver(concordance_table="default")
+    # it should pick up our dummy_df
+    assert pr._concordance_table is dummy_df
+    # and call validate_concordance_table exactly once with dummy_df
+    assert called["validated"] is dummy_df
+
+
+def test_init_with_invalid_concordance_string():
+    """concordance_table=<bad string> should raise ValueError."""
+    with pytest.raises(ValueError):
+        PlaceResolver(concordance_table="not_default")
+
+
+def test_init_with_custom_disambiguation_default():
+    """custom_disambiguation='default' should load resolver._EDGE_CASES."""
+    pr = PlaceResolver(concordance_table=None, custom_disambiguation="default")
+    assert pr._custom_disambiguation is resolver.PlaceResolver._EDGE_CASES
+
+
+def test_init_with_custom_disambiguation_dict():
+    """custom_disambiguation=dict should set _custom_disambiguation to that dict."""
+    custom = {"foo": "X"}
+    pr = PlaceResolver(concordance_table=None, custom_disambiguation=custom)
+    assert pr._custom_disambiguation == custom
+
+
+def test_init_with_dc_api_settings(monkeypatch):
+    """Providing dc_api_settings should pass them into DataCommonsClient."""
+    settings = {"api_key": "KEY", "url": "https://example.com"}
+    captured = {}
+
+    class DummyDC:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+    monkeypatch.setattr(resolver, "DataCommonsClient", DummyDC)
+
+    pr = PlaceResolver(concordance_table=None, dc_api_settings=settings)
+    # Should have created self._dc_client via DummyDC with our settings
+    assert isinstance(pr._dc_client, DummyDC)
+    assert captured == settings
+
+
+# -------------------------------------------------
+# Tests for from_concordance_csv method
+# -------------------------------------------------
+
+def test_from_concordance_csv_reads_csv_and_sets_table(monkeypatch, tmp_path):
+    """from_concordance_csv() should call pd.read_csv on the given path and use that DataFrame."""
+    dummy_df = pd.DataFrame({"dcid": ["X"], "foo": ["bar"]})
+    csv_path = tmp_path / "test.csv"
+    csv_path.write_text("dummy")  # the content is irrelevant
+
+    called = {}
+    def fake_read_csv(path, *args, **kwargs):
+        # Assert the path passed is exactly our csv_path
+        assert str(path) == str(csv_path)
+        called["read"] = True
+        return dummy_df
+
+    monkeypatch.setattr(resolver.pd, "read_csv", fake_read_csv)
+
+    pr = PlaceResolver.from_concordance_csv(csv_path, custom_disambiguation={"A": "a"}, dc_entity_type="Country")
+
+    # Ensure pd.read_csv was invoked
+    assert called.get("read", False), "pd.read_csv was not called"
+    # The new resolver should have our dummy dataframe as its concordance table
+    assert pr._concordance_table is dummy_df
+    # Extra args/kwargs should be forwarded to the constructor
+    assert pr._custom_disambiguation == {"A": "a"}
+    assert pr._dc_entity_type == "Country"
+
+
+# -------------------------------------------------
+# Tests for the concordance_table property
+# -------------------------------------------------
+
+def test_concordance_table_property_returns_df():
+    """Returns the stored DataFrame when one is set."""
+    dummy = pd.DataFrame({"dcid": ["X"], "foo": ["bar"]})
+    pr = PlaceResolver(concordance_table=None)
+    # manually inject
+    pr._concordance_table = dummy
+    assert pr.concordance_table is dummy
+
+def test_concordance_table_property_raises_when_none():
+    """Raises ValueError if no concordance table is defined."""
+    pr = PlaceResolver(concordance_table=None)
+    pr._concordance_table = None
+    with pytest.raises(ValueError):
+        _ = pr.concordance_table
+
+
+# -------------------------------------------------
+# Tests for add_custom_disambiguation method
+# -------------------------------------------------
+
+def test_add_custom_disambiguation_sets_new_dict():
+    """Sets _custom_disambiguation when it was None and returns self."""
+    pr = PlaceResolver(concordance_table=None, custom_disambiguation=None)
+    # Simulate starting with no custom rules
+    pr._custom_disambiguation = None
+
+    custom = {"X": "dc/X"}
+    returned = pr.add_custom_disambiguation(custom)
+
+    assert returned is pr
+    assert pr._custom_disambiguation == {"X": "dc/X"}
+
+def test_add_custom_disambiguation_updates_existing_dict():
+    """Merges new rules into existing _custom_disambiguation and returns self."""
+    initial = {"A": "dc/A"}
+    pr = PlaceResolver(concordance_table=None, custom_disambiguation=initial.copy())
+
+    new_rules = {"B": "dc/B"}
+    returned = pr.add_custom_disambiguation(new_rules)
+
+    assert returned is pr
+    # Original entry plus the new one
+    assert pr._custom_disambiguation == {"A": "dc/A", "B": "dc/B"}
