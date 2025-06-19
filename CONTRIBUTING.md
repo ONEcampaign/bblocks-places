@@ -36,27 +36,33 @@ If you are proposing a feature:
 
 * Explain in detail how it would work.
 * Keep the scope as narrow as possible, to make it easier to implement.
-* Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
+* Remember that this is a public good project: the tools will always be 
+open source, and contributions are welcome!
 
 ## Get Started!
 
 Ready to contribute? Here's how to set up `bblocks-places` for local development.
 
-1. Fork `bblocks-places` and clone your fork:
-2. Install `poetry` in your virtual environment and install `bblocks-places`:
+1. Open an issue in the `bblocks-places` repository to discuss your proposed changes or enhancements. 
+   This is a good way to get feedback and ensure your work aligns with the project's goals.
+2. Fork `bblocks-places` and clone your fork:
+3. Dependencies are managed using poetry. Install poetry in your virtual environment and 
+install `bblocks-places:
 
     ```console
     $ poetry install
     ```
 
-3. Develop your changes and enhancements.
+4.  Ensure tests are written for any new functionality
+and that existing tests pass. Code coverage is important but not critical. We aim for at least
+90% coverage, but we prioritize meaningful tests that cover all major functionality. Code should be formatted 
+using `black` and adhere to the project's coding standards.
 
-4. When you're done making changes, check that your changes conform to any code formatting requirements 
-and pass any tests. Test coverage is targeted at least 90% where all major functionality is covered. Code should be
-formatted using `black`. 
+5. When you are done developing, open a pull request against the main repository, with a clear description of 
+your changes and any relevant issue numbers. One of the maintainers will review your changes and provide feedback.
 
-5. Commit your changes and open a pull request.
+6. If your pull request is accepted, it will be merged into the main branch. Your changes will be included in the 
+next release, and your contributions will be acknowledged in the project's changelog.
 
 ## Pull Request Guidelines
 
