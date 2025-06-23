@@ -83,42 +83,6 @@ def test_handle_multiple_candidates_invalid_option_raises_value_error():
 
 
 # ----------------------------------------
-# Tests for the handle_missing_values function
-# ----------------------------------------
-
-
-def test_handle_missing_values_logs_warning_for_none_values(caplog):
-    """Warns when a candidate is None but dcid_map has a non-null value."""
-    candidates = {"A": None, "B": None}
-    dcid_map = {"A": "dcidA", "B": None}
-    caplog.set_level("WARNING")
-    result = resolver.handle_missing_values(candidates.copy(), dcid_map, to_type="test")
-    assert "No value found for 'A' when mapping to 'test'" in caplog.text
-    # candidates dict should remain unchanged
-    assert result == {"A": None, "B": None}
-
-
-def test_handle_missing_values_no_warning_when_dcid_missing(caplog):
-    """No warning if dcid_map entry is None, even when candidate is None."""
-    candidates = {"A": None}
-    dcid_map = {"A": None}
-    caplog.set_level("WARNING")
-    result = resolver.handle_missing_values(candidates.copy(), dcid_map, to_type="foo")
-    assert caplog.text == ""
-    assert result == {"A": None}
-
-
-def test_handle_missing_values_no_warning_for_non_none_values(caplog):
-    """No warning when candidate value is present."""
-    candidates = {"A": "value"}
-    dcid_map = {"A": "dcidA"}
-    caplog.set_level("WARNING")
-    result = resolver.handle_missing_values(candidates.copy(), dcid_map, to_type="bar")
-    assert caplog.text == ""
-    assert result == {"A": "value"}
-
-
-# ----------------------------------------
 # Tests for the read_default_concordance_table function
 # ----------------------------------------
 
@@ -329,6 +293,24 @@ def test_resolve_map_custom_mapping_overrides_concordance():
         ["X", "Y"], from_type="name", to_type="region", custom_mapping=custom
     )
     assert result == {"X": "NewX", "Y": "OldY"}
+
+
+def test_resolve_map_not_found_string_passthrough():
+    """Custom not_found string values should be returned unchanged."""
+    df = pd.DataFrame({"dcid": ["dc/1"], "name": ["Alpha"], "region": ["RegA"]})
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.map_places(
+        ["Gamma"], from_type="name", to_type="region", not_found="MISSING"
+    )
+    assert result == {"Gamma": "MISSING"}
+
+
+def test_resolve_map_not_found_raise_raises():
+    """not_found='raise' should raise PlaceNotFoundError for unmapped places."""
+    df = pd.DataFrame({"dcid": ["dc/1"], "name": ["Alpha"], "region": ["RegA"]})
+    pr = PlaceResolver(concordance_table=df)
+    with pytest.raises(PlaceNotFoundError):
+        pr.map_places(["Gamma"], from_type="name", to_type="region", not_found="raise")
 
 
 # -------------------------------------------------

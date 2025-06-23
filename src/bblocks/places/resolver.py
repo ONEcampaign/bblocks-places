@@ -78,11 +78,12 @@ def handle_not_founds(
             if not_found == "raise":
                 raise PlaceNotFoundError(f"Place not found: {place}")
             elif not_found == "ignore":
-                logger.warning(f"Place not found: {place}")
+                logger.warning(f"Place not found: {place}. Resolving to None")
                 continue
             else:
                 # set the value of the candidate to the not_found value
                 candidates[place] = not_found
+                logger.warning(f"Place not found: {place}. Resolving to: {not_found}")
 
     return candidates
 
@@ -139,31 +140,6 @@ def handle_multiple_candidates(
                 raise ValueError(
                     f"Invalid value for multiple_candidates: {multiple_candidates}. Must be one of ['raise', 'first', 'last', 'ignore']"
                 )
-
-    return candidates
-
-
-def handle_missing_values(
-    candidates: dict[str, str | list | None],
-    dcid_map: dict[str, str | list | None],
-    to_type: str,
-) -> dict[str, str | list | None]:
-    """Warn when a place has a DCID but no value for ``to_type``.
-
-    Args:
-        candidates: Mapping of places to resolved values.
-        dcid_map: Mapping of places to their DCIDs.
-        to_type: The property or concordance field being mapped to.
-
-    Returns:
-        The ``candidates`` mapping unchanged.
-    """
-
-    for place, val in candidates.items():
-        if val is None and dcid_map.get(place) is not None:
-            logger.warning(
-                f"No value found for '{place}' when mapping to '{to_type}'. Resolving to None."
-            )
 
     return candidates
 
@@ -432,10 +408,8 @@ class PlaceResolver:
             disambiguation_dict=self._custom_disambiguation,
         )
 
-        dcid_map = handle_not_founds(candidates=dcid_map, not_found=not_found)
-
         if to_type == "dcid":
-            return dcid_map
+            return handle_not_founds(candidates=dcid_map, not_found=not_found)
 
         if (
             self._concordance_table is not None
@@ -452,7 +426,7 @@ class PlaceResolver:
                 dc_property=to_type,
             )
 
-        return handle_missing_values(candidates, dcid_map, to_type)
+        return handle_not_founds(candidates=candidates, not_found=not_found)
 
     def _resolve_without_disambiguation(
         self,
@@ -479,10 +453,8 @@ class PlaceResolver:
         else:
             dcid_map = {place: place for place in places_to_map}
 
-        dcid_map = handle_not_founds(dcid_map, not_found)
-
         if to_type == "dcid":
-            return dcid_map
+            return handle_not_founds(dcid_map, not_found)
 
         if (
             self._concordance_table is not None
@@ -499,7 +471,7 @@ class PlaceResolver:
                 dc_property=to_type,
             )
 
-        return handle_missing_values(candidates, dcid_map, to_type)
+        return handle_not_founds(candidates=candidates, not_found=not_found)
 
     def _resolve(
         self,
