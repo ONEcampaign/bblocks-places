@@ -2,7 +2,6 @@
 
 from datacommons_client import DataCommonsClient
 from datacommons_client.utils.error_handling import DCStatusError
-from datacommons_client.models.resolve import FlatCandidateMapping
 from typing import Optional
 
 from bblocks.places.utils import clean_string, split_list
@@ -32,38 +31,56 @@ def fetch_dcids_by_name(
     if not chunk_size:
         dcids = {}
         try:
-            dcids = dc_client.resolve.fetch_dcids_by_name(entities, entity_type).to_flat_dict()
+            dcids = dc_client.resolve.fetch_dcids_by_name(
+                entities, entity_type
+            ).to_flat_dict()
         except DCStatusError as e:
             logger.debug(
                 f"Error fetching DCIDs for entities {entities} of type {entity_type}: {e}"
             )
-            logger.debug("Resolving individual entities, and replacing unresolved places with None")
+            logger.debug(
+                "Resolving individual entities, and replacing unresolved places with None"
+            )
 
             # if there is an error, resolve each entity individually
             for entity in entities:
                 try:
-                    dcids[entity] = dc_client.resolve.fetch_dcids_by_name(entity, entity_type).to_flat_dict()
+                    dcids[entity] = dc_client.resolve.fetch_dcids_by_name(
+                        entity, entity_type
+                    ).to_flat_dict()
                 except Exception as e:
-                    logger.debug(f"Error fetching DCID for {entity}. Resolving to None. Error: {e}")
+                    logger.debug(
+                        f"Error fetching DCID for {entity}. Resolving to None. Error: {e}"
+                    )
                     dcids[entity] = None
     else:
         dcids = {}
         for chunk in split_list(entities, chunk_size):
             try:
-                chunk_dcids = dc_client.resolve.fetch_dcids_by_name(chunk, entity_type).to_flat_dict()
+                chunk_dcids = dc_client.resolve.fetch_dcids_by_name(
+                    chunk, entity_type
+                ).to_flat_dict()
                 dcids.update(chunk_dcids)
             except DCStatusError as e:
-                logger.debug(f"Error fetching DCIDs for chunk {chunk} of type {entity_type}: {e}")
-                logger.debug("Resolving individual entities in the chunk, and replacing unresolved places with None")
+                logger.debug(
+                    f"Error fetching DCIDs for chunk {chunk} of type {entity_type}: {e}"
+                )
+                logger.debug(
+                    "Resolving individual entities in the chunk, and replacing unresolved places with None"
+                )
 
                 # if there is an error, resolve each entity individually
                 for entity in chunk:
                     try:
                         # chunk_dcids[entity] = dc_client.resolve.fetch_dcids_by_name(entity, entity_type).to_flat_dict()
-                        chunk_dcid = dc_client.resolve.fetch_dcids_by_name(entity, entity_type).to_flat_dict()
+                        chunk_dcid = dc_client.resolve.fetch_dcids_by_name(
+                            entity, entity_type
+                        ).to_flat_dict()
                         dcids.update(chunk_dcid)
                     except Exception as e:
-                        logger.debug(f"Error fetching DCID for {entity}. Resolving to None. Error: {e}")
+                        logger.debug(
+                            f"Error fetching DCID for {entity}. Resolving to None. Error: {e}"
+                        )
                         chunk_dcid = {entity: None}
                         dcids.update(chunk_dcid)
 
