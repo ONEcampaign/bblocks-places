@@ -214,6 +214,7 @@ def test_fetch_dcids_handles_dcstatuserror_and_sets_none(monkeypatch):
 
     assert result["B"] is None
 
+
 def test_fetch_dcids_handles_dcstatuserror_with_chunking(monkeypatch):
     """Chunked call raising DCStatusError resolves items individually."""
 
