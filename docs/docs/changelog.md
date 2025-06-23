@@ -1,9 +1,12 @@
 # Changelog
 
-# v0.1.0 (in development)
-- Initial stable release of the `bblocks-places` package
+# v1.0.0 (in development)
+- Stable release of the `bblocks-places` package
 
-## v0.0.3 (in development)
+# v0.1.0 (in development)
+- Initial minor release of the `bblocks-places` package for external testing
+
+## v0.0.3 (2025-06-23)
 - Bug fixes for handling of not found places
 - Fix requests dependency
 - Bug fix DCStatusError 500 - handle cases where an entity input is not valid 
