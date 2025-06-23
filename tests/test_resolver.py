@@ -294,6 +294,7 @@ def test_resolve_map_custom_mapping_overrides_concordance():
     )
     assert result == {"X": "NewX", "Y": "OldY"}
 
+
 def test_resolve_map_not_found_string_passthrough():
     """Custom not_found string values should be returned unchanged."""
     df = pd.DataFrame({"dcid": ["dc/1"], "name": ["Alpha"], "region": ["RegA"]})
@@ -303,14 +304,14 @@ def test_resolve_map_not_found_string_passthrough():
     )
     assert result == {"Gamma": "MISSING"}
 
+
 def test_resolve_map_not_found_raise_raises():
     """not_found='raise' should raise PlaceNotFoundError for unmapped places."""
     df = pd.DataFrame({"dcid": ["dc/1"], "name": ["Alpha"], "region": ["RegA"]})
     pr = PlaceResolver(concordance_table=df)
     with pytest.raises(PlaceNotFoundError):
-        pr.map_places(
-            ["Gamma"], from_type="name", to_type="region", not_found="raise"
-        )
+        pr.map_places(["Gamma"], from_type="name", to_type="region", not_found="raise")
+
 
 # -------------------------------------------------
 # Test resolve method
