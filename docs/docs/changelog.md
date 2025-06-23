@@ -1,9 +1,9 @@
 # Changelog
 
-# v1.0.0 (in development)
+## v1.0.0 (in development)
 - Stable release of the `bblocks-places` package
 
-# v0.1.0 (in development)
+## v0.1.0 (in development)
 - Initial minor release of the `bblocks-places` package for external testing
 
 ## v0.0.3 (2025-06-23)
