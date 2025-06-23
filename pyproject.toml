@@ -12,7 +12,8 @@ requires-python = ">=3.11,<4.0"
 dependencies = [
     "datacommons-client (>=2.0.0,<3.0.0)",
     "pandas (>=2.2.3,<3.0.0)",
-    "charset-normalizer (>=3.4.2,<4.0.0)"
+    "charset-normalizer (>=3.4.2,<4.0.0)",
+    "chardet (>=5.2.0,<6.0.0)"
 ]
 
 [tool.poetry]
