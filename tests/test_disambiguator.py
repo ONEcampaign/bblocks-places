@@ -195,3 +195,39 @@ def test_resolve_places_not_found_becomes_none():
         client, ["Z"], "T", disambiguation_dict=None, chunk_size=None
     )
     assert result == {}
+
+
+def test_fetch_dcids_handles_dcstatuserror_and_sets_none(monkeypatch):
+    """When bulk call raises DCStatusError, unresolved entities map to None."""
+
+    def raise_for_bulk(entities, entity_type):
+        if isinstance(entities, (list, tuple)) and len(entities) > 1:
+            raise disambiguator.DCStatusError("boom")
+        if entities == "A":
+            return FakeResolveResponse({"A": ["dcid/A"]})
+        raise Exception("not resolvable")
+
+    client = FakeDCClient(response_map={})
+    monkeypatch.setattr(client.resolve, "fetch_dcids_by_name", raise_for_bulk)
+
+    result = disambiguator.fetch_dcids_by_name(client, ["A", "B"], "T", chunk_size=None)
+
+    assert result["B"] is None
+
+
+def test_fetch_dcids_handles_dcstatuserror_with_chunking(monkeypatch):
+    """Chunked call raising DCStatusError resolves items individually."""
+
+    def raise_for_chunk(entities, entity_type):
+        if isinstance(entities, (list, tuple)) and len(entities) > 1:
+            raise disambiguator.DCStatusError("boom")
+        if entities == "A":
+            return FakeResolveResponse({"A": ["dcid/A"]})
+        raise Exception("not resolvable")
+
+    client = FakeDCClient(response_map={})
+    monkeypatch.setattr(client.resolve, "fetch_dcids_by_name", raise_for_chunk)
+
+    result = disambiguator.fetch_dcids_by_name(client, ["A", "B"], "T", chunk_size=2)
+
+    assert result == {"A": ["dcid/A"], "B": None}
