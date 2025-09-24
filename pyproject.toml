@@ -1,6 +1,6 @@
 [project]
 name = "bblocks-places"
-version = "0.0.3"
+version = "0.0.4"
 description = "Resolve and standardize places and work with political and geographic groupings"
 authors = [
     {name = "ONE Campaign"},
