@@ -6,6 +6,9 @@
 ## v0.1.0 (in development)
 - Initial minor release of the `bblocks-places` package for external testing
 
+## v0.0.4 (2025-09-24)
+- Updated concordance table income groupings
+
 ## v0.0.3 (2025-06-23)
 - Bug fixes for handling of not found places
 - Fix requests dependency
