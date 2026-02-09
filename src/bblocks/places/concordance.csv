@@ -6,24 +6,24 @@ Algeria,Algeria,country/DZA,DZ,DZA,12,12,2,Africa,15,Northern Africa,True,,,Fals
 American Samoa,American Samoa,country/ASM,AS,ASM,16,16,9,Oceania,61,Polynesia,True,,,False,False,True,False,False,False,880,High income
 Andorra,Andorra,country/AND,AD,AND,20,20,150,Europe,39,Southern Europe,True,,,False,False,False,True,False,False,,High income
 Angola,Angola,country/AGO,AO,AGO,24,24,2,Africa,202,Sub-Saharan Africa,True,17,Middle Africa,True,False,False,True,False,False,225,Lower middle income
-Anguilla,Anguilla,country/AIA,AI,AIA,660,660,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,,
+Anguilla,Anguilla,country/AIA,AI,AIA,660,660,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,376,
 Antarctica,Antarctica,antarctica,AQ,ATA,10,10,,,,,True,,,False,False,False,False,False,False,,
 Antigua and Barbuda,Antigua and Barbuda,country/ATG,AG,ATG,28,28,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,377,High income
 Argentina,Argentina,country/ARG,AR,ARG,32,32,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,425,Upper middle income
 Armenia,Armenia,country/ARM,AM,ARM,51,51,142,Asia,145,Western Asia,True,,,False,True,False,True,False,False,610,Upper middle income
-Aruba,Aruba,country/ABW,AW,ABW,533,533,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,,High income
+Aruba,Aruba,country/ABW,AW,ABW,533,533,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,725,High income
 Australia,Australia,country/AUS,AU,AUS,36,36,9,Oceania,53,Australia and New Zealand,True,,,False,False,False,True,False,False,801,High income
 Austria,Austria,country/AUT,AT,AUT,40,40,150,Europe,155,Western Europe,True,,,False,False,False,True,False,False,1,High income
 Azerbaijan,Azerbaijan,country/AZE,AZ,AZE,31,31,142,Asia,145,Western Asia,True,,,False,True,False,True,False,False,611,Upper middle income
-Bahamas,Bahamas,country/BHS,BS,BHS,44,44,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,,High income
-Bahrain,Bahrain,country/BHR,BH,BHR,48,48,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,,High income
+Bahamas,Bahamas,country/BHS,BS,BHS,44,44,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,328,High income
+Bahrain,Bahrain,country/BHR,BH,BHR,48,48,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,530,High income
 Bangladesh,Bangladesh,country/BGD,BD,BGD,50,50,142,Asia,34,Southern Asia,True,,,True,False,False,True,False,False,666,Lower middle income
-Barbados,Barbados,country/BRB,BB,BRB,52,52,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,,High income
+Barbados,Barbados,country/BRB,BB,BRB,52,52,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,329,High income
 Belarus,Belarus,country/BLR,BY,BLR,112,112,150,Europe,151,Eastern Europe,True,,,False,False,False,True,False,False,86,Upper middle income
 Belgium,Belgium,country/BEL,BE,BEL,56,56,150,Europe,155,Western Europe,True,,,False,False,False,True,False,False,2,High income
 Belize,Belize,country/BLZ,BZ,BLZ,84,84,19,Americas,419,Latin America and the Caribbean,True,13,Central America,False,False,True,True,False,False,352,Upper middle income
 Benin,Benin,country/BEN,BJ,BEN,204,204,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,False,False,True,False,False,236,Lower middle income
-Bermuda,Bermuda,country/BMU,BM,BMU,60,60,19,Americas,21,Northern America,True,,,False,False,False,False,False,False,,High income
+Bermuda,Bermuda,country/BMU,BM,BMU,60,60,19,Americas,21,Northern America,True,,,False,False,False,False,False,False,331,High income
 Bhutan,Bhutan,country/BTN,BT,BTN,64,64,142,Asia,34,Southern Asia,True,,,False,True,False,True,False,False,630,Lower middle income
 Bolivia (Plurinational State of),Bolivia,country/BOL,BO,BOL,68,68,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,True,False,True,False,False,428,Lower middle income
 "Bonaire, Sint Eustatius and Saba","Bonaire, Saint Eustatius and Saba",country/BES,BQ,BES,535,535,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,,
@@ -32,7 +32,7 @@ Botswana,Botswana,country/BWA,BW,BWA,72,72,2,Africa,202,Sub-Saharan Africa,True,
 Bouvet Island,Bouvet Island,country/BVT,BV,BVT,74,74,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,False,False,False,,
 Brazil,Brazil,country/BRA,BR,BRA,76,76,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,431,Upper middle income
 British Indian Ocean Territory,British Indian Ocean Territory,country/IOT,IO,IOT,86,86,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,False,False,False,False,,
-British Virgin Islands,British Virgin Islands,country/VGB,VG,VGB,92,92,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,,High income
+British Virgin Islands,British Virgin Islands,country/VGB,VG,VGB,92,92,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,388,High income
 Brunei Darussalam,Brunei Darussalam,country/BRN,BN,BRN,96,96,142,Asia,35,South-eastern Asia,True,,,False,False,False,True,False,False,,High income
 Bulgaria,Bulgaria,country/BGR,BG,BGR,100,100,150,Europe,151,Eastern Europe,True,,,False,False,False,True,False,False,72,High income
 Burkina Faso,Burkina Faso,country/BFA,BF,BFA,854,854,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,True,False,True,False,False,287,Low income
@@ -41,19 +41,19 @@ Cabo Verde,Cabo Verde,country/CPV,CV,CPV,132,132,2,Africa,202,Sub-Saharan Africa
 Cambodia,Cambodia,country/KHM,KH,KHM,116,116,142,Asia,35,South-eastern Asia,True,,,True,False,False,True,False,False,728,Lower middle income
 Cameroon,Cameroon,country/CMR,CM,CMR,120,120,2,Africa,202,Sub-Saharan Africa,True,17,Middle Africa,False,False,False,True,False,False,229,Lower middle income
 Canada,Canada,country/CAN,CA,CAN,124,124,19,Americas,21,Northern America,True,,,False,False,False,True,False,False,301,High income
-Cayman Islands,Cayman Islands,country/CYM,KY,CYM,136,136,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,,High income
+Cayman Islands,Cayman Islands,country/CYM,KY,CYM,136,136,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,386,High income
 Central African Republic,Central African Republic,country/CAF,CF,CAF,140,140,2,Africa,202,Sub-Saharan Africa,True,17,Middle Africa,True,True,False,True,False,False,231,Low income
 Chad,Chad,country/TCD,TD,TCD,148,148,2,Africa,202,Sub-Saharan Africa,True,17,Middle Africa,True,True,False,True,False,False,232,Low income
-Chile,Chile,country/CHL,CL,CHL,152,152,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,,High income
+Chile,Chile,country/CHL,CL,CHL,152,152,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,434,High income
 China,China,country/CHN,CN,CHN,156,156,142,Asia,30,Eastern Asia,True,,,False,False,False,True,False,False,730,Upper middle income
-"China, Hong Kong Special Administrative Region",Hong Kong,country/HKG,HK,HKG,344,344,142,Asia,30,Eastern Asia,True,,,False,False,False,False,False,False,,High income
-"China, Macao Special Administrative Region",Macau,country/MAC,MO,MAC,446,446,142,Asia,30,Eastern Asia,True,,,False,False,False,False,False,False,,High income
+"China, Hong Kong Special Administrative Region",Hong Kong,country/HKG,HK,HKG,344,344,142,Asia,30,Eastern Asia,True,,,False,False,False,False,False,False,735,High income
+"China, Macao Special Administrative Region",Macau,country/MAC,MO,MAC,446,446,142,Asia,30,Eastern Asia,True,,,False,False,False,False,False,False,748,High income
 Christmas Island,Christmas Island,country/CXR,CX,CXR,162,162,9,Oceania,53,Australia and New Zealand,True,,,False,False,False,False,False,False,,
 Cocos (Keeling) Islands,Cocos (Keeling) Islands,country/CCK,CC,CCK,166,166,9,Oceania,53,Australia and New Zealand,True,,,False,False,False,False,False,False,,
 Colombia,Colombia,country/COL,CO,COL,170,170,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,437,Upper middle income
 Comoros,Comoros,country/COM,KM,COM,174,174,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,True,False,True,True,False,False,233,Lower middle income
 Congo,Congo,country/COG,CG,COG,178,178,2,Africa,202,Sub-Saharan Africa,True,17,Middle Africa,False,False,False,True,False,False,234,Lower middle income
-Cook Islands,Cook Islands,country/COK,CK,COK,184,184,9,Oceania,61,Polynesia,True,,,False,False,True,False,False,False,,
+Cook Islands,Cook Islands,country/COK,CK,COK,184,184,9,Oceania,61,Polynesia,True,,,False,False,True,False,False,False,831,
 Costa Rica,Costa Rica,country/CRI,CR,CRI,188,188,19,Americas,419,Latin America and the Caribbean,True,13,Central America,False,False,False,True,False,False,336,High income
 Côte d’Ivoire,Côte d’Ivoire,country/CIV,CI,CIV,384,384,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,False,False,False,True,False,False,247,Lower middle income
 Croatia,Croatia,country/HRV,HR,HRV,191,191,150,Europe,39,Southern Europe,True,,,False,False,False,True,False,False,62,High income
@@ -81,14 +81,14 @@ Fiji,Fiji,country/FJI,FJ,FJI,242,242,9,Oceania,54,Melanesia,True,,,False,False,T
 Finland,Finland,country/FIN,FI,FIN,246,246,150,Europe,154,Northern Europe,True,,,False,False,False,True,False,False,18,High income
 France,France,country/FRA,FR,FRA,250,250,150,Europe,155,Western Europe,True,,,False,False,False,True,False,False,4,High income
 French Guiana,French Guiana,country/GUF,GF,GUF,254,254,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,False,False,False,,
-French Polynesia,French Polynesia,country/PYF,PF,PYF,258,258,9,Oceania,61,Polynesia,True,,,False,False,True,False,False,False,,High income
+French Polynesia,French Polynesia,country/PYF,PF,PYF,258,258,9,Oceania,61,Polynesia,True,,,False,False,True,False,False,False,840,High income
 French Southern Territories,French Southern Territories,country/ATF,TF,ATF,260,260,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,False,False,False,False,,
 Gabon,Gabon,country/GAB,GA,GAB,266,266,2,Africa,202,Sub-Saharan Africa,True,17,Middle Africa,False,False,False,True,False,False,239,Upper middle income
 Gambia,Gambia,country/GMB,GM,GMB,270,270,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,False,False,True,False,False,240,Low income
 Georgia,Georgia,country/GEO,GE,GEO,268,268,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,612,Upper middle income
 Germany,Germany,country/DEU,DE,DEU,276,276,150,Europe,155,Western Europe,True,,,False,False,False,True,False,False,5,High income
 Ghana,Ghana,country/GHA,GH,GHA,288,288,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,False,False,False,True,False,False,241,Lower middle income
-Gibraltar,Gibraltar,country/GIB,GI,GIB,292,292,150,Europe,39,Southern Europe,True,,,False,False,False,False,False,False,,High income
+Gibraltar,Gibraltar,country/GIB,GI,GIB,292,292,150,Europe,39,Southern Europe,True,,,False,False,False,False,False,False,35,High income
 Greece,Greece,country/GRC,GR,GRC,300,300,150,Europe,39,Southern Europe,True,,,False,False,False,True,False,False,40,High income
 Greenland,Greenland,country/GRL,GL,GRL,304,304,19,Americas,21,Northern America,True,,,False,False,False,False,False,False,,High income
 Grenada,Grenada,country/GRD,GD,GRD,308,308,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,381,Upper middle income
@@ -142,7 +142,7 @@ Marshall Islands,Marshall Islands,country/MHL,MH,MHL,584,584,9,Oceania,57,Micron
 Martinique,Martinique,country/MTQ,MQ,MTQ,474,474,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,,
 Mauritania,Mauritania,country/MRT,MR,MRT,478,478,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,False,False,True,False,False,256,Lower middle income
 Mauritius,Mauritius,country/MUS,MU,MUS,480,480,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,True,True,False,False,257,Upper middle income
-Mayotte,Mayotte,country/MYT,YT,MYT,175,175,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,False,False,False,False,,
+Mayotte,Mayotte,country/MYT,YT,MYT,175,175,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,False,False,False,False,258,
 Mexico,Mexico,country/MEX,MX,MEX,484,484,19,Americas,419,Latin America and the Caribbean,True,13,Central America,False,False,False,True,False,False,358,Upper middle income
 Micronesia (Federated States of),Micronesia,country/FSM,FM,FSM,583,583,9,Oceania,57,Micronesia,True,,,False,False,True,True,False,False,860,Lower middle income
 Monaco,Monaco,country/MCO,MC,MCO,492,492,150,Europe,155,Western Europe,True,,,False,False,False,True,False,False,,High income
@@ -156,7 +156,7 @@ Namibia,Namibia,country/NAM,,NAM,516,516,2,Africa,202,Sub-Saharan Africa,True,18
 Nauru,Nauru,country/NRU,NR,NRU,520,520,9,Oceania,57,Micronesia,True,,,False,False,True,True,False,False,845,High income
 Nepal,Nepal,country/NPL,NP,NPL,524,524,142,Asia,34,Southern Asia,True,,,True,True,False,True,False,False,660,Lower middle income
 Netherlands (Kingdom of the),Netherlands,country/NLD,NL,NLD,528,528,150,Europe,155,Western Europe,True,,,False,False,False,True,False,False,7,High income
-New Caledonia,New Caledonia,country/NCL,NC,NCL,540,540,9,Oceania,54,Melanesia,True,,,False,False,True,False,False,False,,High income
+New Caledonia,New Caledonia,country/NCL,NC,NCL,540,540,9,Oceania,54,Melanesia,True,,,False,False,True,False,False,False,850,High income
 New Zealand,New Zealand,country/NZL,NZ,NZL,554,554,9,Oceania,53,Australia and New Zealand,True,,,False,False,False,True,False,False,820,High income
 Nicaragua,Nicaragua,country/NIC,NI,NIC,558,558,19,Americas,419,Latin America and the Caribbean,True,13,Central America,False,False,False,True,False,False,364,Lower middle income
 Niger,Niger,country/NER,NE,NER,562,562,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,True,False,True,False,False,260,Low income
@@ -164,9 +164,9 @@ Nigeria,Nigeria,country/NGA,NG,NGA,566,566,2,Africa,202,Sub-Saharan Africa,True,
 Niue,Niue,country/NIU,NU,NIU,570,570,9,Oceania,61,Polynesia,True,,,False,False,True,False,False,False,856,
 Norfolk Island,Norfolk Island,country/NFK,NF,NFK,574,574,9,Oceania,53,Australia and New Zealand,True,,,False,False,False,False,False,False,,
 North Macedonia,North Macedonia,country/MKD,MK,MKD,807,807,150,Europe,39,Southern Europe,True,,,False,True,False,True,False,False,66,Upper middle income
-Northern Mariana Islands,Northern Mariana Islands,country/MNP,MP,MNP,580,580,9,Oceania,57,Micronesia,True,,,False,False,True,False,False,False,,High income
+Northern Mariana Islands,Northern Mariana Islands,country/MNP,MP,MNP,580,580,9,Oceania,57,Micronesia,True,,,False,False,True,False,False,False,858,High income
 Norway,Norway,country/NOR,NO,NOR,578,578,150,Europe,154,Northern Europe,True,,,False,False,False,True,False,False,8,High income
-Oman,Oman,country/OMN,OM,OMN,512,512,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,,High income
+Oman,Oman,country/OMN,OM,OMN,512,512,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,558,High income
 Pakistan,Pakistan,country/PAK,PK,PAK,586,586,142,Asia,34,Southern Asia,True,,,False,False,False,True,False,False,665,Lower middle income
 Palau,Palau,country/PLW,PW,PLW,585,585,9,Oceania,57,Micronesia,True,,,False,False,True,True,False,False,861,High income
 Panama,Panama,country/PAN,PA,PAN,591,591,19,Americas,419,Latin America and the Caribbean,True,13,Central America,False,False,False,True,False,False,366,High income
@@ -187,7 +187,7 @@ Russian Federation,Russia,country/RUS,RU,RUS,643,643,150,Europe,151,Eastern Euro
 Rwanda,Rwanda,country/RWA,RW,RWA,646,646,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,True,True,False,True,False,False,266,Low income
 Saint Barthélemy,St. Barths,country/BLM,BL,BLM,652,652,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,,
 Saint Helena,St. Helena,country/SHN,SH,SHN,654,654,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,False,False,False,False,False,False,276,
-Saint Kitts and Nevis,St. Kitts and Nevis,country/KNA,KN,KNA,659,659,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,,High income
+Saint Kitts and Nevis,St. Kitts and Nevis,country/KNA,KN,KNA,659,659,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,382,High income
 Saint Lucia,St. Lucia,country/LCA,LC,LCA,662,662,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,383,Upper middle income
 Saint Martin (French Part),Saint-Martin,country/MAF,MF,MAF,663,663,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,,High income
 Saint Pierre and Miquelon,St. Pierre and Miquelon,country/SPM,PM,SPM,666,666,19,Americas,21,Northern America,True,,,False,False,False,False,False,False,,
@@ -198,7 +198,7 @@ Sao Tome and Principe,Sao Tome and Principe,country/STP,ST,STP,678,678,2,Africa,
 Saudi Arabia,Saudi Arabia,country/SAU,SA,SAU,682,682,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,566,High income
 Senegal,Senegal,country/SEN,SN,SEN,686,686,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,False,False,True,False,False,269,Lower middle income
 Serbia,Serbia,country/SRB,RS,SRB,688,688,150,Europe,39,Southern Europe,True,,,False,False,False,True,False,False,63,Upper middle income
-Seychelles,Seychelles,country/SYC,SC,SYC,690,690,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,True,True,False,False,,High income
+Seychelles,Seychelles,country/SYC,SC,SYC,690,690,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,False,False,True,True,False,False,270,High income
 Sierra Leone,Sierra Leone,country/SLE,SL,SLE,694,694,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,False,False,True,False,False,272,Low income
 Singapore,Singapore,country/SGP,SG,SGP,702,702,142,Asia,35,South-eastern Asia,True,,,False,False,True,True,False,False,,High income
 Sint Maarten (Dutch part),Sint Maarten,country/SXM,SX,SXM,534,534,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,,High income
@@ -225,11 +225,11 @@ Timor-Leste,Timor-Leste,country/TLS,TL,TLS,626,626,142,Asia,35,South-eastern Asi
 Togo,Togo,country/TGO,TG,TGO,768,768,2,Africa,202,Sub-Saharan Africa,True,11,Western Africa,True,False,False,True,False,False,283,Low income
 Tokelau,Tokelau,country/TKL,TK,TKL,772,772,9,Oceania,61,Polynesia,True,,,False,False,False,False,False,False,868,
 Tonga,Tonga,country/TON,TO,TON,776,776,9,Oceania,61,Polynesia,True,,,False,False,True,True,False,False,870,Upper middle income
-Trinidad and Tobago,Trinidad and Tobago,country/TTO,TT,TTO,780,780,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,,High income
+Trinidad and Tobago,Trinidad and Tobago,country/TTO,TT,TTO,780,780,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,True,False,False,375,High income
 Tunisia,Tunisia,country/TUN,TN,TUN,788,788,2,Africa,15,Northern Africa,True,,,False,False,False,True,False,False,139,Lower middle income
 Türkiye,Türkiye,country/TUR,TR,TUR,792,792,142,Asia,145,Western Asia,True,,,False,False,False,True,False,False,55,Upper middle income
 Turkmenistan,Turkmenistan,country/TKM,TM,TKM,795,795,142,Asia,143,Central Asia,True,,,False,True,False,True,False,False,616,Upper middle income
-Turks and Caicos Islands,Turks and Caicos Islands,country/TCA,TC,TCA,796,796,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,,High income
+Turks and Caicos Islands,Turks and Caicos Islands,country/TCA,TC,TCA,796,796,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,False,False,False,False,387,High income
 Tuvalu,Tuvalu,country/TUV,TV,TUV,798,798,9,Oceania,61,Polynesia,True,,,True,False,True,True,False,False,872,Upper middle income
 Uganda,Uganda,country/UGA,UG,UGA,800,800,2,Africa,202,Sub-Saharan Africa,True,14,Eastern Africa,True,True,False,True,False,False,285,Low income
 Ukraine,Ukraine,country/UKR,UA,UKR,804,804,150,Europe,151,Eastern Europe,True,,,False,False,False,True,False,False,85,Upper middle income
@@ -239,7 +239,7 @@ United Republic of Tanzania,Tanzania,country/TZA,TZ,TZA,834,834,2,Africa,202,Sub
 United States Minor Outlying Islands,United States Minor Outlying Islands,country/UMI,UM,UMI,581,581,9,Oceania,57,Micronesia,True,,,False,False,False,False,False,False,,
 United States of America,United States,country/USA,US,USA,840,840,19,Americas,21,Northern America,True,,,False,False,False,True,False,False,302,High income
 United States Virgin Islands,United States Virgin Islands,country/VIR,VI,VIR,850,850,19,Americas,419,Latin America and the Caribbean,True,29,Caribbean,False,False,True,False,False,False,,High income
-Uruguay,Uruguay,country/URY,UY,URY,858,858,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,,High income
+Uruguay,Uruguay,country/URY,UY,URY,858,858,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,True,False,False,460,High income
 Uzbekistan,Uzbekistan,country/UZB,UZ,UZB,860,860,142,Asia,143,Central Asia,True,,,False,True,False,True,False,False,617,Lower middle income
 Vanuatu,Vanuatu,country/VUT,VU,VUT,548,548,9,Oceania,54,Melanesia,True,,,False,False,True,True,False,False,854,Lower middle income
 Venezuela (Bolivarian Republic of),Venezuela,country/VEN,VE,VEN,862,862,19,Americas,419,Latin America and the Caribbean,True,5,South America,False,False,False,False,False,False,463,Not classified
