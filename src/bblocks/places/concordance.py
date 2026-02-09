@@ -36,7 +36,7 @@ def validate_concordance_table(concordance_table: pd.DataFrame) -> None:
 
 def get_concordance_dict(
     concordance_table: pd.DataFrame, from_type: str, to_type: str
-) -> dict[str, str]:
+) -> dict[str, str | int]:
     """Return a dictionary with the from_type values as keys and the to_type values as values using the concordance table"""
 
     if from_type == to_type:
@@ -65,8 +65,8 @@ def _map_single_or_list(val, concordance_dict):
 
 
 def map_places(
-    concordance_table: pd.DataFrame, places: list[str], from_type, to_type
-) -> dict[str, str | None]:
+    concordance_table: pd.DataFrame, places: list[str | int], from_type, to_type
+) -> dict[str | int, str | int | None]:
     """Map a list of places to a desired type using the concordance table"""
 
     concordance_dict = get_concordance_dict(concordance_table, from_type, to_type)

@@ -298,7 +298,7 @@ def get_lldc(
 
 
 def resolve_places(
-    places: str | list[str] | pd.Series,
+    places: str | int | list[str | int] | pd.Series,
     from_type: Optional[str] = None,
     to_type: Optional[str] = "dcid",
     not_found: Literal["raise", "ignore"] | str = "raise",
@@ -387,7 +387,7 @@ def resolve_places(
 
 
 def map_places(
-    places: str | list[str] | pd.Series,
+    places: str | int | list[str | int] | pd.Series,
     to_type: Optional[str] = "dcid",
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] | str = "raise",
@@ -476,7 +476,7 @@ def map_places(
 
 
 def filter_places(
-    places: list[str] | pd.Series,
+    places: list[str | int] | pd.Series,
     filters: dict[str, str | list[str] | bool],
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
@@ -582,7 +582,7 @@ def filter_places(
 
 
 def filter_african_countries(
-    places: str | list[str] | pd.Series,
+    places: str | int | list[str | int] | pd.Series,
     exclude_non_un_members: Optional[bool] = True,
     from_type: Optional[str] = None,
     not_found: Literal["raise", "ignore"] = "raise",
