@@ -8,6 +8,7 @@
 
 ## v0.0.5 (2026-02-09)
 - Bug fix: resolving from known numeric entity type 
+- Added additional DAC codes to the concordance table
 
 ## v0.0.4 (2025-09-24)
 - Updated concordance table income groupings
