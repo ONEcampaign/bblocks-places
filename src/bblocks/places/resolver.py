@@ -430,7 +430,7 @@ class PlaceResolver:
 
     def _resolve_without_disambiguation(
         self,
-        places_to_map: list[str],
+        places_to_map: list[str | int],
         from_type: str,
         to_type: str,
         *,
@@ -475,7 +475,7 @@ class PlaceResolver:
 
     def _resolve(
         self,
-        places: list[str],
+        places: list[str | int],
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] | str = "raise",
@@ -556,7 +556,7 @@ class PlaceResolver:
 
     def map_places(
         self,
-        places: str | list[str] | pd.Series,
+        places: str | int | list[str | int] | pd.Series,
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] | str = "raise",
@@ -610,7 +610,7 @@ class PlaceResolver:
             A dictionary mapping the places to the desired format.
         """
 
-        if isinstance(places, str):
+        if isinstance(places, (str, int)):
             places = [places]
         elif isinstance(places, list):
             places = list(dict.fromkeys(places))
@@ -618,7 +618,7 @@ class PlaceResolver:
             places = list(places.unique())
         else:
             raise ValueError(
-                f"Invalid type for places: {type(places)}. Must be one of [str, list[str], pd.Series]"
+                f"Invalid type for places: {type(places)}. Must be one of [str, int, list[str | int], pd.Series]"
             )
 
         null_places = [p for p in places if pd.isna(p)]
@@ -642,7 +642,7 @@ class PlaceResolver:
 
     def resolve_places(
         self,
-        places: str | list[str] | pd.Series,
+        places: str | int | list[str | int] | pd.Series,
         from_type: Optional[str] = None,
         to_type: Optional[str] = "dcid",
         not_found: Literal["raise", "ignore"] | str = "raise",
@@ -707,7 +707,7 @@ class PlaceResolver:
         )
 
         # convert back to the original format replacing the original places with the resolved places
-        if isinstance(places, str):
+        if isinstance(places, (str, int)):
             return mapper.get(places)
 
         elif isinstance(places, pd.Series):
@@ -760,7 +760,7 @@ class PlaceResolver:
 
     def filter_places(
         self,
-        places: list[str] | pd.Series,
+        places: list[str | int] | pd.Series,
         filters: dict[str, str | list[str] | bool],
         from_type: Optional[str] = None,
         not_found: Literal["raise", "ignore"] = "raise",

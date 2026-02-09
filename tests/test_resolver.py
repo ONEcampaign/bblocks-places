@@ -620,6 +620,83 @@ def test_resolve_map_ignore_nulls_false_raises():
         pr.map_places([None], from_type="name", to_type="region", ignore_nulls=False)
 
 
+# -------------------------------------------------
+# Tests for numeric input types
+# -------------------------------------------------
+
+
+def test_resolve_map_numeric_from_type():
+    """map_places should work with numeric inputs like dac_code."""
+    df = pd.DataFrame(
+        {
+            "dcid": ["dc/1", "dc/2"],
+            "name_short": ["Alpha", "Beta"],
+            "dac_code": pd.array([4, 625], dtype="Int64"),
+        }
+    )
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.map_places([4, 625], from_type="dac_code", to_type="name_short")
+    assert result == {4: "Alpha", 625: "Beta"}
+
+
+def test_resolve_map_numeric_to_type():
+    """map_places should preserve numeric output values when to_type is numeric."""
+    df = pd.DataFrame(
+        {
+            "dcid": ["dc/1", "dc/2"],
+            "name": ["Alpha", "Beta"],
+            "dac_code": pd.array([4, 625], dtype="Int64"),
+        }
+    )
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.map_places(["Alpha", "Beta"], from_type="name", to_type="dac_code")
+    assert result == {"Alpha": 4, "Beta": 625}
+
+
+def test_resolve_numeric_single_int():
+    """resolve_places should accept a single integer input."""
+    df = pd.DataFrame(
+        {
+            "dcid": ["dc/1"],
+            "name_short": ["Alpha"],
+            "dac_code": pd.array([4], dtype="Int64"),
+        }
+    )
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_places(4, from_type="dac_code", to_type="name_short")
+    assert result == "Alpha"
+
+
+def test_resolve_numeric_list():
+    """resolve_places should accept a list of integers."""
+    df = pd.DataFrame(
+        {
+            "dcid": ["dc/1", "dc/2"],
+            "name_short": ["Alpha", "Beta"],
+            "dac_code": pd.array([4, 625], dtype="Int64"),
+        }
+    )
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_places([4, 625], from_type="dac_code", to_type="name_short")
+    assert result == ["Alpha", "Beta"]
+
+
+def test_resolve_numeric_not_found_ignore():
+    """resolve_places with numeric input should handle not_found='ignore'."""
+    df = pd.DataFrame(
+        {
+            "dcid": ["dc/1"],
+            "name_short": ["Alpha"],
+            "dac_code": pd.array([4], dtype="Int64"),
+        }
+    )
+    pr = PlaceResolver(concordance_table=df)
+    result = pr.resolve_places(
+        [4, 9999], from_type="dac_code", to_type="name_short", not_found="ignore"
+    )
+    assert result == ["Alpha", None]
+
+
 def test_resolve_map_custom_mapping_prevents_not_found_raise():
     """custom_mapping entries bypass not_found='raise' and get returned."""
     df = pd.DataFrame(

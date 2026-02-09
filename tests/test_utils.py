@@ -19,6 +19,9 @@ from bblocks.places import utils
         ("    ", ""),  # Only spaces
         ("12345", "12345"),  # Numbers should stay
         (None, None),  # None input should return None
+        (4, "4"),  # Integer input
+        (625, "625"),  # Larger integer input
+        (3.14, "314"),  # Float input (dot is punctuation, removed)
     ],
 )
 def test_simple_clean_string(input_str, expected):

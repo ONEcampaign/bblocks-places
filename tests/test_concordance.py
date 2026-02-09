@@ -176,6 +176,57 @@ def test_get_concordance_dict_income_level_drops_nulls(master_concordance_df):
 
 
 # ——————————————————————————————————————————————————————————————————————————
+# get_concordance_dict tests with numeric from_type
+# ——————————————————————————————————————————————————————————————————————————
+
+
+@pytest.fixture(scope="module")
+def numeric_concordance_df():
+    """Fixture for a concordance DataFrame with a numeric column (like dac_code)."""
+    return pd.DataFrame(
+        {
+            "dcid": ["country/FRA", "country/AFG", "country/ZWE"],
+            "name_short": ["France", "Afghanistan", "Zimbabwe"],
+            "dac_code": pd.array([4, 625, 71], dtype="Int64"),
+        }
+    )
+
+
+def test_get_concordance_dict_numeric_from_type(numeric_concordance_df):
+    """Numeric from_type keys should be converted to strings via clean_string."""
+    result = concordance.get_concordance_dict(
+        numeric_concordance_df, from_type="dac_code", to_type="dcid"
+    )
+    assert result == {
+        "4": "country/FRA",
+        "625": "country/AFG",
+        "71": "country/ZWE",
+    }
+
+
+def test_get_concordance_dict_numeric_to_type(numeric_concordance_df):
+    """Numeric to_type values should preserve their original type."""
+    result = concordance.get_concordance_dict(
+        numeric_concordance_df, from_type="name_short", to_type="dac_code"
+    )
+    # Values should remain as integers
+    assert result["france"] == 4
+    assert result["afghanistan"] == 625
+    assert result["zimbabwe"] == 71
+
+
+def test_get_concordance_dict_numeric_identity(numeric_concordance_df):
+    """Identity mapping on a numeric column should work and preserve original values."""
+    result = concordance.get_concordance_dict(
+        numeric_concordance_df, from_type="dac_code", to_type="dac_code"
+    )
+    # Keys are cleaned strings, values are original integers
+    assert result["4"] == 4
+    assert result["625"] == 625
+    assert result["71"] == 71
+
+
+# ——————————————————————————————————————————————————————————————————————————
 # _map_single_or_list tests
 # ——————————————————————————————————————————————————————————————————————————
 
@@ -225,6 +276,32 @@ def test_map_single_or_list_empty_list(iso_to_dcid):
     assert concordance._map_single_or_list([], iso_to_dcid) is None
 
 
+def test_map_single_or_list_numeric_scalar(numeric_concordance_df):
+    """A numeric scalar should be found in a concordance dict keyed by numeric from_type."""
+    conc_dict = concordance.get_concordance_dict(
+        numeric_concordance_df, from_type="dac_code", to_type="dcid"
+    )
+    assert concordance._map_single_or_list(4, conc_dict) == "country/FRA"
+
+
+def test_map_single_or_list_numeric_list(numeric_concordance_df):
+    """A list of numeric values should be resolved correctly."""
+    conc_dict = concordance.get_concordance_dict(
+        numeric_concordance_df, from_type="dac_code", to_type="dcid"
+    )
+    result = concordance._map_single_or_list([4, 625], conc_dict)
+    assert isinstance(result, list)
+    assert set(result) == {"country/FRA", "country/AFG"}
+
+
+def test_map_single_or_list_numeric_miss(numeric_concordance_df):
+    """A numeric value not in the dict should return None."""
+    conc_dict = concordance.get_concordance_dict(
+        numeric_concordance_df, from_type="dac_code", to_type="dcid"
+    )
+    assert concordance._map_single_or_list(9999, conc_dict) is None
+
+
 # —————————————————————————————————————————————————————————————————————————
 # map_places tests
 # —————————————————————————————————————————————————————————————————————————
@@ -244,6 +321,28 @@ def test_map_places_basic_hits(master_concordance_df):
         "Italy": "country/ITA",
         "France": "country/FRA",
     }
+
+
+def test_map_places_numeric_from_type(numeric_concordance_df):
+    """map_places should work when places are numeric values (e.g. dac_code)."""
+    result = concordance.map_places(
+        numeric_concordance_df,
+        [4, 625],
+        from_type="dac_code",
+        to_type="name_short",
+    )
+    assert result == {4: "France", 625: "Afghanistan"}
+
+
+def test_map_places_numeric_to_type(numeric_concordance_df):
+    """map_places should preserve numeric values when to_type is numeric."""
+    result = concordance.map_places(
+        numeric_concordance_df,
+        ["France", "Zimbabwe"],
+        from_type="name_short",
+        to_type="dac_code",
+    )
+    assert result == {"France": 4, "Zimbabwe": 71}
 
 
 def test_map_candidates_none_candidate_stays_none(master_concordance_df):
