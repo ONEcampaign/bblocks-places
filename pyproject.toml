@@ -1,6 +1,6 @@
 [project]
 name = "bblocks-places"
-version = "0.0.5"
+version = "0.0.6"
 description = "Resolve and standardize places and work with political and geographic groupings"
 authors = [
     {name = "ONE Campaign"},
@@ -9,6 +9,9 @@ authors = [
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
+classifiers = [
+    "Development Status :: 7 - Inactive",
+]
 dependencies = [
     "datacommons-client (>=2.0.0,<3.0.0)",
     "pandas (>=2.2.3,<3.0.0)",

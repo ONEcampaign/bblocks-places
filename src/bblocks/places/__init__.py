@@ -1,4 +1,16 @@
+import warnings
 from importlib.metadata import version
+
+warnings.warn(
+    "bblocks-places is deprecated and no longer maintained. "
+    "It will not receive further updates or bug fixes. "
+    "Please migrate to resolvekit (https://pypi.org/project/resolvekit/), "
+    "which covers the same place-resolution functionality and is under "
+    "active development.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from bblocks.places.resolver import PlaceResolver
 
 from bblocks.places.main import (
